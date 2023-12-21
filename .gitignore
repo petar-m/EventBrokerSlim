@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/test/M.EventBroker.Tests/test_coverage/coverage
