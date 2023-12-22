@@ -53,13 +53,13 @@ public class Orchestrator<T, TEvent> : IEventHandler<TEvent>
 
     public virtual Task Handle(TEvent @event)
     {
+        if (!@event.CorrelationId.Equals(_correlationId))
+        {
+            return Task.CompletedTask;
+        }
+
         _expected.TryRemove(@event.Id, out _);
         return Task.CompletedTask;
-    }
-
-    public Task<bool> ShouldHandle(TEvent @event)
-    {
-        return @event.CorrelationId.Equals(_correlationId) ? Task.FromResult(true) : Task.FromResult(false);
     }
 
     public Task OnError(Exception exception, TEvent @event)

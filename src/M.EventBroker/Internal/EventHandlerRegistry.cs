@@ -32,7 +32,6 @@ internal class EventHandlerRegistry
                     Key: key,
                     InterfaceType: typeof(IEventHandler<TEvent>),
                     Handle: async (handler, @event) => await ((THandler)handler).Handle((TEvent)@event),
-                    ShouldHandle: async (handler, @event) => await ((THandler)handler).ShouldHandle((TEvent)@event),
                     OnError: async (handler, @event, exception) => await ((THandler)handler).OnError(exception, (TEvent)@event));
 
         if (!_eventHandlerDescriptors.TryGetValue(typeof(TEvent), out var handlers))

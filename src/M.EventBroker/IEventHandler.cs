@@ -16,13 +16,6 @@ public interface IEventHandler<TEvent>
     Task Handle(TEvent @event);
 
     /// <summary>
-    /// Returns a value indicating whether the event handler should be executed.
-    /// </summary>
-    /// <param name="event">An instance of TEvent representing the event.</param>
-    /// <returns>A value indicating whether the event handler should be executed.</returns>
-    Task<bool> ShouldHandle(TEvent @event) => Task.FromResult(true);
-
-    /// <summary>
     /// Called when an error is caught during execution.
     /// </summary>
     /// <param name="exception">The exception caught.</param>

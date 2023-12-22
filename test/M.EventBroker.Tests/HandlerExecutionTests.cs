@@ -114,36 +114,6 @@ public class HandlerExecutionTests
     }
 
     [Fact]
-    public async Task ShouldHandleEvaluatesTo_False_Handle_IsNotCalled()
-    {
-        // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                  .AddKeyedSingleton<TestEventHandled, EventsRecorder>("orchestrator"));
-
-        var services = serviceCollection.BuildServiceProvider(true);
-
-        using var scope = services.CreateScope();
-
-        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
-
-        // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: -1, CorrelationId: 9999);
-
-        await eventBroker.Publish(event1);
-
-        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
-
-        // Assert
-        Assert.Empty(orchestrator.HandledEventIds);
-        Assert.Empty(orchestrator.Exceptions);
-    }
-
-    [Fact]
     public async Task Exception_WhenResolvingHandler_IsHandled()
     {
         // Arrange
@@ -213,9 +183,6 @@ public class HandlerExecutionTests
 
             await _eventBroker.Publish(handled);
         }
-
-        public Task<bool> ShouldHandle(TestEvent @event) => Task.FromResult(@event.Id > 0);
-
 
         public Task OnError(Exception exception, TestEvent @event)
         {

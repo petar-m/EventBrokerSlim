@@ -58,11 +58,6 @@ internal class ThreadPoolEventHandlerRunner
                         try
                         {
                             service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptior.InterfaceType, eventHandlerDescriptior.Key);
-                            if (!await eventHandlerDescriptior.ShouldHandle(service, @event))
-                            {
-                                return;
-                            }
-
                             await eventHandlerDescriptior.Handle(service, @event);
                         }
                         catch (Exception exception)
