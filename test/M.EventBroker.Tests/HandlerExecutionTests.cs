@@ -140,6 +140,62 @@ public class HandlerExecutionTests
         Assert.Empty(orchestrator.Exceptions);
     }
 
+    [Fact]
+    public async Task UnhandledException_FromEventHandler_IsPassedTo_OnError()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+
+        serviceCollection.AddEventBroker(
+            x => x.AddKeyedSingleton<TestEvent, EventsExceptionRecorder>("orchestrator"));
+
+        var services = serviceCollection.BuildServiceProvider(true);
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var orchestrator = (EventsExceptionRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEvent>>("orchestrator");
+
+        // Act
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+
+        await eventBroker.Publish(event1);
+
+        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.Single(orchestrator.Exceptions);
+        Assert.IsType<NotImplementedException>(orchestrator.Exceptions[0]);
+    }
+
+    [Fact]
+    public async Task UnhandledException_FromOnError_IsSuppressed()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+
+        serviceCollection.AddEventBroker(
+            x => x.AddKeyedSingleton<TestEvent, EventsOnErrorException>("orchestrator"));
+
+        var services = serviceCollection.BuildServiceProvider(true);
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var orchestrator = (EventsOnErrorException)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEvent>>("orchestrator");
+
+        // Act
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+
+        await eventBroker.Publish(event1);
+
+        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.Single(orchestrator.Exceptions);
+        Assert.IsType<NotImplementedException>(orchestrator.Exceptions[0]);
+    }
+
     public record TestEvent(string Message, int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
 
     public record TestEventHandled(int CorrelationId) : ITraceable<int>;
@@ -196,5 +252,27 @@ public class HandlerExecutionTests
         public Task Handle(TestEvent @event) => throw new NotImplementedException();
 
         public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
+    }
+
+    public class EventsExceptionRecorder : Orchestrator<int, TestEvent>
+    {
+        public override Task Handle(TestEvent @event)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class EventsOnErrorException : Orchestrator<int, TestEvent>
+    {
+        public override Task Handle(TestEvent @event)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override async Task OnError(Exception exception, TestEvent @event)
+        {
+            await base.OnError(exception, @event);
+            throw new NotImplementedException();
+        }
     }
 }

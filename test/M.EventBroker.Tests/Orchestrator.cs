@@ -44,7 +44,7 @@ public class Orchestrator<T, TEvent> : IEventHandler<TEvent>
         return Task.CompletedTask;
     }
 
-    public Task OnError(Exception exception, TEvent @event)
+    public virtual Task OnError(Exception exception, TEvent @event)
     {
         _exceptions.Add(exception);
         return Task.CompletedTask;

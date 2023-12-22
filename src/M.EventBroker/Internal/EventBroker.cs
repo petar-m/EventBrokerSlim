@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -18,6 +19,7 @@ internal class EventBroker : IEventBroker
 
     public async Task Publish<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : notnull
     {
+        ArgumentNullException.ThrowIfNull(@event, nameof(@event));
         await _channelWriter.WriteAsync(@event, cancellationToken);
     }
 
