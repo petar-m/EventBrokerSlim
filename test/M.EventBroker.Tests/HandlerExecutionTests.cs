@@ -29,15 +29,14 @@ public class HandlerExecutionTests
         var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999, TimeSpan.FromMilliseconds(50));
-        var event2 = event1 with { Id = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
-        orchestrator.Expect(new[] { event1, event2 });
+        var event1 = new TestEvent("Test Event", CorrelationId: 1, TimeToRun: TimeSpan.FromMilliseconds(50));
+        var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
+        orchestrator.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.Complete(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
 
         // Assert
         Assert.True(completed);
@@ -66,15 +65,14 @@ public class HandlerExecutionTests
         var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999, TimeSpan.FromMilliseconds(50));
-        var event2 = event1 with { Id = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
-        orchestrator.Expect(new[] { event1, event2 });
+        var event1 = new TestEvent("Test Event", CorrelationId: 1, TimeSpan.FromMilliseconds(50));
+        var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
+        orchestrator.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.Complete(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
 
         // Assert
         Assert.True(completed);
@@ -101,8 +99,7 @@ public class HandlerExecutionTests
         var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999);
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
 
         await eventBroker.Publish(event1);
 
@@ -132,8 +129,7 @@ public class HandlerExecutionTests
         var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999);
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
 
         await eventBroker.Publish(event1);
 
@@ -144,9 +140,9 @@ public class HandlerExecutionTests
         Assert.Empty(orchestrator.Exceptions);
     }
 
-    public record TestEvent(string Message, int Id, int CorrelationId, TimeSpan TimeToRun = default) : ITraceableEvent<int>, IIdentifieableEvent<int>;
+    public record TestEvent(string Message, int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
 
-    public record TestEventHandled(int Id, int CorrelationId) : ITraceableEvent<int>, IIdentifieableEvent<int>;
+    public record TestEventHandled(int CorrelationId) : ITraceable<int>;
 
     public class EventsRecorder : Orchestrator<int, TestEventHandled>
     {
@@ -155,7 +151,7 @@ public class HandlerExecutionTests
         public override async Task Handle(TestEventHandled @event)
         {
             await base.Handle(@event);
-            _events.Add((@event.Id, DateTime.UtcNow.Ticks));
+            _events.Add((@event.CorrelationId, DateTime.UtcNow.Ticks));
         }
 
         public int[] HandledEventIds => _events.OrderBy(x => x.tick).Select(x => x.id).ToArray();
@@ -177,9 +173,7 @@ public class HandlerExecutionTests
                 await Task.Delay(@event.TimeToRun);
             }
 
-            var handled = new TestEventHandled(
-                Id: @event.Id,
-                CorrelationId: @event.CorrelationId);
+            var handled = new TestEventHandled(CorrelationId: @event.CorrelationId);
 
             await _eventBroker.Publish(handled);
         }

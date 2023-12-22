@@ -50,7 +50,7 @@ public class EventHandlerRegistryBuilder
         return this;
     }
 
-    private string GetOrCreateKey<TEvent>(string? key) => key ?? typeof(TEvent).FullName!;
+    private static string GetOrCreateKey<TEvent>(string? key) => key ?? typeof(TEvent).FullName!;
 
     internal EventHandlerRegistry Build()
     {

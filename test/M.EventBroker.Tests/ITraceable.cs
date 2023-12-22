@@ -1,6 +1,6 @@
 ﻿namespace M.EventBrokerSlim.Tests;
 
-public interface ITraceableEvent<T>
+public interface ITraceable<T>
 {
     public T CorrelationId { get; }
 }

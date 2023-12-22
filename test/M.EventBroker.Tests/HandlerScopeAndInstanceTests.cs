@@ -29,15 +29,14 @@ public class HandlerScopeAndInstanceTests
         var orchestrator = (HandlerInstanceRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999);
-        var event2 = event1 with { Id = 2 };
-        orchestrator.Expect(new[] { event1, event2 });
-        
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var event2 = event1 with { CorrelationId = 2 };
+        orchestrator.Expect(event1, event2);
+
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.Complete(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
         Assert.True(completed);
@@ -68,15 +67,14 @@ public class HandlerScopeAndInstanceTests
         var orchestrator = (HandlerInstanceRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999);
-        var event2 = event1 with { Id = 2 };
-        orchestrator.Expect(new[] { event1, event2 });
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var event2 = event1 with { CorrelationId = 2 };
+        orchestrator.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.Complete(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
         Assert.True(completed);
@@ -104,15 +102,14 @@ public class HandlerScopeAndInstanceTests
         var orchestrator = (HandlerInstanceRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
 
         // Act
-        orchestrator.Begin(9999);
-        var event1 = new TestEvent("Test Event", Id: 1, CorrelationId: 9999);
-        var event2 = event1 with { Id = 2 };
-        orchestrator.Expect(new[] { event1, event2 });
+        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var event2 = event1 with { CorrelationId = 2 };
+        orchestrator.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.Complete(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
         Assert.True(completed);
@@ -124,9 +121,9 @@ public class HandlerScopeAndInstanceTests
         Assert.NotEqual(orchestrator.HandlerScopeHashCodes[0], orchestrator.HandlerScopeHashCodes[1]);
     }
 
-    public record TestEvent(string Message, int Id, int CorrelationId) : ITraceableEvent<int>, IIdentifieableEvent<int>;
+    public record TestEvent(string Message, int CorrelationId) : ITraceable<int>;
 
-    public record TestEventHandled(int Id, int CorrelationId, int HandlerObjectHashCode, int HandlerScopeHashCode) : ITraceableEvent<int>, IIdentifieableEvent<int>;
+    public record TestEventHandled(int CorrelationId, int HandlerObjectHashCode, int HandlerScopeHashCode) : ITraceable<int>;
 
     public class HandlerInstanceRecorder : Orchestrator<int, TestEventHandled>
     {
@@ -159,11 +156,10 @@ public class HandlerScopeAndInstanceTests
         public async Task Handle(TestEvent @event)
         {
             var handled = new TestEventHandled(
-                Id: @event.Id, 
-                CorrelationId: @event.CorrelationId, 
+                CorrelationId: @event.CorrelationId,
                 HandlerObjectHashCode: GetHashCode(),
                 HandlerScopeHashCode: _serviceProvider.GetHashCode());
-            
+
             await _eventBroker.Publish(handled);
         }
 
