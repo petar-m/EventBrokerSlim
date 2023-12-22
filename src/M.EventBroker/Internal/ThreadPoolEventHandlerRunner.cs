@@ -24,13 +24,12 @@ internal class ThreadPoolEventHandlerRunner
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
     }
 
-    public ValueTask Run()
+    public void Run()
     {
-        _ = Task.Run(RunAsync);
-        return ValueTask.CompletedTask;
+        _ = Task.Run(ProcessEvents);
     }
 
-    private async ValueTask RunAsync()
+    private async ValueTask ProcessEvents()
     {
         while (await _channelReader.WaitToReadAsync())
         {
