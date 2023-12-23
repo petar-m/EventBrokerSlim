@@ -19,7 +19,15 @@ public class Orchestrator<T, TEvent> : IEventHandler<TEvent>
         }
     }
 
-     public async Task<bool> WaitForExpected(TimeSpan timeout = default)
+    public void Expect(params T[] items)
+    {
+        foreach (var item in items)
+        {
+            _expected.TryAdd(item, null);
+        }
+    }
+
+    public async Task<bool> WaitForExpected(TimeSpan timeout = default)
     {
         var deadline = timeout == default ? DateTime.MaxValue : DateTime.UtcNow + timeout;
 

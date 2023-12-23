@@ -26,10 +26,10 @@ internal class EventHandlerRegistry
         return handlers;
     }
 
-    public void RegisterHandlerDescriptor<TEvent, THandler>(string key) where THandler : class, IEventHandler<TEvent>
+    public void RegisterHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
     {
         var descriptor = new EventHandlerDescriptor(
-                    Key: key,
+                    Key: eventHandlerKey,
                     InterfaceType: typeof(IEventHandler<TEvent>),
                     Handle: async (handler, @event) => await ((THandler)handler).Handle((TEvent)@event),
                     OnError: async (handler, @event, exception) => await ((THandler)handler).OnError(exception, (TEvent)@event));

@@ -19,7 +19,7 @@ public class HandlerRegistrationTests
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
     }
 
@@ -33,7 +33,7 @@ public class HandlerRegistrationTests
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
     }
 
@@ -47,7 +47,7 @@ public class HandlerRegistrationTests
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
     }
 
@@ -102,15 +102,15 @@ public class HandlerRegistrationTests
             x => x.Add(Handlers.Registration));
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
 
         serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler1));
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler1).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
 
         serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler2));
-        Assert.Equal(typeof(TestEvent).FullName, serviceDescriptor.ServiceKey);
+        Assert.Equal(typeof(TestEventHandler2).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
     }
 
