@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\M.EventBroker\M.EventBrokerSlim.csproj" />
+		<ProjectReference Include="..\..\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

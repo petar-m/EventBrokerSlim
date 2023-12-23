@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "src\M.EventBroker\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "src\M.EventBrokerSlim\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim.Tests", "test\M.EventBroker.Tests\M.EventBrokerSlim.Tests.csproj", "{66C57C38-C955-4367-A4D9-86E970B8DCB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim.Tests", "test\M.EventBrokerSlim.Tests\M.EventBrokerSlim.Tests.csproj", "{66C57C38-C955-4367-A4D9-86E970B8DCB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3F9CF562-DD57-4F53-92FD-575EFCB7838C}"
 EndProject
