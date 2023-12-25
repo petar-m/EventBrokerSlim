@@ -1,142 +1,118 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace M.EventBrokerSlim.Tests;
-
 public class ExceptionHandlingTests
 {
     [Fact]
     public async Task Exception_WhenResolvingHandler_IsHandled()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddScoped(_ => "scoped");
-        // try to inject scoped instance into singleton -> runtime error
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEvent, TestEventHandler1>()
-                  .AddKeyedSingleton<TestEventHandled, EventsRecorder>("orchestrator"));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        // TestEventHandler1 has dependency on string not configured in the DI container 
+                        x => x.AddKeyedSingleton<TestEvent, TestEventHandler1>()));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var testEvent = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(testEvent);
 
-        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Empty(orchestrator.HandledEventIds);
-        Assert.Empty(orchestrator.Exceptions);
+        Assert.Empty(eventsRecorder.HandledEventIds);
+        Assert.Empty(eventsRecorder.Exceptions);
     }
 
     [Fact]
     public async Task UnhandledException_FromEventHandler_IsPassedTo_OnError()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEvent, EventsExceptionRecorder>("orchestrator"));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsExceptionRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEvent>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var testEvent = new TestEvent(CorrelationId: 1, ThrowFromHandle: true);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(testEvent);
 
-        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Single(orchestrator.Exceptions);
-        Assert.IsType<NotImplementedException>(orchestrator.Exceptions[0]);
+        Assert.Single(eventsRecorder.Exceptions);
+        Assert.IsType<NotImplementedException>(eventsRecorder.Exceptions[0]);
     }
 
     [Fact]
     public async Task UnhandledException_FromOnError_IsSuppressed()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEvent, EventsOnErrorException>("orchestrator"));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsOnErrorException)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEvent>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var event1 = new TestEvent(CorrelationId: 1, ThrowFromHandle: true, ThrowFromOnError: true);
 
         await eventBroker.Publish(event1);
 
-        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Single(orchestrator.Exceptions);
-        Assert.IsType<NotImplementedException>(orchestrator.Exceptions[0]);
+        Assert.Single(eventsRecorder.Exceptions);
+        Assert.IsType<NotImplementedException>(eventsRecorder.Exceptions[0]);
     }
 
-    public record TestEvent(string Message, int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
-
-    public record TestEventHandled(int CorrelationId) : ITraceable<int>;
-
-    public class EventsRecorder : Orchestrator<int, TestEventHandled>
-    {
-        private readonly ConcurrentBag<(int id, long tick)> _events = new();
-
-        public override async Task Handle(TestEventHandled @event)
-        {
-            await base.Handle(@event);
-            _events.Add((@event.CorrelationId, DateTime.UtcNow.Ticks));
-        }
-
-        public int[] HandledEventIds => _events.OrderBy(x => x.tick).Select(x => x.id).ToArray();
-    }
+    public record TestEvent(int CorrelationId, bool ThrowFromHandle = false, bool ThrowFromOnError = false) : ITraceable<int>;
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly IEventBroker _eventBroker;
+        private readonly EventsRecorder<int> _eventsRecorder;
 
-        public TestEventHandler(IEventBroker eventBroker)
+        public TestEventHandler(EventsRecorder<int> eventBroker)
         {
-            _eventBroker = eventBroker;
+            _eventsRecorder = eventBroker;
         }
 
-        public async Task Handle(TestEvent @event)
+        public Task Handle(TestEvent @event)
         {
-            if (@event.TimeToRun != default)
+            _eventsRecorder.Notify(@event);
+            if (@event.ThrowFromHandle)
             {
-                await Task.Delay(@event.TimeToRun);
+                throw new NotImplementedException();
             }
 
-            var handled = new TestEventHandled(CorrelationId: @event.CorrelationId);
-
-            await _eventBroker.Publish(handled);
+            return Task.CompletedTask;
         }
 
         public Task OnError(Exception exception, TestEvent @event)
         {
-            throw new NotImplementedException();
+            _eventsRecorder.Notify(exception, @event);
+            if (@event.ThrowFromOnError)
+            {
+                throw new NotImplementedException();
+            }
+            return Task.CompletedTask;
         }
     }
 
@@ -152,27 +128,5 @@ public class ExceptionHandlingTests
         public Task Handle(TestEvent @event) => throw new NotImplementedException();
 
         public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
-    }
-
-    public class EventsExceptionRecorder : Orchestrator<int, TestEvent>
-    {
-        public override Task Handle(TestEvent @event)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class EventsOnErrorException : Orchestrator<int, TestEvent>
-    {
-        public override Task Handle(TestEvent @event)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override async Task OnError(Exception exception, TestEvent @event)
-        {
-            await base.OnError(exception, @event);
-            throw new NotImplementedException();
-        }
     }
 }

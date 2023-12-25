@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,129 +9,102 @@ namespace M.EventBrokerSlim.Tests;
 public class HandlerExecutionTests
 {
     [Fact]
-    public async Task MaxConcurrentHandlers_EqualsOne_HandlersAreExecuted_Sequentially()
+    public async Task MaxConcurrentHandlers_IsOne_HandlersAreExecuted_Sequentially()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                  .AddKeyedSingleton<TestEventHandled, EventsRecorder>("orchestrator")
-                  .WithMaxConcurrentHandlers(1));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
+                              .WithMaxConcurrentHandlers(1)));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1, TimeToRun: TimeSpan.FromMilliseconds(50));
+        var event1 = new TestEvent(CorrelationId: 1, TimeToRun: TimeSpan.FromMilliseconds(50));
         var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
-        orchestrator.Expect(event1, event2);
+        eventsRecorder.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
 
         // Assert
         Assert.True(completed);
-        Assert.Equal(2, orchestrator.HandledEventIds.Length);
-        // second event is faster, but will be executed after the first one is handled
-        Assert.Equal(1, orchestrator.HandledEventIds[0]);
-        Assert.Equal(2, orchestrator.HandledEventIds[1]);
+        Assert.Equal(2, eventsRecorder.HandledEventIds.Length);
+        // second event completes faster, but will be executed after the first one is handled
+        Assert.Equal(1, eventsRecorder.HandledEventIds[0]);
+        Assert.Equal(2, eventsRecorder.HandledEventIds[1]);
     }
 
     [Fact]
-    public async Task MaxConcurrentHandlers_IsGreaterThanOne_HandlersAreExecuted_Sequentially()
+    public async Task MaxConcurrentHandlers_IsGreaterThanOne_HandlersAreExecuted_InParallel()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                  .AddKeyedSingleton<TestEventHandled, EventsRecorder>("orchestrator")
-                  .WithMaxConcurrentHandlers(2));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
+                              .WithMaxConcurrentHandlers(2)));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1, TimeSpan.FromMilliseconds(50));
+        var event1 = new TestEvent(CorrelationId: 1, TimeSpan.FromMilliseconds(50));
         var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
-        orchestrator.Expect(event1, event2);
+        eventsRecorder.Expect(event1, event2);
 
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await orchestrator.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
 
         // Assert
         Assert.True(completed);
-        Assert.Equal(2, orchestrator.HandledEventIds.Length);
+        Assert.Equal(2, eventsRecorder.HandledEventIds.Length);
         // second event is faster and will complete first
-        Assert.Equal(2, orchestrator.HandledEventIds[0]);
-        Assert.Equal(1, orchestrator.HandledEventIds[1]);
+        Assert.Equal(2, eventsRecorder.HandledEventIds[0]);
+        Assert.Equal(1, eventsRecorder.HandledEventIds[1]);
     }
 
     [Fact]
     public async Task NoHandlerRegistered_NothingHappens()
     {
         // Arrange
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEventHandled, EventsRecorder>("orchestrator"));
-
-        var services = serviceCollection.BuildServiceProvider(true);
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(_ => { }));
 
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var orchestrator = (EventsRecorder)scope.ServiceProvider.GetRequiredKeyedService<IEventHandler<TestEventHandled>>("orchestrator");
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
 
         // Act
-        var event1 = new TestEvent("Test Event", CorrelationId: 1);
+        var event1 = new TestEvent(CorrelationId: 1);
 
         await eventBroker.Publish(event1);
 
-        await orchestrator.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Empty(orchestrator.HandledEventIds);
-        Assert.Empty(orchestrator.Exceptions);
+        Assert.Empty(eventsRecorder.HandledEventIds);
+        Assert.Empty(eventsRecorder.Exceptions);
     }
 
-    public record TestEvent(string Message, int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
-
-    public record TestEventHandled(int CorrelationId) : ITraceable<int>;
-
-    public class EventsRecorder : Orchestrator<int, TestEventHandled>
-    {
-        private readonly ConcurrentBag<(int id, long tick)> _events = new();
-
-        public override async Task Handle(TestEventHandled @event)
-        {
-            await base.Handle(@event);
-            _events.Add((@event.CorrelationId, DateTime.UtcNow.Ticks));
-        }
-
-        public int[] HandledEventIds => _events.OrderBy(x => x.tick).Select(x => x.id).ToArray();
-    }
+    public record TestEvent(int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly IEventBroker _eventBroker;
+        private readonly EventsRecorder<int> _eventsRecoder;
 
-        public TestEventHandler(IEventBroker eventBroker)
+        public TestEventHandler(EventsRecorder<int> eventsRecorder)
         {
-            _eventBroker = eventBroker;
+            _eventsRecoder = eventsRecorder;
         }
 
         public async Task Handle(TestEvent @event)
@@ -143,28 +114,13 @@ public class HandlerExecutionTests
                 await Task.Delay(@event.TimeToRun);
             }
 
-            var handled = new TestEventHandled(CorrelationId: @event.CorrelationId);
-
-            await _eventBroker.Publish(handled);
+            _eventsRecoder.Notify(@event);
         }
 
         public Task OnError(Exception exception, TestEvent @event)
         {
-            throw new NotImplementedException();
+            _eventsRecoder.Notify(exception, @event);
+            return Task.CompletedTask;
         }
-    }
-
-    public class TestEventHandler1 : IEventHandler<TestEvent>
-    {
-        private readonly string _input;
-
-        public TestEventHandler1(string input)
-        {
-            _input = input;
-        }
-
-        public Task Handle(TestEvent @event) => throw new NotImplementedException();
-
-        public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
     }
 }

@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 
 namespace M.EventBrokerSlim.Internal;
 
-/// <summary>
-/// Manages event subscriptions and invoking of event handlers.
-/// </summary>
 internal class EventBroker : IEventBroker
 {
     private readonly ChannelWriter<object> _channelWriter;

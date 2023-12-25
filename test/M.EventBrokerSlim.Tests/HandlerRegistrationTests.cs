@@ -10,86 +10,38 @@ namespace M.EventBrokerSlim.Tests;
 public class HandlerRegistrationTests
 {
     [Fact]
-    public void RegisterHandlerAsTransient_WithoutProvidingKey_KeyIsEventType()
+    public void RegisterHandlerAsTransient_AddsToServiceCollection()
     {
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedTransient<TestEvent, TestEventHandler>());
+        var serviceCollection = new ServiceCollection()
+            .AddEventBroker(
+                x => x.AddKeyedTransient<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
     }
 
     [Fact]
-    public void RegisterHandlerAsScoped_WithoutProvidingKey_KeyIsEventType()
+    public void RegisterHandlerAsScoped_AddsToServiceCollection()
     {
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedScoped<TestEvent, TestEventHandler>());
+        var serviceCollection = new ServiceCollection()
+            .AddEventBroker(
+                x => x.AddKeyedScoped<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
     }
 
     [Fact]
-    public void RegisterHandlerAsSingleton_WithoutProvidingKey_KeyIsEventType()
+    public void RegisterHandlerAsSingleton_AddsToServiceCollection()
     {
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEvent, TestEventHandler>());
+        var serviceCollection = new ServiceCollection()
+            .AddEventBroker(
+                x => x.AddKeyedSingleton<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
-        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
-        Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
-    }
-
-    [Fact]
-    public void RegisterHandlerAsTransient_WithCustomKey_KeyIsEventType()
-    {
-        var serviceCollection = new ServiceCollection();
-        var key = Guid.NewGuid().ToString();
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedTransient<TestEvent, TestEventHandler>(key));
-
-        var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-
-        Assert.Equal(key, serviceDescriptor.ServiceKey);
-        Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
-    }
-
-    [Fact]
-    public void RegisterHandlerAsScoped_WithCustomKey_KeyIsEventType()
-    {
-        var serviceCollection = new ServiceCollection();
-        var key = Guid.NewGuid().ToString();
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedScoped<TestEvent, TestEventHandler>(key));
-
-        var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-
-        Assert.Equal(key, serviceDescriptor.ServiceKey);
-        Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
-    }
-
-    [Fact]
-    public void RegisterHandlerAsSingleton_WithCustomKey_KeyIsEventType()
-    {
-        var serviceCollection = new ServiceCollection();
-        var key = Guid.NewGuid().ToString();
-        serviceCollection.AddEventBroker(
-            x => x.AddKeyedSingleton<TestEvent, TestEventHandler>(key));
-
-        var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-
-        Assert.Equal(key, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
     }
 
@@ -98,19 +50,15 @@ public class HandlerRegistrationTests
     {
         var serviceCollection = new ServiceCollection();
 
-        serviceCollection.AddEventBroker(
-            x => x.Add(Handlers.Registration));
+        serviceCollection.AddEventBroker(x => x.Add(Handlers.Registration));
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-        Assert.Equal(typeof(TestEventHandler).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
 
         serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler1));
-        Assert.Equal(typeof(TestEventHandler1).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
 
         serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler2));
-        Assert.Equal(typeof(TestEventHandler2).FullName, serviceDescriptor.ServiceKey);
         Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
     }
 
@@ -155,17 +103,11 @@ public class HandlerRegistrationTests
         public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
     }
 
-    public class TestEventHandler1 : IEventHandler<TestEvent>
+    public class TestEventHandler1 : TestEventHandler
     {
-        public Task Handle(TestEvent @event) => throw new NotImplementedException();
-
-        public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
     }
 
-    public class TestEventHandler2 : IEventHandler<TestEvent>
+    public class TestEventHandler2 : TestEventHandler
     {
-        public Task Handle(TestEvent @event) => throw new NotImplementedException();
-
-        public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
     }
 }

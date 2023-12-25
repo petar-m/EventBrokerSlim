@@ -20,25 +20,25 @@ public class EventHandlerRegistryBuilder
         return this;
     }
 
-    public EventHandlerRegistryBuilder AddKeyedScoped<TEvent, THandler>(string? eventHandlerKey = null) where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddKeyedScoped<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        eventHandlerKey = GetOrCreateKey<THandler>(eventHandlerKey);
+        var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
         _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
-    public EventHandlerRegistryBuilder AddKeyedSingleton<TEvent, THandler>(string? eventHandlerKey = null) where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddKeyedSingleton<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        eventHandlerKey = GetOrCreateKey<THandler>(eventHandlerKey);
+        var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
         _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
-    public EventHandlerRegistryBuilder AddKeyedTransient<TEvent, THandler>(string? eventHandlerKey = null) where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddKeyedTransient<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        eventHandlerKey = GetOrCreateKey<THandler>(eventHandlerKey);
+        var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);
         _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
@@ -49,8 +49,6 @@ public class EventHandlerRegistryBuilder
         configure(this);
         return this;
     }
-
-    private static string GetOrCreateKey<THandler>(string? key) => key ?? typeof(THandler).FullName!;
 
     internal EventHandlerRegistry Build()
     {
