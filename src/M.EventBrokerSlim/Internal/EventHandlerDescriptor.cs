@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace M.EventBrokerSlim.Internal;
 
-internal record EventHandlerDescriptor(
+internal sealed record EventHandlerDescriptor(
     string Key,
     Type InterfaceType,
     Func<object, object, Task> Handle,

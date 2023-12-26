@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace M.EventBrokerSlim.Internal;
 
-internal class EventHandlerRegistry
+internal sealed class EventHandlerRegistry
 {
     private readonly Dictionary<Type, List<EventHandlerDescriptor>> _eventHandlerDescriptors = new();
 

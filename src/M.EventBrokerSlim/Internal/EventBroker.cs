@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace M.EventBrokerSlim.Internal;
 
-internal class EventBroker : IEventBroker
+internal sealed class EventBroker : IEventBroker
 {
     private readonly ChannelWriter<object> _channelWriter;
 
@@ -17,11 +17,16 @@ internal class EventBroker : IEventBroker
     public async Task Publish<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : notnull
     {
         ArgumentNullException.ThrowIfNull(@event, nameof(@event));
-        await _channelWriter.WriteAsync(@event, cancellationToken);
+        try
+        {
+            await _channelWriter.WriteAsync(@event, cancellationToken);
+        }
+        catch (ChannelClosedException exception)
+        {
+            const string message = "EventBroker cannot publish event: Shutdown() or Dispose() has been called";
+            throw new EventBrokerPublishNotAvailableException(message, exception);
+        }
     }
 
-    public void Shutdown()
-    {
-        _channelWriter.Complete();
-    }
+    public void Shutdown() => _ = _channelWriter.TryComplete();
 }

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
-public class EventHandlerRegistryBuilder
+public sealed class EventHandlerRegistryBuilder
 {
     private readonly EventHandlerRegistry _registry = new();
     private readonly IServiceCollection _services;

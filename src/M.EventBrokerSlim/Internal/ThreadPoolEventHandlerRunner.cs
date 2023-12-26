@@ -6,10 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace M.EventBrokerSlim.Internal;
 
-/// <summary>
-/// Runs event handlers on a ThreadPool threads.
-/// </summary>
-internal class ThreadPoolEventHandlerRunner
+internal sealed class ThreadPoolEventHandlerRunner
 {
     private readonly ChannelReader<object> _channelReader;
     private readonly IServiceScopeFactory _serviceScopeFactory;

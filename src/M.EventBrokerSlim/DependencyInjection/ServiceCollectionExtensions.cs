@@ -15,14 +15,15 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddSingleton(eventHandlerRegistryBuilder.Build());
 
         var channelKey = Guid.NewGuid();
-        var eventChannel = Channel.CreateUnbounded<object>(
-            new UnboundedChannelOptions
+
+        serviceCollection.AddKeyedSingleton(
+            channelKey,
+            (_, _) => Channel.CreateUnbounded<object>(new UnboundedChannelOptions
             {
                 AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = false
-            });
-        serviceCollection.AddKeyedSingleton(channelKey, eventChannel);
+            }));
 
         serviceCollection.AddSingleton<IEventBroker>(
             x =>
