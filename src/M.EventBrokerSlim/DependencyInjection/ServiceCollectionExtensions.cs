@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
@@ -37,7 +38,8 @@ public static class ServiceCollectionExtensions
             x => new ThreadPoolEventHandlerRunner(
                 x.GetRequiredKeyedService<Channel<object>>(channelKey).Reader,
                 x.GetRequiredService<IServiceScopeFactory>(),
-                x.GetRequiredService<EventHandlerRegistry>()));
+                x.GetRequiredService<EventHandlerRegistry>(),
+                x.GetService<ILogger<ThreadPoolEventHandlerRunner>>()));
 
         return serviceCollection;
     }

@@ -16,7 +16,13 @@ public sealed class EventHandlerRegistryBuilder
 
     public EventHandlerRegistryBuilder WithMaxConcurrentHandlers(int maxConcurrentHandlers)
     {
-        _registry.WithMaxConcurrentHandlers(maxConcurrentHandlers);
+        _registry.MaxConcurrentHandlers = maxConcurrentHandlers;
+        return this;
+    }
+
+    public EventHandlerRegistryBuilder DisableMissingHandlerWarningLog()
+    {
+        _registry.DisableMissingHandlerWarningLog = true;
         return this;
     }
 

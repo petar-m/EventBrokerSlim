@@ -6,19 +6,26 @@ namespace M.EventBrokerSlim.Internal;
 internal sealed class EventHandlerRegistry
 {
     private readonly Dictionary<Type, List<EventHandlerDescriptor>> _eventHandlerDescriptors = new();
+    private int _maxConcurrentHandlers = 2;
 
-    public int MaxConcurrentHandlers { get; internal set; } = 2;
-
-    public EventHandlerRegistry WithMaxConcurrentHandlers(int maxConcurrentHandlers)
+    internal int MaxConcurrentHandlers
     {
-        if (maxConcurrentHandlers <= 0)
+        get
         {
-            throw new ArgumentOutOfRangeException(nameof(maxConcurrentHandlers), "Value should be greater than zero");
+            return _maxConcurrentHandlers;
         }
+        set
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "MaxConcurrentHandlers should be greater than zero");
+            }
 
-        MaxConcurrentHandlers = maxConcurrentHandlers;
-        return this;
+            _maxConcurrentHandlers = value;
+        }
     }
+
+    internal bool DisableMissingHandlerWarningLog { get; set; }
 
     internal List<EventHandlerDescriptor>? GetEventHandlers(Type eventType)
     {
@@ -26,7 +33,7 @@ internal sealed class EventHandlerRegistry
         return handlers;
     }
 
-    public void RegisterHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
+    internal void RegisterHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
     {
         var descriptor = new EventHandlerDescriptor(
                     Key: eventHandlerKey,

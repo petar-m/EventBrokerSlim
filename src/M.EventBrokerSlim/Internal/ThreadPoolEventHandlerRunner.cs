@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace M.EventBrokerSlim.Internal;
 
@@ -11,13 +12,19 @@ internal sealed class ThreadPoolEventHandlerRunner
     private readonly ChannelReader<object> _channelReader;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly EventHandlerRegistry _eventHandlerRegistry;
+    private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
     private readonly SemaphoreSlim _semaphore;
 
-    internal ThreadPoolEventHandlerRunner(ChannelReader<object> channelReader, IServiceScopeFactory serviceScopeFactory, EventHandlerRegistry eventHandlerRegistry)
+    internal ThreadPoolEventHandlerRunner(
+        ChannelReader<object> channelReader, 
+        IServiceScopeFactory serviceScopeFactory, 
+        EventHandlerRegistry eventHandlerRegistry,
+        ILogger<ThreadPoolEventHandlerRunner>? logger)
     {
         _channelReader = channelReader;
         _serviceScopeFactory = serviceScopeFactory;
         _eventHandlerRegistry = eventHandlerRegistry;
+        _logger = logger;
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
     }
 
@@ -37,7 +44,11 @@ internal sealed class ThreadPoolEventHandlerRunner
                 var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
                 if (eventHandlers is null)
                 {
-                    // TODO: Log?
+                    if (!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
+                    {
+                        _logger.LogNoEventHandlerForEvent(type);
+                    }
+
                     continue;
                 }
 
@@ -60,7 +71,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                         {
                             if (service is null)
                             {
-                                // TODO: Log?
+                                _logger?.LogEventHandlerResolvingError(@event.GetType(), exception);
                                 return;
                             }
 
@@ -68,10 +79,10 @@ internal sealed class ThreadPoolEventHandlerRunner
                             {
                                 await eventHandlerDescriptior.OnError(service, @event, exception);
                             }
-                            catch
+                            catch(Exception errorHandlingException)
                             {
-                                // supress further exeptions
-                                // TODO: Log?
+                                // suppress further exeptions
+                                _logger?.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);
                             }
                         }
                         finally

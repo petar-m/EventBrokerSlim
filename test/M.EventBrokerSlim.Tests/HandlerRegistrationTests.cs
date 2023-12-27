@@ -68,10 +68,10 @@ public class HandlerRegistrationTests
         var serviceCollection = new ServiceCollection();
 
         var exception = Assert.Throws<ArgumentOutOfRangeException>(
-            paramName: "maxConcurrentHandlers",
+            paramName: "value",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(0)));
 
-        Assert.Equal("Value should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'value')", exception.Message);
     }
 
     [Fact]
@@ -80,10 +80,10 @@ public class HandlerRegistrationTests
         var serviceCollection = new ServiceCollection();
         var rand = new Random();
         var exception = Assert.Throws<ArgumentOutOfRangeException>(
-            paramName: "maxConcurrentHandlers",
+            paramName: "value",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(rand.Next(int.MinValue, -1))));
 
-        Assert.Equal("Value should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'value')", exception.Message);
     }
 
     public record TestEvent();

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
+using MELT;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace M.EventBrokerSlim.Tests;
@@ -73,7 +76,7 @@ public class HandlerExecutionTests
     }
 
     [Fact]
-    public async Task NoHandlerRegistered_NothingHappens()
+    public async Task NoHandlerRegistered_NoLogger_NothingHappens()
     {
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
@@ -94,6 +97,58 @@ public class HandlerExecutionTests
         // Assert
         Assert.Empty(eventsRecorder.HandledEventIds);
         Assert.Empty(eventsRecorder.Exceptions);
+    }
+
+    [Fact]
+    public async Task NoHandlerRegistered_LogsWarning_IfEnabled()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
+            sc => sc.AddEventBroker(_ => { }));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        // Act
+        var event1 = new TestEvent(CorrelationId: 1);
+
+        await eventBroker.Publish(event1);
+
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
+
+        var log = Assert.Single(provider.Sink.LogEntries);
+        Assert.Equal(LogLevel.Warning, log.LogLevel);
+        Assert.Equal("No event handler found for event M.EventBrokerSlim.Tests.HandlerExecutionTests+TestEvent", log.Message);
+    }
+
+    [Fact]
+    public async Task NoHandlerRegistered_LogsWarning_IfDisabled()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
+            sc => sc.AddEventBroker(x => x.DisableMissingHandlerWarningLog()));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        // Act
+        var event1 = new TestEvent(CorrelationId: 1);
+
+        await eventBroker.Publish(event1);
+
+        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
+
+        Assert.Empty(provider.Sink.LogEntries);
     }
 
     public record TestEvent(int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;
