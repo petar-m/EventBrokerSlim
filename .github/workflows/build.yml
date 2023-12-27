@@ -2,7 +2,7 @@ name: Build, Test, Publish
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
       - "*.md"
       - "*.png" 
@@ -11,7 +11,7 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
       - "*.md"
       - "*.png" 
