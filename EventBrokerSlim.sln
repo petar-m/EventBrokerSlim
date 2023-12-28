@@ -14,10 +14,18 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D8DD8B48-A9B7-4EC4-8C09-E8361C3C344A}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE = LICENSE
+		package-readme.md = package-readme.md
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{749C73FB-A73E-4794-8019-138CF561888B}"
+	ProjectSection(SolutionItems) = preProject
+		package-icon.png = package-icon.png
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{E871E84E-729F-4F8A-9569-65DA225D64A9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{2F2939E6-0AEE-45FD-9748-D90C8B990FB0}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
@@ -43,6 +51,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{414B2794-9946-434A-BB85-CDA461E0442D} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
 		{66C57C38-C955-4367-A4D9-86E970B8DCB1} = {19848670-435F-4970-887E-B643BFB08FD0}
+		{2F2939E6-0AEE-45FD-9748-D90C8B990FB0} = {E871E84E-729F-4F8A-9569-65DA225D64A9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace M.EventBrokerSlim;
 
@@ -12,11 +14,13 @@ public interface IEventHandler<TEvent>
     /// <summary>
     /// Handles the event.
     /// </summary>
-    /// <param name="event">An instance of TEvent representing the event.</param>
+    /// <param name="event">An instance of <typeparamref name="TEvent"/> representing the event.</param>
     Task Handle(TEvent @event);
 
     /// <summary>
-    /// Called when an error is caught during execution.
+    /// Called when an unhadled exception is caught during execution.
+    /// Exceptions thrown from this method are swalloled.
+    /// If there is <see cref="ILogger"/> configured in the <see cref="IServiceCollection"/> an Error will be logged.
     /// </summary>
     /// <param name="exception">The exception caught.</param>
     /// <param name="event">The event instance which handling caused the exception.</param>

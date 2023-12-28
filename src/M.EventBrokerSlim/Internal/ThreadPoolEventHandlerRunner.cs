@@ -30,12 +30,12 @@ internal sealed class ThreadPoolEventHandlerRunner
 
     public void Run()
     {
-        _ = Task.Run(ProcessEvents);
+        _ = Task.Factory.StartNew(ProcessEvents, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     private async ValueTask ProcessEvents()
     {
-        while (await _channelReader.WaitToReadAsync())
+        while (await _channelReader.WaitToReadAsync().ConfigureAwait(false))
         {
             while (_channelReader.TryRead(out var @event))
             {
@@ -54,7 +54,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                 for (int i = 0; i < eventHandlers.Count; i++)
                 {
-                    await _semaphore.WaitAsync();
+                    await _semaphore.WaitAsync().ConfigureAwait(false);
 
                     var eventHandlerDescriptior = eventHandlers[i];
 
@@ -65,7 +65,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                         try
                         {
                             service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptior.InterfaceType, eventHandlerDescriptior.Key);
-                            await eventHandlerDescriptior.Handle(service, @event);
+                            await eventHandlerDescriptior.Handle(service, @event).ConfigureAwait(false);
                         }
                         catch (Exception exception)
                         {
@@ -77,7 +77,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                             try
                             {
-                                await eventHandlerDescriptior.OnError(service, @event, exception);
+                                await eventHandlerDescriptior.OnError(service, @event, exception).ConfigureAwait(false);
                             }
                             catch(Exception errorHandlingException)
                             {

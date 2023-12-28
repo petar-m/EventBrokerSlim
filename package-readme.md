@@ -2,16 +2,9 @@
 
 An implementation of broadcasting events in a fire-and-forget style.  
 
-This was supposed to be next vesion of [EventBroker](https://github.com/petar-m/EventBroker), however it diverged so much than it became its own package.  
-It is trimmed down to minimum public surface and essential functionality.
-
-It still is:
 - in-memory, in-process
 - publishing is *Fire and Forget* style  
 - events don't need to implement specific interface  
-- event handlers are runned on background threads  
-
-And also:
 - events are handled on a ThreadPool threads
 - tightly integrated with Microsoft.Extensions.DependencyInjection
 - each handler is resolved and runned in a new DI container scope
@@ -68,3 +61,4 @@ class MyClass
     }
 }
 ```
+

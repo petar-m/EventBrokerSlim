@@ -72,3 +72,27 @@ jobs:
         name: Unit Tests Report
         path: testresults/*.trx
         reporter: dotnet-trx
+
+    - name: Create NuGet Package
+      if: ${{ env.IS_TAG == 'true' }}    
+      run: dotnet pack src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+    
+    - name: Upload a Nuget Package Build Artifact
+      if: ${{ env.IS_TAG == 'true' }}
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: NuGet package
+        path: ./*.nupkg
+        retention-days: 1
+    
+    - name: Upload a Nuget Symbols Package Build Artifact
+      if: ${{ env.IS_TAG == 'true' }}    
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: NuGet symbols package
+        path: ./*.snupkg
+        retention-days: 1
+
+    - name: Publish NuGet Package
+      if: ${{ env.IS_TAG == 'true' }}    
+      run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
