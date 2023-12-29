@@ -37,7 +37,7 @@ jobs:
       name: Set Version
       run: |
         ref=${{ github.ref }}
-        pattern="^refs/tags/[0-9]+.[0-9]+.[0-9]+(-.*)$"
+        pattern="^refs/tags/[0-9]+.[0-9]+.[0-9]+(-.+)?$"
         
         if [[ $ref =~ $pattern ]]; then
           is_release=true
