@@ -19,7 +19,7 @@ public interface IEventHandler<TEvent>
 
     /// <summary>
     /// Called when an unhadled exception is caught during execution.
-    /// Exceptions thrown from this method are swalloled.
+    /// Exceptions thrown from this method are swallowed.
     /// If there is <see cref="ILogger"/> configured in the <see cref="IServiceCollection"/> an Error will be logged.
     /// </summary>
     /// <param name="exception">The exception caught.</param>
