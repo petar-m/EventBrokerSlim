@@ -9,7 +9,7 @@ on:
       - "*.drawio" 
       - ".gitignore"
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+(-.+)?$'
+      - '*'
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -89,6 +89,5 @@ jobs:
     
     - name: Publish NuGet Package
       if: ${{ success() && env.IS_RELEASE == 'true' }}    
-      # run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
-      run: | 
-        echo "ulpoading package"
+      run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
+
