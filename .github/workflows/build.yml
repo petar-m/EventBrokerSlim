@@ -47,7 +47,7 @@ jobs:
         
         echo "IS_RELEASE=$is_release" >> $GITHUB_ENV
         
-        if $IS_RELEASE == true; then
+        if $is_release == true; then
           version=$(echo $ref | cut -c 11-)
         else
           version="0.0.1-build$(date +'%Y%m%d'-'%H%M%S')"
