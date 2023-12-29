@@ -35,7 +35,7 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
         // process the event
     }
 
-    public Task OnError(Exception exception, SomeEvent @event)
+    public async Task OnError(Exception exception, SomeEvent @event)
     {
         // called on unhandled exeption from Handle 
     }
@@ -71,11 +71,11 @@ class MyClass
 
 # Design  
 
-EventBroker uses System.Threading.Channel.  
+EventBroker uses `System.Threading.Channels.Channel<T>` to decouple procucers and consumers.  
 
-There are no limits for publishers. Publishing is as fast as writing to a channel.  
+There are no limits for publishers. Publishing is as fast as writing an event to a channel.  
 
-Handlers are resolved by the event type in a new scope and disposed after handler comletes. Each handler execution is scheduled on the ThreadPool. No more than configured maximum handlers run concurrently.
+Event handlers are resolved by event type in a new scope and disposed after handler comletes. Each handler execution is scheduled on the ThreadPool. No more than configured maximum handlers run concurrently.
   
 ![](docs/event_broker.png)
 
@@ -83,17 +83,18 @@ Handlers are resolved by the event type in a new scope and disposed after handle
 
 ## Events
 
-Events can be of any type. A best pracice for event is to be immutable, since it can be processed by multiple handlers in different threads.  
+Events can be of any type. A best pracice for event is to be immutable - may be processed by multiple handlers in different threads.  
 
 ## Event Handlers
 
-Event handlers need to implement `IEventHandler<TEvent>` interface.  
-Each event handler is executed on a background thread. Each event handler is resovled from its own DI container scope.
+Event handlers have to implement `IEventHandler<TEvent>` interface and to be registered in the DI container.  
+For each event handler a new DI container scope is created and the event handler is resolved from it. This way it can safely use injected services.  
+Every event handler is executed on a background thread.
 
 ## Configuration  
 
 EventBroker is depending on `Microsoft.Extentions.DependencyInjection` container for resolving event handlers.  
-EventBroker guarantees that each handler is resolved in its own scope which is disposed after the handler completes.  
+It guarantees that each handler is resolved in a new scope which is disposed after the handler completes.  
 
 EventBroker is configured using the `AddEventBroker` extension method of `IServiceCollection`.  
 Event handlers and event broker behavior are configured using the confiuration delegate.  
@@ -110,7 +111,7 @@ services.AddEventBroker(
 ```  
 There can be multiple handlers for the same event.  
 
-The `AddKeyed*` naming may be confusing since no key is provided. This comes from the need to create a scope and resolve the handler from this scope. Since there can be multiple implementations of the same interface, `GetService` or `GetServices` will get either the last one registered or all of them. This is solved by internally generating a key for each registration. Then exactly one keyed service (event handler) is resolved per scope.  
+The `AddKeyed*` naming may be confusing since no key is provided. This comes from the need to create a scope and resolve the handler from this scope. Since there can be multiple implementations of the same interface, `GetService` or `GetServices` will get either the last one registered or all of them. This is solved by internally generating a key and registering each handler as keyed service. Then exactly one keyed service (event handler) is resolved per scope.  
 
 Event handlers can be configured separately by providing a configuration action but still have to be passed to `AddEventBroker` method.  
 *Example:*
@@ -151,7 +152,7 @@ Events are published using `IEventBroker.Publish` method.
 
 ## Exception Handling  
 
-Since event handlers are executed on background threads, there can be no unhandled ecxeptions.  
+Since event handlers are executed on background threads, there there is nowhere to propagate unhandled ecxeptions.  
 
 An exception thrown from `Handle` method is caught and passed to `OnError` method of the same handler instance (may be on another thread however).  
 
