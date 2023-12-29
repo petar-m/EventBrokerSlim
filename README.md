@@ -1,7 +1,7 @@
 # EventBrokerSlim  
   
 
-[![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows/build.yml/badge.svg)](https://github.com/petar-m/M.EventBrokerSlim/actions)
+[![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows/build.yml/badge.svg)](https://github.com/petar-m/EventBrokerSlim/actions)
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.svg)](https://www.nuget.org/packages/M.EventBrokerSlim)    
 
 An implementation of broadcasting events in a fire-and-forget style.  
