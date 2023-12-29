@@ -84,11 +84,11 @@ jobs:
         reporter: dotnet-trx
 
     - name: Create NuGet Package
-      if: success() && ${{ env.IS_RELEASE == 'true' }}    
+      if: ${{ success() && env.IS_RELEASE == 'true' }}    
       run: dotnet pack src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
     
     - name: Publish NuGet Package
-      if: success() && ${{ env.IS_RELEASE == 'true' }}    
+      if: ${{ success() && env.IS_RELEASE == 'true' }}    
       # run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
       run: | 
         echo "ulpoading package"
