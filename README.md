@@ -1,4 +1,8 @@
 # EventBrokerSlim  
+  
+
+[![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows//build.yml/badge.svg)](https://github.com/petar-m/JustEvaluate/actions)
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.svg)](https://www.nuget.org/packages/M.EventBrokerSlim)    
 
 An implementation of broadcasting events in a fire-and-forget style.  
 
@@ -75,7 +79,7 @@ EventBroker uses `System.Threading.Channels.Channel<T>` to decouple procucers an
 
 There are no limits for publishers. Publishing is as fast as writing an event to a channel.  
 
-Event handlers are resolved by event type in a new scope and disposed after handler comletes. Each handler execution is scheduled on the ThreadPool. No more than configured maximum handlers run concurrently.
+Event handlers are resolved by event type in a new scope which is disposed after handler comletes. Each handler execution is scheduled on the ThreadPool. No more than configured maximum handlers run concurrently.
   
 ![](docs/event_broker.png)
 
