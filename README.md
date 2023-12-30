@@ -146,7 +146,7 @@ Note that handlers registered outside of `AddEventBroker` method will be ignored
 
 `WithMaxConcurrentHandlers` defines how many handlers can run at the same time. Default is 2.  
 
-`DisableMissingHandlerWarningLog` suppresses logging warnins when there is no handler found for event.  
+`DisableMissingHandlerWarningLog` suppresses logging warning when there is no handler found for event.  
 
 ## Publishing Events  
 
@@ -156,7 +156,7 @@ Events are published using `IEventBroker.Publish` method.
 
 ## Exception Handling  
 
-Since event handlers are executed on background threads, there there is nowhere to propagate unhandled ecxeptions.  
+Since event handlers are executed on background threads, there is nowhere to propagate unhandled ecxeptions.  
 
 An exception thrown from `Handle` method is caught and passed to `OnError` method of the same handler instance (may be on another thread however).  
 
