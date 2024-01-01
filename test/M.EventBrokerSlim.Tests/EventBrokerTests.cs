@@ -80,7 +80,7 @@ public class EventBrokerTests
     {
         // Arrange
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddEventBroker(_ => { });
+        serviceCollection.AddEventBroker();
 
         var channelKey = serviceCollection.Single(x => x.IsKeyedService && x.ServiceType == typeof(Channel<object>)).ServiceKey;
 

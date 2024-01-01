@@ -15,14 +15,16 @@ public static class ServiceCollectionExtensions
     /// Adds event broker to the specified <see cref="IServiceCollection" />.
     /// </summary>
     /// <param name="serviceCollection">The <see cref="IServiceCollection" /> to add services to.</param>
-    /// <param name="handlersConfiguration">The <see cref="EventHandlerRegistryBuilder"/> configuration delegate.</param>
+    /// <param name="eventBrokerConfiguration">The <see cref="EventBrokerBuilder"/> configuration delegate.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddEventBroker(this IServiceCollection serviceCollection, Action<EventHandlerRegistryBuilder> handlersConfiguration)
+    public static IServiceCollection AddEventBroker(
+        this IServiceCollection serviceCollection,
+        Action<EventBrokerBuilder>? eventBrokerConfiguration = null)
     {
-        var eventHandlerRegistryBuilder = new EventHandlerRegistryBuilder(serviceCollection);
-        handlersConfiguration(eventHandlerRegistryBuilder);
+        var eventHandlerRegistryBuilder = new EventBrokerBuilder(serviceCollection);
+        eventBrokerConfiguration?.Invoke(eventHandlerRegistryBuilder);
 
-        serviceCollection.AddSingleton(eventHandlerRegistryBuilder.Build());
+        serviceCollection.AddSingleton<EventHandlerRegistryBuilder>(eventHandlerRegistryBuilder);
 
         var channelKey = Guid.NewGuid();
 
@@ -50,6 +52,30 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredService<EventHandlerRegistry>(),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>()));
 
+        serviceCollection.AddSingleton(
+            x =>
+            {
+                var builders = x.GetServices<EventHandlerRegistryBuilder>();
+                return EventHandlerRegistryBuilder.Build(builders);
+            });
+
+        return serviceCollection;
+    }
+
+    /// <summary>
+    /// Adds EventBroker event handlers to the specified <see cref="IServiceCollection" />.
+    /// </summary>
+    /// <param name="serviceCollection">The <see cref="IServiceCollection" /> to add services to.</param>
+    /// <param name="eventHandlersConfiguration">The <see cref="EventHandlerRegistryBuilder"/> configuration delegate.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddEventHandlers(
+        this IServiceCollection serviceCollection,
+        Action<EventHandlerRegistryBuilder> eventHandlersConfiguration)
+    {
+        var eventHandlerRegistryBuilder = new EventHandlerRegistryBuilder(serviceCollection);
+        eventHandlersConfiguration(eventHandlerRegistryBuilder);
+
+        serviceCollection.AddSingleton(eventHandlerRegistryBuilder);
         return serviceCollection;
     }
 }

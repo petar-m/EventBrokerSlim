@@ -1,41 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
 /// <summary>
-/// Registers event handlers in DI container and configures event broker behavior.
+/// Registers EventBorker event handlers in DI container.
 /// </summary>
-public sealed class EventHandlerRegistryBuilder
+public class EventHandlerRegistryBuilder
 {
-    private readonly EventHandlerRegistry _registry = new();
     private readonly IServiceCollection _services;
+    private readonly List<EventHandlerDescriptor> _eventsHandlersDescriptors = new();
 
     internal EventHandlerRegistryBuilder(IServiceCollection services)
     {
         _services = services;
-    }
-
-    /// <summary>
-    /// Sets the maximum number of event handlers to run at the same time.
-    /// </summary>
-    /// <param name="maxConcurrentHandlers">Maximum number of event handlers to run at the same time. Default is 2.</param>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder WithMaxConcurrentHandlers(int maxConcurrentHandlers)
-    {
-        _registry.MaxConcurrentHandlers = maxConcurrentHandlers;
-        return this;
-    }
-
-    /// <summary>
-    /// Turns off Warning log when no handler is found for event. Turned on by default.
-    /// </summary>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder DisableMissingHandlerWarningLog()
-    {
-        _registry.DisableMissingHandlerWarningLog = true;
-        return this;
     }
 
     /// <summary>
@@ -49,7 +30,8 @@ public sealed class EventHandlerRegistryBuilder
     {
         var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
+
+        CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
@@ -64,7 +46,8 @@ public sealed class EventHandlerRegistryBuilder
     {
         var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
+
+        CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
@@ -79,7 +62,8 @@ public sealed class EventHandlerRegistryBuilder
     {
         var eventHandlerKey = Guid.NewGuid().ToString();
         _services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        _registry.RegisterHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
+
+        CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
@@ -94,8 +78,33 @@ public sealed class EventHandlerRegistryBuilder
         return this;
     }
 
-    internal EventHandlerRegistry Build()
+    internal void CreateEventHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
     {
-        return _registry;
+        var descriptor = new EventHandlerDescriptor(
+            Key: eventHandlerKey,
+            EventType: typeof(TEvent),
+            InterfaceType: typeof(IEventHandler<TEvent>),
+            Handle: async (handler, @event) => await ((THandler)handler).Handle((TEvent)@event),
+            OnError: async (handler, @event, exception) => await ((THandler)handler).OnError(exception, (TEvent)@event));
+
+        _eventsHandlersDescriptors.Add(descriptor);
+    }
+
+    internal static EventHandlerRegistry Build(IEnumerable<EventHandlerRegistryBuilder> builders)
+    {
+        var eventHandlerRegistry = new EventHandlerRegistry();
+        foreach (var builer in builders)
+        {
+            foreach (var descriptor in builer._eventsHandlersDescriptors)
+            {
+                eventHandlerRegistry.AddHandlerDescriptor(descriptor);
+            }
+        }
+
+        var eventBrokerBuilder = (EventBrokerBuilder)builders.Single(x => x is EventBrokerBuilder);
+        eventHandlerRegistry.DisableMissingHandlerWarningLog = eventBrokerBuilder._disableMissingHandlerWarningLog;
+        eventHandlerRegistry.MaxConcurrentHandlers = eventBrokerBuilder._maxConcurrentHandlers;
+
+        return eventHandlerRegistry;
     }
 }
