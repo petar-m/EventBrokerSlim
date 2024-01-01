@@ -100,8 +100,7 @@ Every event handler is executed on a background thread.
 EventBroker is depending on `Microsoft.Extentions.DependencyInjection` container for resolving event handlers.  
 It guarantees that each handler is resolved in a new scope which is disposed after the handler completes.  
 
-EventBroker is configured using `AddEventBroker` and `AddEventHandlers` extension methods of `IServiceCollection`.  
-Event handlers and event broker behavior are configured using a confiuration delegate.  
+EventBroker is configured with `AddEventBroker` and `AddEventHandlers` extension methods of `IServiceCollection` using a confiuration delegate.  
 Event handlers are registered by the event type and a corresponding `IEventHandler` implementation as transient, scoped, or singleton.  
 
 *Example:*
@@ -136,32 +135,8 @@ There can be multiple handlers for the same event.
 
 The `AddKeyed*` naming may be confusing since no key is provided. This comes from the need to create a scope and resolve the handler from this scope. Since there can be multiple implementations of the same interface, `GetService` or `GetServices` will get either the last one registered or all of them. This is solved by internally generating a key and registering each handler as keyed service. Then exactly one keyed service (event handler) is resolved per scope.  
 
-Event handlers can be configured separately by providing a configuration action but still have to be passed to `AddEventBroker` method.  
-*Example:*
-```csharp
-public class SomeHandlers
-{
-    public static Action<EventHandlerRegistryBuilder> Register()
-    {
-        return x => x.AddKeyedTransient<Event1, Handler1>()
-                     .AddKeyedScoped<Event2, Handler2>();
-    }
-}
 
-public class OtherHandlers
-{
-    public static Action<EventHandlerRegistryBuilder> Register()
-    {
-        return x => x.AddKeyedScoped<Event1, Handler3>();
-    }
-}
-
-services.AddEventBroker(
-    x => x.Add(SomeHandlers.Register())
-          .Add(OtherHandlers.Register()))
-```  
-
-Note that handlers registered outside of `AddEventBroker` method will be ignored.
+Note that handlers not registered using `AddEventBroker` or `AddEventHandlers` methods will be ignored by EventBroker.
 
 
 

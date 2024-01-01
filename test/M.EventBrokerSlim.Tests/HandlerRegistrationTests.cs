@@ -46,23 +46,6 @@ public class HandlerRegistrationTests
     }
 
     [Fact]
-    public void RegisterHandlersUsingDelegate()
-    {
-        var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddEventBroker(x => x.Add(Handlers.Registration));
-
-        var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
-        Assert.Equal(ServiceLifetime.Scoped, serviceDescriptor.Lifetime);
-
-        serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler1));
-        Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
-
-        serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler2));
-        Assert.Equal(ServiceLifetime.Transient, serviceDescriptor.Lifetime);
-    }
-
-    [Fact]
     public void MaxConcurrentHandlers_SetTo_Zero_Throws()
     {
         var serviceCollection = new ServiceCollection();
@@ -209,43 +192,6 @@ public class HandlerRegistrationTests
 
         // Assert
         Assert.True(completed);
-    }
-
-    [Fact]
-    public async Task Handlers_RegisteredWithDelegate_AreExecuted()
-    {
-        // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventHandlers(Handlers.Registration)
-                    .AddEventBroker());
-
-        using var scope = services.CreateScope();
-
-        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
-
-        // Act
-        var testEvent = new TestEvent(CorrelationId: "1");
-
-        eventsRecorder.Expect(
-            $"1_{typeof(TestEventHandler).Name}",
-            $"1_{typeof(TestEventHandler1).Name}",
-            $"1_{typeof(TestEventHandler2).Name}");
-
-        await eventBroker.Publish(testEvent);
-
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
-
-        // Assert
-        Assert.True(completed);
-    }
-
-    public static class Handlers
-    {
-        public static Action<EventHandlerRegistryBuilder> Registration =>
-            x => x.AddKeyedScoped<TestEvent, TestEventHandler>()
-                  .AddKeyedSingleton<TestEvent, TestEventHandler1>()
-                  .AddKeyedTransient<TestEvent, TestEventHandler2>();
     }
 
     public record TestEvent(string CorrelationId) : ITraceable<string>;
