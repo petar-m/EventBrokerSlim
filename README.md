@@ -100,19 +100,38 @@ Every event handler is executed on a background thread.
 EventBroker is depending on `Microsoft.Extentions.DependencyInjection` container for resolving event handlers.  
 It guarantees that each handler is resolved in a new scope which is disposed after the handler completes.  
 
-EventBroker is configured using the `AddEventBroker` extension method of `IServiceCollection`.  
-Event handlers and event broker behavior are configured using the confiuration delegate.  
+EventBroker is configured using `AddEventBroker` and `AddEventHandlers` extension methods of `IServiceCollection`.  
+Event handlers and event broker behavior are configured using a confiuration delegate.  
 Event handlers are registered by the event type and a corresponding `IEventHandler` implementation as transient, scoped, or singleton.  
 
 *Example:*
 ```csharp
 services.AddEventBroker(
-    x => x.AddKeyedTransient<Event1, EventHandler1>()
+    x => x.WithMaxConcurrentHandlers(3)
+          .DisableMissingHandlerWarningLog()
+          .AddKeyedTransient<Event1, EventHandler1>()
           .AddKeyedScoped<Event2, EventHandler2>()
-          .AddKeyedSingleton<Event3, EventHandler3>()
-          .WithMaxConcurrentHandlers(3)
-          .DisableMissingHandlerWarningLog())
+          .AddKeyedSingleton<Event3, EventHandler3>())
 ```  
+
+`WithMaxConcurrentHandlers` defines how many handlers can run at the same time. Default is 2.  
+
+`DisableMissingHandlerWarningLog` suppresses logging warning when there is no handler found for event.  
+
+EventBroker behavior and event handlers can be configured with separate extension methods. The order of calls to `AddEventBroker` and `AddEventHandlers` does not matter. 
+
+*Example:*
+```csharp
+services.AddEventBroker(
+            x => x.WithMaxConcurrentHandlers(3)
+                  .DisableMissingHandlerWarningLog());
+
+services.AddEventHandlers(
+            x => x.AddKeyedTransient<Event1, EventHandler1>()
+                  .AddKeyedScoped<Event2, EventHandler2>()
+                  .AddKeyedSingleton<Event3, EventHandler3>())
+```  
+
 There can be multiple handlers for the same event.  
 
 The `AddKeyed*` naming may be confusing since no key is provided. This comes from the need to create a scope and resolve the handler from this scope. Since there can be multiple implementations of the same interface, `GetService` or `GetServices` will get either the last one registered or all of them. This is solved by internally generating a key and registering each handler as keyed service. Then exactly one keyed service (event handler) is resolved per scope.  
@@ -144,9 +163,7 @@ services.AddEventBroker(
 
 Note that handlers registered outside of `AddEventBroker` method will be ignored.
 
-`WithMaxConcurrentHandlers` defines how many handlers can run at the same time. Default is 2.  
 
-`DisableMissingHandlerWarningLog` suppresses logging warning when there is no handler found for event.  
 
 ## Publishing Events  
 

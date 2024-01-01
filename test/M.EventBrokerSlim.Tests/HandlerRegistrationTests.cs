@@ -68,10 +68,10 @@ public class HandlerRegistrationTests
         var serviceCollection = new ServiceCollection();
 
         var exception = Assert.Throws<ArgumentOutOfRangeException>(
-            paramName: "value",
+            paramName: "maxConcurrentHandlers",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(0)));
 
-        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'value')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
     }
 
     [Fact]
@@ -80,13 +80,165 @@ public class HandlerRegistrationTests
         var serviceCollection = new ServiceCollection();
         var rand = new Random();
         var exception = Assert.Throws<ArgumentOutOfRangeException>(
-            paramName: "value",
+            paramName: "maxConcurrentHandlers",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(rand.Next(int.MinValue, -1))));
 
-        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'value')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
     }
 
-    public record TestEvent();
+    [Fact]
+    public async Task Handlers_RegisteredWith_AddEventBroker_AreExecuted()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler2>()));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
+
+        // Act
+        var testEvent = new TestEvent(CorrelationId: "1");
+
+        eventsRecorder.Expect(
+            $"1_{typeof(TestEventHandler).Name}",
+            $"1_{typeof(TestEventHandler1).Name}",
+            $"1_{typeof(TestEventHandler2).Name}");
+
+        await eventBroker.Publish(testEvent);
+
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.True(completed);
+    }
+
+    [Fact]
+    public async Task Handlers_RegisteredBefore_AddEventBroker_AreExecuted()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
+            sc => sc.AddEventHandlers(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler2>())
+                    .AddEventBroker());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
+
+        // Act
+        var testEvent = new TestEvent(CorrelationId: "1");
+
+        eventsRecorder.Expect(
+            $"1_{typeof(TestEventHandler).Name}",
+            $"1_{typeof(TestEventHandler1).Name}",
+            $"1_{typeof(TestEventHandler2).Name}");
+
+        await eventBroker.Publish(testEvent);
+
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.True(completed);
+    }
+
+    [Fact]
+    public async Task Handlers_RegisteredAfter_AddEventBroker_AreExecuted()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
+            sc => sc.AddEventBroker()
+                    .AddEventHandlers(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
+                              .AddKeyedScoped<TestEvent, TestEventHandler2>()));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
+
+        // Act
+        var testEvent = new TestEvent(CorrelationId: "1");
+
+        eventsRecorder.Expect(
+            $"1_{typeof(TestEventHandler).Name}",
+            $"1_{typeof(TestEventHandler1).Name}",
+            $"1_{typeof(TestEventHandler2).Name}");
+
+        await eventBroker.Publish(testEvent);
+
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.True(completed);
+    }
+
+    [Fact]
+    public async Task Handlers_RegisteredBeforeAndAfter_AddEventBroker_AreExecuted()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
+            sc => sc.AddEventHandlers(x => x.AddKeyedTransient<TestEvent, TestEventHandler>())
+                    .AddEventBroker(x => x.AddKeyedScoped<TestEvent, TestEventHandler1>())
+                    .AddEventHandlers(x => x.AddKeyedScoped<TestEvent, TestEventHandler2>()));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
+
+        // Act
+        var testEvent = new TestEvent(CorrelationId: "1");
+
+        eventsRecorder.Expect(
+            $"1_{typeof(TestEventHandler).Name}",
+            $"1_{typeof(TestEventHandler1).Name}",
+            $"1_{typeof(TestEventHandler2).Name}");
+
+        await eventBroker.Publish(testEvent);
+
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.True(completed);
+    }
+
+    [Fact]
+    public async Task Handlers_RegisteredWithDelegate_AreExecuted()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
+            sc => sc.AddEventHandlers(Handlers.Registration)
+                    .AddEventBroker());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
+
+        // Act
+        var testEvent = new TestEvent(CorrelationId: "1");
+
+        eventsRecorder.Expect(
+            $"1_{typeof(TestEventHandler).Name}",
+            $"1_{typeof(TestEventHandler1).Name}",
+            $"1_{typeof(TestEventHandler2).Name}");
+
+        await eventBroker.Publish(testEvent);
+
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.True(completed);
+    }
 
     public static class Handlers
     {
@@ -96,18 +248,43 @@ public class HandlerRegistrationTests
                   .AddKeyedTransient<TestEvent, TestEventHandler2>();
     }
 
+    public record TestEvent(string CorrelationId) : ITraceable<string>;
+
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        public Task Handle(TestEvent @event) => throw new NotImplementedException();
+        private readonly EventsRecorder<string> _eventsRecorder;
+        private readonly IServiceProvider _scope;
 
-        public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
+        public TestEventHandler(EventsRecorder<string> eventsRecorder, IServiceProvider scope)
+        {
+            _eventsRecorder = eventsRecorder;
+            _scope = scope;
+        }
+
+        public Task Handle(TestEvent @event)
+        {
+            _eventsRecorder.Notify($"{@event.CorrelationId}_{GetType().Name}");
+            return Task.CompletedTask;
+        }
+
+        public Task OnError(Exception exception, TestEvent @event)
+        {
+            _eventsRecorder.Notify(exception, @event);
+            return Task.CompletedTask;
+        }
     }
 
     public class TestEventHandler1 : TestEventHandler
     {
+        public TestEventHandler1(EventsRecorder<string> eventsRecorder, IServiceProvider scope) : base(eventsRecorder, scope)
+        {
+        }
     }
 
     public class TestEventHandler2 : TestEventHandler
     {
+        public TestEventHandler2(EventsRecorder<string> eventsRecorder, IServiceProvider scope) : base(eventsRecorder, scope)
+        {
+        }
     }
 }

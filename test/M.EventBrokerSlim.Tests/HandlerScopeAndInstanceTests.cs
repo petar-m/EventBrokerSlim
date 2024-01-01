@@ -14,8 +14,8 @@ public class HandlerScopeAndInstanceTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                              .WithMaxConcurrentHandlers(1)));
+                        x => x.WithMaxConcurrentHandlers(1)
+                              .AddKeyedTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
@@ -48,8 +48,8 @@ public class HandlerScopeAndInstanceTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedSingleton<TestEvent, TestEventHandler>()
-                              .WithMaxConcurrentHandlers(1)));
+                        x => x.WithMaxConcurrentHandlers(1)
+                              .AddKeyedSingleton<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
@@ -82,8 +82,8 @@ public class HandlerScopeAndInstanceTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedScoped<TestEvent, TestEventHandler>()
-                              .WithMaxConcurrentHandlers(1)));
+                        x => x.WithMaxConcurrentHandlers(1)
+                              .AddKeyedScoped<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
