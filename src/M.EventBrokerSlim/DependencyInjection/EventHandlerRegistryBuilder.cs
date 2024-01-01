@@ -28,7 +28,7 @@ public class EventHandlerRegistryBuilder
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public EventHandlerRegistryBuilder AddKeyedScoped<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        var eventHandlerKey = Guid.NewGuid().ToString();
+        var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
 
         CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
@@ -44,7 +44,7 @@ public class EventHandlerRegistryBuilder
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public EventHandlerRegistryBuilder AddKeyedSingleton<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        var eventHandlerKey = Guid.NewGuid().ToString();
+        var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
 
         CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
@@ -60,14 +60,14 @@ public class EventHandlerRegistryBuilder
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public EventHandlerRegistryBuilder AddKeyedTransient<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
-        var eventHandlerKey = Guid.NewGuid().ToString();
+        var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);
 
         CreateEventHandlerDescriptor<TEvent, THandler>(eventHandlerKey);
         return this;
     }
 
-    internal void CreateEventHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
+    internal void CreateEventHandlerDescriptor<TEvent, THandler>(Guid eventHandlerKey) where THandler : class, IEventHandler<TEvent>
     {
         var descriptor = new EventHandlerDescriptor(
             Key: eventHandlerKey,
