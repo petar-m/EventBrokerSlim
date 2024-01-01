@@ -67,17 +67,6 @@ public class EventHandlerRegistryBuilder
         return this;
     }
 
-    /// <summary>
-    /// Accepts a action for configuring event handlers and behavior of the event broker.
-    /// </summary>
-    /// <param name="configure"></param>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder Add(Action<EventHandlerRegistryBuilder> configure)
-    {
-        configure(this);
-        return this;
-    }
-
     internal void CreateEventHandlerDescriptor<TEvent, THandler>(string eventHandlerKey) where THandler : class, IEventHandler<TEvent>
     {
         var descriptor = new EventHandlerDescriptor(
