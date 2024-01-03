@@ -142,9 +142,14 @@ Note that handlers not registered using `AddEventBroker` or `AddEventHandlers` m
 
 ## Publishing Events  
 
+`IEventBroker` and its implementation are registered in the DI container by the `AddEventBroker` method.
+
 Events are published using `IEventBroker.Publish` method.
 
-`IEventBroker` and its implementation are registered in the DI container by the `AddEventBroker` method.
+Events can be published after given time interval with `IEventBroker.PublishDeferred` method.
+
+**Caution**: `PublishDeferred` may not be accurate and may perform badly if large amount of deferred messages are scheduled. It runs a new task that in turn uses `Task.Delay` and then publishes the event.  
+A lot of `Task.Delay` means a lot of timers waiting in a queue.
 
 ## Exception Handling  
 
