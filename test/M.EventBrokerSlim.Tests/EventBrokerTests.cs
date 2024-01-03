@@ -95,7 +95,7 @@ public class EventBrokerTests
     }
 
     [Fact]
-    public async Task Publish_AfterShoutdown_Throws()
+    public async Task Publish_AfterShutdown_Throws()
     {
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
@@ -123,7 +123,7 @@ public class EventBrokerTests
     }
 
     [Fact]
-    public async Task PublishDeferred_AfterShoutdown_DoesNotThrow()
+    public async Task PublishDeferred_AfterShutdown_DoesNotThrow()
     {
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
@@ -145,7 +145,6 @@ public class EventBrokerTests
         // Assert
         Assert.False(completed);
         Assert.Empty(eventsRecorder.HandledEventIds);
-
     }
 
     [Fact]
