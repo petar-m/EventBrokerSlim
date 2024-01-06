@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using MELT;
@@ -154,7 +155,7 @@ public class ExceptionHandlingTests
             _eventsRecorder = eventBroker;
         }
 
-        public Task Handle(TestEvent @event)
+        public Task Handle(TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
             if (@event.ThrowFromHandle)
@@ -165,7 +166,7 @@ public class ExceptionHandlingTests
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event)
+        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             if (@event.ThrowFromOnError)
@@ -185,8 +186,8 @@ public class ExceptionHandlingTests
             _input = input;
         }
 
-        public Task Handle(TestEvent @event) => throw new NotImplementedException();
+        public Task Handle(TestEvent @event, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnError(Exception exception, TestEvent @event) => throw new NotImplementedException();
+        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 }

@@ -8,10 +8,14 @@ namespace M.EventBrokerSlim.Internal;
 internal sealed class EventBroker : IEventBroker
 {
     private readonly ChannelWriter<object> _channelWriter;
+    private readonly CancellationTokenSource _cancellationTokenSource;
+    private readonly CancellationToken _cancellationToken;
 
-    public EventBroker(ChannelWriter<object> channelWriter)
+    public EventBroker(ChannelWriter<object> channelWriter, CancellationTokenSource cancellationTokenSource)
     {
         _channelWriter = channelWriter;
+        _cancellationTokenSource = cancellationTokenSource;
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public async Task Publish<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : notnull
@@ -37,8 +41,8 @@ internal sealed class EventBroker : IEventBroker
         {
             try
             {
-                await Task.Delay(deferDuration).ConfigureAwait(false);
-                await _channelWriter.WriteAsync(@event).ConfigureAwait(false);
+                await Task.Delay(deferDuration, _cancellationToken).ConfigureAwait(false);
+                await _channelWriter.WriteAsync(@event, _cancellationToken).ConfigureAwait(false);
             }
             catch
             {
@@ -49,5 +53,9 @@ internal sealed class EventBroker : IEventBroker
         return Task.CompletedTask;
     }
 
-    public void Shutdown() => _ = _channelWriter.TryComplete();
+    public void Shutdown()
+    {
+        _ = _channelWriter.TryComplete();
+        _cancellationTokenSource.Cancel();
+    }
 }

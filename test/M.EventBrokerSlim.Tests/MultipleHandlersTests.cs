@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,13 +55,13 @@ public class MultipleHandlersTests
             _eventsRecorder = eventsRecorder;
         }
 
-        public Task Handle(TestEvent @event)
+        public Task Handle(TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify($"{@event.CorrelationId}_{GetType().Name}");
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event)
+        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;

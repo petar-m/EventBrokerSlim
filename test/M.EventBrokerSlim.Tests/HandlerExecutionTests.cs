@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using MELT;
@@ -162,7 +163,7 @@ public class HandlerExecutionTests
             _eventsRecoder = eventsRecorder;
         }
 
-        public async Task Handle(TestEvent @event)
+        public async Task Handle(TestEvent @event, CancellationToken cancellationToken)
         {
             if (@event.TimeToRun != default)
             {
@@ -172,7 +173,7 @@ public class HandlerExecutionTests
             _eventsRecoder.Notify(@event);
         }
 
-        public Task OnError(Exception exception, TestEvent @event)
+        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(exception, @event);
             return Task.CompletedTask;

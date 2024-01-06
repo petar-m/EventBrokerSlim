@@ -23,12 +23,12 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
     {
     }
 
-    public async Task Handle(SomeEvent @event)
+    public async Task Handle(SomeEvent @event, CancellationToken cancellationToken)
     {
         // process the event
     }
 
-    public Task OnError(Exception exception, SomeEvent @event)
+    public Task OnError(Exception exception, SomeEvent @event, CancellationToken cancellationToken)
     {
         // called on unhandled exeption from Handle 
     }

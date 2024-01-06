@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
+using MELT;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace M.EventBrokerSlim.Tests;
@@ -187,9 +190,9 @@ public class EventBrokerTests
         eventsRecorder.Expect(1);
         var calledPublisheDeferredAt = DateTime.UtcNow;
 
-        await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromSeconds(1));
+        await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(200));
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(2));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(250));
 
         // Assert
         Assert.True(completed);
@@ -197,7 +200,7 @@ public class EventBrokerTests
         Assert.Equal(1, eventsRecorder.HandledEventIds[0]);
 
         var handlerExecutedAt = scope.ServiceProvider.GetRequiredService<Timestamp>().ExecutedAt;
-        Assert.True(handlerExecutedAt - calledPublisheDeferredAt >= TimeSpan.FromSeconds(1));
+        Assert.True(handlerExecutedAt - calledPublisheDeferredAt >= TimeSpan.FromMilliseconds(200));
     }
 
     [Fact]
@@ -226,7 +229,160 @@ public class EventBrokerTests
             x => Assert.Equal(1, x));
     }
 
-    public record TestEvent(int CorrelationId) : ITraceable<int>;
+    [Fact]
+    public async Task PublishDeferred_DelayedTasks_Cancelled_OnShutdown()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>())
+                    .AddSingleton<Timestamp>());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        var expected = Enumerable.Range(1, 10).Select(x => new TestEvent(x)).ToArray();
+        eventsRecorder.Expect(expected);
+
+        // Act
+        foreach (var @event in expected)
+        {
+            await eventBroker.PublishDeferred(@event, TimeSpan.FromMilliseconds(200));
+        }
+
+        eventBroker.Shutdown();
+
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(300));
+
+        // Assert
+        Assert.False(completed);
+        Assert.Empty(eventsRecorder.HandledEventIds);
+    }
+
+    [Fact]
+    public async Task Shutdown_WhileHandlingEvent_TaskCancelledException_HandledByOnError()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.WithMaxConcurrentHandlers(2)
+                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                    .AddSingleton<Timestamp>());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        var expected = Enumerable.Range(1, 10).Select(x => new TestEvent(x, HandlingDuration: TimeSpan.FromMilliseconds(500))).ToArray();
+        eventsRecorder.Expect(expected);
+
+        // Act
+        foreach (var @event in expected)
+        {
+            await eventBroker.Publish(@event);
+        }
+
+        await Task.Delay(TimeSpan.FromMilliseconds(250));
+
+        eventBroker.Shutdown();
+
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+
+        // Assert
+        Assert.False(completed);
+        Assert.Collection(eventsRecorder.HandledEventIds.Order(),
+            x => Assert.Equal(1, x),
+            x => Assert.Equal(2, x));
+
+        Assert.Collection(eventsRecorder.Exceptions,
+            x => Assert.IsType<TaskCanceledException>(x),
+            x => Assert.IsType<TaskCanceledException>(x));
+    }
+
+    [Fact]
+    public async Task Shutdown_PendingEvents_AreNot_Processed()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
+            sc => sc.AddEventBroker(
+                        x => x.WithMaxConcurrentHandlers(2)
+                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                    .AddSingleton<Timestamp>());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        var expected = Enumerable.Range(1, 10).Select(x => new TestEvent(x, HandlingDuration: TimeSpan.FromMilliseconds(200))).ToArray();
+        eventsRecorder.Expect(expected);
+
+        // Act
+        foreach (var @event in expected)
+        {
+            await eventBroker.Publish(@event);
+        }
+
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+        eventBroker.Shutdown();
+
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(300));
+
+        // Assert
+        Assert.False(completed);
+
+        Assert.Equal(8, eventsRecorder.Expected.Length);
+
+        Assert.DoesNotContain(1, eventsRecorder.Expected);
+        Assert.DoesNotContain(2, eventsRecorder.Expected);
+    }
+
+    [Fact]
+    public async Task Shutdown_WhileHandlingError_TaskCancelledException_IsLogged()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
+            sc => sc.AddEventBroker(
+                        x => x.WithMaxConcurrentHandlers(2)
+                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                    .AddSingleton<Timestamp>());
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<int>>();
+
+        var testEvent = new TestEvent(CorrelationId: 1, ThrowFromHandle: true, ErrorHandlingDuration: TimeSpan.FromMilliseconds(300));
+        eventsRecorder.Expect(testEvent);
+
+        // Act
+        await eventBroker.Publish(testEvent);
+        
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+        eventBroker.Shutdown();
+
+        await eventsRecorder.Wait(TimeSpan.FromMilliseconds(100));
+
+        // Assert
+
+        var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
+
+        var log = Assert.Single(provider.Sink.LogEntries);
+        Assert.Equal(LogLevel.Error, log.LogLevel);
+        Assert.Equal("Unhandled exception executing M.EventBrokerSlim.Tests.EventBrokerTests+TestEventHandler.OnError()", log.Message);
+        Assert.IsType<TaskCanceledException>(log.Exception);
+    }
+
+    public record TestEvent(
+        int CorrelationId,
+        TimeSpan HandlingDuration = default,
+        bool ThrowFromHandle = false,
+        TimeSpan ErrorHandlingDuration = default) : ITraceable<int>;
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
@@ -239,21 +395,34 @@ public class EventBrokerTests
             _timestamp = timestamp;
         }
 
-        public Task Handle(TestEvent @event)
+        public async Task Handle(TestEvent @event, CancellationToken cancellationToken)
         {
+            _eventsRecoder.Notify(@event);
+
             if (_timestamp is not null)
             {
                 _timestamp.ExecutedAt = DateTime.UtcNow;
             }
 
-            _eventsRecoder.Notify(@event);
-            return Task.CompletedTask;
+            if (@event.ThrowFromHandle)
+            {
+                throw new InvalidOperationException("Exception during event handling");
+            }
+
+            if (@event.HandlingDuration != default)
+            {
+                await Task.Delay(@event.HandlingDuration, cancellationToken);
+            }
         }
 
-        public Task OnError(Exception exception, TestEvent @event)
+        public async Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(exception, @event);
-            return Task.CompletedTask;
+
+            if (@event.ErrorHandlingDuration != default)
+            {
+                await Task.Delay(@event.ErrorHandlingDuration, cancellationToken);
+            }
         }
     }
 
