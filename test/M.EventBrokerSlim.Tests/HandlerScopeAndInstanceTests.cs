@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using M.EventBrokerSlim.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -123,14 +124,14 @@ public class HandlerScopeAndInstanceTests
             _scope = scope;
         }
 
-        public Task Handle(TestEvent @event)
+        public Task Handle(TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
             _eventsRecorder.Notify(@event, handlerInstance: GetHashCode(), scopeInstance: _scope.GetHashCode());
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event)
+        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;

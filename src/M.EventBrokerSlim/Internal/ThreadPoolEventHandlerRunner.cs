@@ -12,18 +12,21 @@ internal sealed class ThreadPoolEventHandlerRunner
     private readonly ChannelReader<object> _channelReader;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly EventHandlerRegistry _eventHandlerRegistry;
+    private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
     private readonly SemaphoreSlim _semaphore;
 
     internal ThreadPoolEventHandlerRunner(
-        ChannelReader<object> channelReader, 
-        IServiceScopeFactory serviceScopeFactory, 
+        ChannelReader<object> channelReader,
+        IServiceScopeFactory serviceScopeFactory,
         EventHandlerRegistry eventHandlerRegistry,
+        CancellationTokenSource cancellationTokenSource,
         ILogger<ThreadPoolEventHandlerRunner>? logger)
     {
         _channelReader = channelReader;
         _serviceScopeFactory = serviceScopeFactory;
         _eventHandlerRegistry = eventHandlerRegistry;
+        _cancellationTokenSource = cancellationTokenSource;
         _logger = logger;
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
     }
@@ -35,7 +38,8 @@ internal sealed class ThreadPoolEventHandlerRunner
 
     private async ValueTask ProcessEvents()
     {
-        while (await _channelReader.WaitToReadAsync().ConfigureAwait(false))
+        CancellationToken token = _cancellationTokenSource.Token;
+        while (await _channelReader.WaitToReadAsync(token).ConfigureAwait(false))
         {
             while (_channelReader.TryRead(out var @event))
             {
@@ -54,7 +58,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                 for (int i = 0; i < eventHandlers.Count; i++)
                 {
-                    await _semaphore.WaitAsync().ConfigureAwait(false);
+                    await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
                     var eventHandlerDescriptior = eventHandlers[i];
 
@@ -65,7 +69,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                         try
                         {
                             service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptior.InterfaceType, eventHandlerDescriptior.Key);
-                            await eventHandlerDescriptior.Handle(service, @event).ConfigureAwait(false);
+                            await eventHandlerDescriptior.Handle(service, @event, token).ConfigureAwait(false);
                         }
                         catch (Exception exception)
                         {
@@ -77,9 +81,9 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                             try
                             {
-                                await eventHandlerDescriptior.OnError(service, @event, exception).ConfigureAwait(false);
+                                await eventHandlerDescriptior.OnError(service, @event, exception, token).ConfigureAwait(false);
                             }
-                            catch(Exception errorHandlingException)
+                            catch (Exception errorHandlingException)
                             {
                                 // suppress further exeptions
                                 _logger?.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);

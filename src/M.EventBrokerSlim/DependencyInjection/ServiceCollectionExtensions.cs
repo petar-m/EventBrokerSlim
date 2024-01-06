@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,10 +27,14 @@ public static class ServiceCollectionExtensions
 
         serviceCollection.AddSingleton<EventHandlerRegistryBuilder>(eventHandlerRegistryBuilder);
 
-        var channelKey = Guid.NewGuid();
+        var eventBrokerKey = Guid.NewGuid();
+
+        CancellationTokenSource eventBrokerCancellationTokenSource = new();
+
+        serviceCollection.AddKeyedSingleton(eventBrokerKey, eventBrokerCancellationTokenSource);
 
         serviceCollection.AddKeyedSingleton(
-            channelKey,
+            eventBrokerKey,
             (_, _) => Channel.CreateUnbounded<object>(new UnboundedChannelOptions
             {
                 AllowSynchronousContinuations = false,
@@ -42,14 +47,17 @@ public static class ServiceCollectionExtensions
             {
                 var eventHandlerRunner = x.GetRequiredService<ThreadPoolEventHandlerRunner>();
                 eventHandlerRunner.Run();
-                return new EventBroker(x.GetRequiredKeyedService<Channel<object>>(channelKey).Writer);
+                return new EventBroker(
+                    x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Writer,
+                    x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
             });
 
         serviceCollection.AddSingleton(
             x => new ThreadPoolEventHandlerRunner(
-                x.GetRequiredKeyedService<Channel<object>>(channelKey).Reader,
+                x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Reader,
                 x.GetRequiredService<IServiceScopeFactory>(),
                 x.GetRequiredService<EventHandlerRegistry>(),
+                x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>()));
 
         serviceCollection.AddSingleton(

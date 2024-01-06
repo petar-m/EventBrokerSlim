@@ -73,8 +73,8 @@ public class EventHandlerRegistryBuilder
             Key: eventHandlerKey,
             EventType: typeof(TEvent),
             InterfaceType: typeof(IEventHandler<TEvent>),
-            Handle: async (handler, @event) => await ((THandler)handler).Handle((TEvent)@event),
-            OnError: async (handler, @event, exception) => await ((THandler)handler).OnError(exception, (TEvent)@event));
+            Handle: async (handler, @event, ct) => await ((THandler)handler).Handle((TEvent)@event, ct),
+            OnError: async (handler, @event, exception, ct) => await ((THandler)handler).OnError(exception, (TEvent)@event, ct));
 
         _eventsHandlersDescriptors.Add(descriptor);
     }

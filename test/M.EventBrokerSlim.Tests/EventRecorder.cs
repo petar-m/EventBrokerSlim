@@ -18,6 +18,8 @@ public class EventsRecorder<T>
 
     public T[] HandledEventIds => _events.OrderBy(x => x.tick).Select(x => x.id).ToArray();
 
+    public T[] Expected => _expected.Keys.ToArray();
+
     public int[] HandlerObjectsHashCodes => _handlerInstances.OrderBy(x => x.tick).Select(x => x.id).ToArray();
 
     public int[] HandlerScopeHashCodes => _scopeInstances.OrderBy(x => x.tick).Select(x => x.id).ToArray();
