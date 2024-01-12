@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -81,19 +80,23 @@ public class EventHandlerRegistryBuilder
 
     internal static EventHandlerRegistry Build(IEnumerable<EventHandlerRegistryBuilder> builders)
     {
-        var eventHandlerRegistry = new EventHandlerRegistry();
-        foreach (var builer in builders)
+        EventBrokerBuilder? eventBrokerBuilder = null;
+        List<EventHandlerDescriptor> descriptors = new();
+        foreach (var builder in builders)
         {
-            foreach (var descriptor in builer._eventsHandlersDescriptors)
+            if (builder is EventBrokerBuilder)
             {
-                eventHandlerRegistry.AddHandlerDescriptor(descriptor);
+                eventBrokerBuilder = (EventBrokerBuilder)builder;
+            }
+
+            foreach (var descriptor in builder._eventsHandlersDescriptors)
+            {
+                descriptors.Add(descriptor);
             }
         }
 
-        var eventBrokerBuilder = (EventBrokerBuilder)builders.Single(x => x is EventBrokerBuilder);
-        eventHandlerRegistry.DisableMissingHandlerWarningLog = eventBrokerBuilder._disableMissingHandlerWarningLog;
-        eventHandlerRegistry.MaxConcurrentHandlers = eventBrokerBuilder._maxConcurrentHandlers;
-
-        return eventHandlerRegistry;
+#pragma warning disable CS8602 // Dereference of a possibly null reference. No EventBrokerBuilder means IServiceCollection.AddEventBroker() was never called, container will trying to resove IEventBroker.
+        return new EventHandlerRegistry(descriptors, eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
     }
 }

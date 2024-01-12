@@ -1,30 +1,29 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace M.EventBrokerSlim.Internal;
 
 internal sealed class EventHandlerRegistry
 {
-    private readonly Dictionary<Type, List<EventHandlerDescriptor>> _eventHandlerDescriptors = new();
+    private readonly FrozenDictionary<Type, List<EventHandlerDescriptor>> _eventHandlerDescriptors;
 
-    internal int MaxConcurrentHandlers { get; set; } = 2;
+    public EventHandlerRegistry(List<EventHandlerDescriptor> descriptors, int maxConcurrentHandlers, bool disableMissingHandlerWarningLog)
+    {
+        _eventHandlerDescriptors = descriptors.GroupBy(x => x.EventType)
+                                              .ToFrozenDictionary(x => x.Key, x => x.ToList());
+        MaxConcurrentHandlers = maxConcurrentHandlers;
+        DisableMissingHandlerWarningLog = disableMissingHandlerWarningLog;
+    }
 
-    internal bool DisableMissingHandlerWarningLog { get; set; }
+    internal int MaxConcurrentHandlers { get; }
+
+    internal bool DisableMissingHandlerWarningLog { get; }
 
     internal List<EventHandlerDescriptor>? GetEventHandlers(Type eventType)
     {
         _eventHandlerDescriptors.TryGetValue(eventType, out var handlers);
         return handlers;
-    }
-
-    internal void AddHandlerDescriptor(EventHandlerDescriptor eventHandlerDescriptor)
-    {
-        if (!_eventHandlerDescriptors.TryGetValue(eventHandlerDescriptor.EventType, out var handlers))
-        {
-            handlers = new List<EventHandlerDescriptor>();
-            _eventHandlerDescriptors.Add(eventHandlerDescriptor.EventType, handlers);
-        }
-
-        handlers.Add(eventHandlerDescriptor);
     }
 }

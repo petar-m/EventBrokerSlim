@@ -60,7 +60,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                 {
                     await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                    var eventHandlerDescriptior = eventHandlers[i];
+                    var eventHandlerDescriptor = eventHandlers[i];
 
                     _ = Task.Run(async () =>
                     {
@@ -68,8 +68,8 @@ internal sealed class ThreadPoolEventHandlerRunner
                         object? service = null;
                         try
                         {
-                            service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptior.InterfaceType, eventHandlerDescriptior.Key);
-                            await eventHandlerDescriptior.Handle(service, @event, token).ConfigureAwait(false);
+                            service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptor.InterfaceType, eventHandlerDescriptor.Key);
+                            await eventHandlerDescriptor.Handle(service, @event, token).ConfigureAwait(false);
                         }
                         catch (Exception exception)
                         {
@@ -81,7 +81,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                             try
                             {
-                                await eventHandlerDescriptior.OnError(service, @event, exception, token).ConfigureAwait(false);
+                                await eventHandlerDescriptor.OnError(service, @event, exception, token).ConfigureAwait(false);
                             }
                             catch (Exception errorHandlingException)
                             {
