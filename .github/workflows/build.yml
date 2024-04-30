@@ -31,7 +31,7 @@ jobs:
 
     steps:
  
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - id: set-version
       name: Set Version
@@ -62,7 +62,7 @@ jobs:
         echo "version: ${{ env.VERSION }}"
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
@@ -112,4 +112,3 @@ jobs:
     - name: Publish NuGet Package
       if: ${{ success() && env.IS_RELEASE == 'true' }}    
       run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
-
