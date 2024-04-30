@@ -53,7 +53,7 @@ public class RetryPolicyTests
         public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(retryPolicy);
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
@@ -63,7 +63,7 @@ public class RetryPolicyTests
         public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(retryPolicy);
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }

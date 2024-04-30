@@ -121,8 +121,8 @@ public class RetryFromOnErrorUsingDelayDelegateTests
         public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
-            
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter((attempt, lastDelay) => TimeSpan.FromMilliseconds(100 * (attempt + 1)) + lastDelay);
             }

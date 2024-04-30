@@ -204,7 +204,7 @@ public class HandlerRegistrationTests
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception,TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;

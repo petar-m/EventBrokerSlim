@@ -25,7 +25,7 @@ internal sealed class EventBroker : IEventBroker
         {
             await _channelWriter.WriteAsync(@event, cancellationToken);
         }
-        catch (ChannelClosedException exception)
+        catch(ChannelClosedException exception)
         {
             const string message = "EventBroker cannot publish event: Shutdown() has been called";
             throw new EventBrokerPublishNotAvailableException(message, exception);

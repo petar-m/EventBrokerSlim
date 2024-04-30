@@ -29,7 +29,7 @@ internal class RetryQueue
         {
             await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
             _retryQueue.Enqueue(retryDescriptor, DateTime.UtcNow.Add(retryDescriptor.RetryPolicy.LastDelay).Ticks);
-            if (!_polling)
+            if(!_polling)
             {
                 _polling = true;
                 _ = Task.Factory.StartNew(static async x => await Poll(x!), this);
@@ -44,13 +44,13 @@ internal class RetryQueue
     private static async Task Poll(object state)
     {
         var self = (RetryQueue)state;
-        while (true)
+        while(true)
         {
             await self._semaphore.WaitAsync(self._cancellationToken);
 
-            while (self._retryQueue.TryPeek(out var retryDescriptor, out long ticks))
+            while(self._retryQueue.TryPeek(out var retryDescriptor, out long ticks))
             {
-                if (DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(25)).Ticks >= ticks)
+                if(DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(25)).Ticks >= ticks)
                 {
                     await self._channelWriter.WriteAsync(retryDescriptor, self._cancellationToken).ConfigureAwait(false);
                     _ = self._retryQueue.Dequeue();
@@ -61,7 +61,7 @@ internal class RetryQueue
                 }
             }
 
-            if (self._retryQueue.Count == 0)
+            if(self._retryQueue.Count == 0)
             {
                 self._polling = false;
                 self._semaphore.Release();

@@ -158,7 +158,7 @@ public class HandlerExecutionTests
 
         public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            if (@event.TimeToRun != default)
+            if(@event.TimeToRun != default)
             {
                 await Task.Delay(@event.TimeToRun);
             }

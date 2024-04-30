@@ -24,7 +24,7 @@ public class EventBrokerBuilder : EventHandlerRegistryBuilder
     /// <exception cref="ArgumentOutOfRangeException">Throws when <paramref name="maxConcurrentHandlers"/> is less than 1.</exception>
     public EventBrokerBuilder WithMaxConcurrentHandlers(int maxConcurrentHandlers)
     {
-        if (maxConcurrentHandlers <= 0)
+        if(maxConcurrentHandlers <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxConcurrentHandlers), "MaxConcurrentHandlers should be greater than zero");
         }

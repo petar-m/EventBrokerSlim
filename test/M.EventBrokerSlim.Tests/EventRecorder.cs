@@ -23,7 +23,7 @@ public class EventsRecorder<T> where T : notnull
 
     public void Expect(params ITraceable<T>[] items)
     {
-        foreach (var item in items)
+        foreach(var item in items)
         {
             _expected.TryAdd(item.CorrelationId, null);
         }
@@ -31,7 +31,7 @@ public class EventsRecorder<T> where T : notnull
 
     public void Expect(params T[] items)
     {
-        foreach (var item in items)
+        foreach(var item in items)
         {
             _expected.TryAdd(item, null);
         }
@@ -41,9 +41,9 @@ public class EventsRecorder<T> where T : notnull
     {
         var deadline = timeout == default ? DateTime.MaxValue : DateTime.UtcNow + timeout;
 
-        while (DateTime.UtcNow <= deadline)
+        while(DateTime.UtcNow <= deadline)
         {
-            if (_expected.IsEmpty)
+            if(_expected.IsEmpty)
             {
                 return true;
             }
@@ -60,13 +60,13 @@ public class EventsRecorder<T> where T : notnull
     {
         _expected.TryRemove(@event.CorrelationId, out _);
         _events.Add((@event.CorrelationId, DateTime.UtcNow.Ticks));
-        
-        if (handlerInstance.HasValue)
+
+        if(handlerInstance.HasValue)
         {
             _handlerInstances.Add((id: handlerInstance.Value, tick: DateTime.UtcNow.Ticks));
         }
 
-        if (scopeInstance.HasValue)
+        if(scopeInstance.HasValue)
         {
             _scopeInstances.Add((id: scopeInstance.Value, tick: DateTime.UtcNow.Ticks));
         }

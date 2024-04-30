@@ -45,18 +45,18 @@ internal sealed class ThreadPoolEventHandlerRunner
     private async ValueTask ProcessEvents()
     {
         CancellationToken token = _cancellationTokenSource.Token;
-        while (await _channelReader.WaitToReadAsync(token).ConfigureAwait(false))
+        while(await _channelReader.WaitToReadAsync(token).ConfigureAwait(false))
         {
-            while (_channelReader.TryRead(out var @event))
+            while(_channelReader.TryRead(out var @event))
             {
                 RetryDescriptor? retryDescriptor = @event as RetryDescriptor;
-                if (retryDescriptor is null)
+                if(retryDescriptor is null)
                 {
                     var type = @event.GetType();
                     var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
-                    if (eventHandlers == default)
+                    if(eventHandlers == default)
                     {
-                        if (!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
+                        if(!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
                         {
                             _logger.LogNoEventHandlerForEvent(type);
                         }
@@ -64,7 +64,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                         continue;
                     }
 
-                    for (int i = 0; i < eventHandlers.Length; i++)
+                    for(int i = 0; i < eventHandlers.Length; i++)
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
@@ -106,9 +106,9 @@ internal sealed class ThreadPoolEventHandlerRunner
 
             await handler(service, @event, retryPolicy, context.CancellationToken).ConfigureAwait(false);
         }
-        catch (Exception exception)
+        catch(Exception exception)
         {
-            if (service is null)
+            if(service is null)
             {
                 context.LogEventHandlerResolvingError(exception);
                 return;
@@ -118,7 +118,7 @@ internal sealed class ThreadPoolEventHandlerRunner
             {
                 await errorHandler(service, @event, exception, retryPolicy, context.CancellationToken).ConfigureAwait(false);
             }
-            catch (Exception errorHandlingException)
+            catch(Exception errorHandlingException)
             {
                 // suppress further exeptions
                 context.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);

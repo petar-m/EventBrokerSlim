@@ -153,7 +153,7 @@ public class RetryFromOnErrorTests
         public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }

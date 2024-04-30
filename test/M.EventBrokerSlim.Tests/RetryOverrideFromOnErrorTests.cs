@@ -54,7 +54,7 @@ public class RetryOverrideFromOnErrorTests
         public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             await Task.Delay(_random.Next(1, 10));
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
@@ -65,7 +65,7 @@ public class RetryOverrideFromOnErrorTests
         public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
-            if (retryPolicy.Attempt < _settings.RetryAttempts)
+            if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay.Add(TimeSpan.FromMilliseconds(300)));
             }

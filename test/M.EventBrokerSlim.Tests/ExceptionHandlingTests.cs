@@ -151,7 +151,7 @@ public class ExceptionHandlingTests
         public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
-            if (@event.ThrowFromHandle)
+            if(@event.ThrowFromHandle)
             {
                 throw new NotImplementedException();
             }
@@ -162,7 +162,7 @@ public class ExceptionHandlingTests
         public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
-            if (@event.ThrowFromOnError)
+            if(@event.ThrowFromOnError)
             {
                 throw new NotImplementedException();
             }

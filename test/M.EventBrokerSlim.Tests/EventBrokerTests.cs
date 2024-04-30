@@ -244,7 +244,7 @@ public class EventBrokerTests
         eventsRecorder.Expect(expected);
 
         // Act
-        foreach (var @event in expected)
+        foreach(var @event in expected)
         {
             await eventBroker.PublishDeferred(@event, TimeSpan.FromMilliseconds(200));
         }
@@ -277,7 +277,7 @@ public class EventBrokerTests
         eventsRecorder.Expect(expected);
 
         // Act
-        foreach (var @event in expected)
+        foreach(var @event in expected)
         {
             await eventBroker.Publish(@event);
         }
@@ -318,7 +318,7 @@ public class EventBrokerTests
         eventsRecorder.Expect(expected);
 
         // Act
-        foreach (var @event in expected)
+        foreach(var @event in expected)
         {
             await eventBroker.Publish(@event);
         }
@@ -358,7 +358,7 @@ public class EventBrokerTests
 
         // Act
         await eventBroker.Publish(testEvent);
-        
+
         await Task.Delay(TimeSpan.FromMilliseconds(100));
 
         eventBroker.Shutdown();
@@ -396,17 +396,17 @@ public class EventBrokerTests
         {
             _eventsRecoder.Notify(@event);
 
-            if (_timestamp is not null)
+            if(_timestamp is not null)
             {
                 _timestamp.ExecutedAt = DateTime.UtcNow;
             }
 
-            if (@event.ThrowFromHandle)
+            if(@event.ThrowFromHandle)
             {
                 throw new InvalidOperationException("Exception during event handling");
             }
 
-            if (@event.HandlingDuration != default)
+            if(@event.HandlingDuration != default)
             {
                 await Task.Delay(@event.HandlingDuration, cancellationToken);
             }
@@ -416,7 +416,7 @@ public class EventBrokerTests
         {
             _eventsRecoder.Notify(exception, @event);
 
-            if (@event.ErrorHandlingDuration != default)
+            if(@event.ErrorHandlingDuration != default)
             {
                 await Task.Delay(@event.ErrorHandlingDuration, cancellationToken);
             }
