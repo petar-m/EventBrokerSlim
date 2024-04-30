@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
 
         serviceCollection.AddSingleton(
             x => new ThreadPoolEventHandlerRunner(
-                x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Reader,
+                x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey),
                 x.GetRequiredService<IServiceScopeFactory>(),
                 x.GetRequiredService<EventHandlerRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),

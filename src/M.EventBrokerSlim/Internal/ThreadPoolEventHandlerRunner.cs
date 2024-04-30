@@ -4,31 +4,37 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal;
 
 internal sealed class ThreadPoolEventHandlerRunner
 {
     private readonly ChannelReader<object> _channelReader;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly EventHandlerRegistry _eventHandlerRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
     private readonly SemaphoreSlim _semaphore;
+    private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
 
     internal ThreadPoolEventHandlerRunner(
-        ChannelReader<object> channelReader,
+        Channel<object> channel,
         IServiceScopeFactory serviceScopeFactory,
         EventHandlerRegistry eventHandlerRegistry,
         CancellationTokenSource cancellationTokenSource,
         ILogger<ThreadPoolEventHandlerRunner>? logger)
     {
-        _channelReader = channelReader;
-        _serviceScopeFactory = serviceScopeFactory;
+        _channelReader = channel.Reader;
         _eventHandlerRegistry = eventHandlerRegistry;
         _cancellationTokenSource = cancellationTokenSource;
         _logger = logger;
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
+
+        var retryQueue = new RetryQueue(channel.Writer, cancellationTokenSource.Token);
+        var retryPolicyPool = new DefaultObjectPool<RetryPolicy>(new RetryPolicyPooledObjectPolicy(), _eventHandlerRegistry.MaxConcurrentHandlers);
+        var contextPooledObjectPolicy = new HandlerExecutionContextPooledObjectPolicy(retryPolicyPool, _semaphore, serviceScopeFactory, _logger, retryQueue);
+        _contextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(contextPooledObjectPolicy, _eventHandlerRegistry.MaxConcurrentHandlers);
+        contextPooledObjectPolicy.ContextObjectPool = _contextObjectPool;
     }
 
     public void Run()
@@ -43,59 +49,79 @@ internal sealed class ThreadPoolEventHandlerRunner
         {
             while (_channelReader.TryRead(out var @event))
             {
-                var type = @event.GetType();
-
-                var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
-                if (eventHandlers is null)
+                RetryDescriptor? retryDescriptor = @event as RetryDescriptor;
+                if (retryDescriptor is null)
                 {
-                    if (!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
+                    var type = @event.GetType();
+                    var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
+                    if (eventHandlers is null)
                     {
-                        _logger.LogNoEventHandlerForEvent(type);
+                        if (!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
+                        {
+                            _logger.LogNoEventHandlerForEvent(type);
+                        }
+
+                        continue;
                     }
 
-                    continue;
-                }
+                    for (int i = 0; i < eventHandlers.Count; i++)
+                    {
+                        await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                for (int i = 0; i < eventHandlers.Count; i++)
+                        var eventHandlerDescriptor = eventHandlers[i];
+
+                        var context = _contextObjectPool.Get().Initialize(@event, eventHandlerDescriptor, retryDescriptor, token);
+                        _ = Task.Factory.StartNew(static async x => await HandleEvent(x!), context);
+                    }
+                }
+                else
                 {
                     await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                    var eventHandlerDescriptor = eventHandlers[i];
-
-                    _ = Task.Run(async () =>
-                    {
-                        using var scope = _serviceScopeFactory.CreateScope();
-                        object? service = null;
-                        try
-                        {
-                            service = scope.ServiceProvider.GetRequiredKeyedService(eventHandlerDescriptor.InterfaceType, eventHandlerDescriptor.Key);
-                            await eventHandlerDescriptor.Handle(service, @event, token).ConfigureAwait(false);
-                        }
-                        catch (Exception exception)
-                        {
-                            if (service is null)
-                            {
-                                _logger?.LogEventHandlerResolvingError(@event.GetType(), exception);
-                                return;
-                            }
-
-                            try
-                            {
-                                await eventHandlerDescriptor.OnError(service, @event, exception, token).ConfigureAwait(false);
-                            }
-                            catch (Exception errorHandlingException)
-                            {
-                                // suppress further exeptions
-                                _logger?.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);
-                            }
-                        }
-                        finally
-                        {
-                            _semaphore.Release();
-                        }
-                    });
+                    var context = _contextObjectPool.Get().Initialize(retryDescriptor.Event, retryDescriptor.EventHandlerDescriptor, retryDescriptor, token);
+                    _ = Task.Factory.StartNew(static async x => await HandleEvent(x!), context);
                 }
             }
+        }
+    }
+
+    private static async Task HandleEvent(object state)
+    {
+        var context = (HandlerExecutionContext)state;
+        var retryPolicy = context.RetryPolicy!;
+        var @event = context.Event!;
+        var handler = context.EventHandlerDescriptor!.Handle;
+        var errorHandler = context.EventHandlerDescriptor!.OnError;
+
+        object? service = null;
+        using var scope = context.CreateScope();
+        try
+        {
+            service = context.GetService(scope.ServiceProvider);
+
+            await handler(service, @event, retryPolicy, context.CancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            if (service is null)
+            {
+                context.LogEventHandlerResolvingError(exception);
+                return;
+            }
+
+            try
+            {
+                await errorHandler(service, @event, exception, retryPolicy, context.CancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception errorHandlingException)
+            {
+                // suppress further exeptions
+                context.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);
+            }
+        }
+        finally
+        {
+            await context.CompleteAsync().ConfigureAwait(false);
         }
     }
 }

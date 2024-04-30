@@ -141,7 +141,7 @@ public class EventBrokerTests
         eventsRecorder.Expect(1);
 
         eventBroker.Shutdown();
-        await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMicroseconds(20));
+        await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(20));
 
         var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(100));
 
@@ -395,7 +395,7 @@ public class EventBrokerTests
             _timestamp = timestamp;
         }
 
-        public async Task Handle(TestEvent @event, CancellationToken cancellationToken)
+        public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(@event);
 
@@ -415,7 +415,7 @@ public class EventBrokerTests
             }
         }
 
-        public async Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
+        public async Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(exception, @event);
 

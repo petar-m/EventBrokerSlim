@@ -55,13 +55,13 @@ public class MultipleHandlersTests
             _eventsRecorder = eventsRecorder;
         }
 
-        public Task Handle(TestEvent @event, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify($"{@event.CorrelationId}_{GetType().Name}");
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;

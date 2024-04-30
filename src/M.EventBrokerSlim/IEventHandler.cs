@@ -16,8 +16,9 @@ public interface IEventHandler<TEvent>
     /// Handles the event.
     /// </summary>
     /// <param name="event">An instance of <typeparamref name="TEvent"/> representing the event.</param>
+    /// <param name="retryPolicy">Provides ability to request a retry for the same event by the handler. Do not keep a reference to this instance, it may be pooled and reused.</param>
     /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-    Task Handle(TEvent @event, CancellationToken cancellationToken);
+    Task Handle(TEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken);
 
     /// <summary>
     /// Called when an unhadled exception is caught during execution.
@@ -26,6 +27,7 @@ public interface IEventHandler<TEvent>
     /// </summary>
     /// <param name="exception">The exception caught.</param>
     /// <param name="event">The event instance which handling caused the exception.</param>
+    /// <param name="retryPolicy">Provides ability to request a retry for the same event by the handler. Do not keep a reference to this instance, it may be pooled and reused.</param>
     /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-    Task OnError(Exception exception, TEvent @event, CancellationToken cancellationToken);
+    Task OnError(Exception exception, TEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken);
 }

@@ -72,8 +72,8 @@ public class EventHandlerRegistryBuilder
             Key: eventHandlerKey,
             EventType: typeof(TEvent),
             InterfaceType: typeof(IEventHandler<TEvent>),
-            Handle: async (handler, @event, ct) => await ((THandler)handler).Handle((TEvent)@event, ct),
-            OnError: async (handler, @event, exception, ct) => await ((THandler)handler).OnError(exception, (TEvent)@event, ct));
+            Handle: async (handler, @event, retryPolicy, ct) => await ((THandler)handler).Handle((TEvent)@event, retryPolicy, ct),
+            OnError: async (handler, @event, exception, retryPolicy, ct) => await ((THandler)handler).OnError(exception, (TEvent)@event, retryPolicy, ct));
 
         _eventsHandlersDescriptors.Add(descriptor);
     }
@@ -82,14 +82,14 @@ public class EventHandlerRegistryBuilder
     {
         EventBrokerBuilder? eventBrokerBuilder = null;
         List<EventHandlerDescriptor> descriptors = new();
-        foreach (var builder in builders)
+        foreach(var builder in builders)
         {
-            if (builder is EventBrokerBuilder)
+            if(builder is EventBrokerBuilder)
             {
                 eventBrokerBuilder = (EventBrokerBuilder)builder;
             }
 
-            foreach (var descriptor in builder._eventsHandlersDescriptors)
+            foreach(var descriptor in builder._eventsHandlersDescriptors)
             {
                 descriptors.Add(descriptor);
             }
