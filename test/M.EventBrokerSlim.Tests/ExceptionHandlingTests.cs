@@ -1,12 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using M.EventBrokerSlim.DependencyInjection;
-using MELT;
-using Microsoft.Extensions.DependencyInjection;
+﻿using MELT;
 using Microsoft.Extensions.Logging;
-using Xunit;
 
 namespace M.EventBrokerSlim.Tests;
 public class ExceptionHandlingTests

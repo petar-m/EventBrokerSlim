@@ -1,13 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using M.EventBrokerSlim.DependencyInjection;
+﻿using System.Threading.Channels;
 using MELT;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
 
 namespace M.EventBrokerSlim.Tests;
 

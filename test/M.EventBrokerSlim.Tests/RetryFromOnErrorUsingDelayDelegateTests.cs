@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using M.EventBrokerSlim.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-
-namespace M.EventBrokerSlim.Tests;
+﻿namespace M.EventBrokerSlim.Tests;
 
 public class RetryFromOnErrorUsingDelayDelegateTests
 {
