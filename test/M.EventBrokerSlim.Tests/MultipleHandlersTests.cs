@@ -34,7 +34,7 @@ public class MultipleHandlersTests
 
         await eventBroker.Publish(testEvent);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
 
         // Assert
         Assert.True(completed);

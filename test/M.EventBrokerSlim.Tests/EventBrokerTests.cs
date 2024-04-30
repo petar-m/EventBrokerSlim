@@ -285,7 +285,7 @@ public class EventBrokerTests
             await eventBroker.Publish(@event);
         }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(250));
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
 
         eventBroker.Shutdown();
 

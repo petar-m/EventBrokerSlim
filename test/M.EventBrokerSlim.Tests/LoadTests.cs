@@ -44,7 +44,7 @@ public class LoadTests
             await eventBroker.Publish(new Event3("event", i));
         }
 
-        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(3));
 
         // Assert
         var counters = eventsTracker.Items

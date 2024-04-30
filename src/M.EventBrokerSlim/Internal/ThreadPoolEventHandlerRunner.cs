@@ -93,6 +93,11 @@ internal sealed class ThreadPoolEventHandlerRunner
         var handler = context.EventHandlerDescriptor!.Handle;
         var errorHandler = context.EventHandlerDescriptor!.OnError;
 
+        if(context.CancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         object? service = null;
         using var scope = context.CreateScope();
         try
