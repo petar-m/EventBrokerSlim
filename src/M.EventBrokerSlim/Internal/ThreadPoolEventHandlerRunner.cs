@@ -54,7 +54,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                 {
                     var type = @event.GetType();
                     var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
-                    if (eventHandlers is null)
+                    if (eventHandlers == default)
                     {
                         if (!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
                         {
@@ -64,7 +64,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                         continue;
                     }
 
-                    for (int i = 0; i < eventHandlers.Count; i++)
+                    for (int i = 0; i < eventHandlers.Length; i++)
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
