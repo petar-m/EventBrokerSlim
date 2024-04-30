@@ -10,14 +10,14 @@ public static class ServiceProviderHelper
         return serviceCollection.BuildServiceProvider(true);
     }
 
-    public static ServiceProvider BuildWithEventsRecorder<T>(Action<IServiceCollection> configure)
+    public static ServiceProvider BuildWithEventsRecorder<T>(Action<IServiceCollection> configure) where T : notnull
     {
         ServiceCollection serviceCollection = CreateServiceCollection(configure);
         serviceCollection.AddSingleton<EventsRecorder<T>>();
         return serviceCollection.BuildServiceProvider(true);
     }
 
-    public static ServiceProvider BuildWithEventsRecorderAndLogger<T>(Action<IServiceCollection> configure)
+    public static ServiceProvider BuildWithEventsRecorderAndLogger<T>(Action<IServiceCollection> configure) where T : notnull
     {
         ServiceCollection serviceCollection = CreateServiceCollection(configure);
         serviceCollection.AddSingleton<EventsRecorder<T>>();

@@ -2,9 +2,9 @@
 
 namespace M.EventBrokerSlim.Tests;
 
-public class EventsRecorder<T>
+public class EventsRecorder<T> where T : notnull
 {
-    private readonly ConcurrentDictionary<T, object> _expected = new();
+    private readonly ConcurrentDictionary<T, object?> _expected = new();
     private readonly TimeSpan _waitForItemsTimeout = TimeSpan.FromMilliseconds(10);
     private readonly ConcurrentBag<Exception> _exceptions = new();
     private readonly ConcurrentBag<(T id, long tick)> _events = new();

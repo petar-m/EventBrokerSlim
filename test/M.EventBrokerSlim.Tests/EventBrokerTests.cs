@@ -18,7 +18,9 @@ public class EventBrokerTests
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act Assert
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.Publish<TestEvent>(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 
     [Fact]
@@ -33,7 +35,9 @@ public class EventBrokerTests
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act Assert
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.PublishDeferred<TestEvent>(null, TimeSpan.FromSeconds(1)));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 
     [Fact]
@@ -380,9 +384,9 @@ public class EventBrokerTests
     public class TestEventHandler : IEventHandler<TestEvent>
     {
         private readonly EventsRecorder<int> _eventsRecoder;
-        private readonly Timestamp _timestamp;
+        private readonly Timestamp? _timestamp;
 
-        public TestEventHandler(EventsRecorder<int> eventsRecorder, Timestamp timestamp = null)
+        public TestEventHandler(EventsRecorder<int> eventsRecorder, Timestamp? timestamp = null)
         {
             _eventsRecoder = eventsRecorder;
             _timestamp = timestamp;

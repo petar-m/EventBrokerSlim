@@ -139,7 +139,7 @@ public class LoadTests
 
         public Task Handle(T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            _tracker.Track(@event);
+            _tracker.Track(@event!);
             return Task.CompletedTask;
         }
 

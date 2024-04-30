@@ -1,11 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
-
-	<PropertyGroup>
 		<PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
 		<RespositoryType>git</RespositoryType>
