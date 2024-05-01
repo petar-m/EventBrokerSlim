@@ -175,5 +175,5 @@ To avoid these problems, both `IEventBroker` `Handle` and `OnError` methods have
 
 `RetryPolicy.RetryRequested` is used to coordinate retry request between `Handle` and `OnError`. `RetryPolicy` is passed to both methods to enable error handling and retry request entirely in `Handle` method. `OnError` can check `RetryPolicy.RetryRequested` to know whether `Hanlde` had called `RetryPolicy.RetryAfter()`.  
 
-**Caution:** the retry will not be exactly after the specified time interval in `RetryPolicy.RetryAfter()`. Take into account a tollerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
+**Caution:** the retry will not be exactly after the specified time interval in `RetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
 
