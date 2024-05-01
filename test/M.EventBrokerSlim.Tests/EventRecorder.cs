@@ -58,7 +58,6 @@ public class EventsRecorder<T> where T : notnull
 
     public virtual void Notify(ITraceable<T> @event, int? handlerInstance = null, int? scopeInstance = null)
     {
-        _expected.TryRemove(@event.CorrelationId, out _);
         _events.Add((@event.CorrelationId, DateTime.UtcNow.Ticks));
 
         if(handlerInstance.HasValue)
@@ -70,12 +69,14 @@ public class EventsRecorder<T> where T : notnull
         {
             _scopeInstances.Add((id: scopeInstance.Value, tick: DateTime.UtcNow.Ticks));
         }
+
+        _expected.TryRemove(@event.CorrelationId, out _);
     }
 
     public virtual void Notify(T correlationId)
     {
-        _expected.TryRemove(correlationId, out _);
         _events.Add((correlationId, DateTime.UtcNow.Ticks));
+        _expected.TryRemove(correlationId, out _);
     }
 
     public virtual void Notify(Exception exception, ITraceable<T> @event)
