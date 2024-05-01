@@ -12,8 +12,8 @@ public class OrderOfRetriesTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent1, TestEventHandler1>()
-                              .AddKeyedTransient<TestEvent2, TestEventHandler2>())
+                              .AddTransient<TestEvent1, TestEventHandler1>()
+                              .AddTransient<TestEvent2, TestEventHandler2>())
                     .AddSingleton<EventsTracker>());
 
         using var scope = services.CreateScope();

@@ -10,7 +10,7 @@ public class ExceptionHandlingTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
@@ -36,7 +36,7 @@ public class ExceptionHandlingTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
                         // TestEventHandler1 has dependency on string not configured in the DI container 
-                        x => x.AddKeyedSingleton<TestEvent, TestEventHandler1>()));
+                        x => x.AddSingleton<TestEvent, TestEventHandler1>()));
 
         using var scope = services.CreateScope();
 
@@ -62,7 +62,7 @@ public class ExceptionHandlingTests
         var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
             sc => sc.AddEventBroker(
                         // TestEventHandler1 has dependency on string not configured in the DI container 
-                        x => x.AddKeyedSingleton<TestEvent, TestEventHandler1>()));
+                        x => x.AddSingleton<TestEvent, TestEventHandler1>()));
 
         using var scope = services.CreateScope();
 
@@ -90,7 +90,7 @@ public class ExceptionHandlingTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
@@ -115,7 +115,7 @@ public class ExceptionHandlingTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 

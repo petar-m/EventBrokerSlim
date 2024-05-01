@@ -12,7 +12,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -29,7 +29,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -46,7 +46,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -62,7 +62,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -78,7 +78,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -100,7 +100,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -128,7 +128,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -175,7 +175,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>())
+                        x => x.AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton<Timestamp>());
 
         using var scope = services.CreateScope();
@@ -206,7 +206,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()));
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -232,7 +232,7 @@ public class EventBrokerTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>())
+                        x => x.AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton<Timestamp>());
 
         using var scope = services.CreateScope();
@@ -265,7 +265,7 @@ public class EventBrokerTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(2)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton<Timestamp>());
 
         using var scope = services.CreateScope();
@@ -306,7 +306,7 @@ public class EventBrokerTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(2)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton<Timestamp>());
 
         using var scope = services.CreateScope();
@@ -345,7 +345,7 @@ public class EventBrokerTests
         var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(2)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton<Timestamp>());
 
         using var scope = services.CreateScope();

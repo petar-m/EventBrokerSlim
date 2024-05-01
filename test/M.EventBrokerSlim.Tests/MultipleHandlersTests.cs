@@ -8,9 +8,9 @@ public class MultipleHandlersTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
             sc => sc.AddEventBroker(
-                x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                      .AddKeyedTransient<TestEvent, TestEventHandler1>()
-                      .AddKeyedTransient<TestEvent, TestEventHandler2>()));
+                x => x.AddTransient<TestEvent, TestEventHandler>()
+                      .AddTransient<TestEvent, TestEventHandler1>()
+                      .AddTransient<TestEvent, TestEventHandler2>()));
 
         using var scope = services.CreateScope();
 

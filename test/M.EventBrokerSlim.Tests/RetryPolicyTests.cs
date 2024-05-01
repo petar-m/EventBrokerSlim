@@ -12,7 +12,7 @@ public class RetryPolicyTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
                     .AddSingleton<EventsTracker>());
 

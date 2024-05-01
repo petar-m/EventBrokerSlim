@@ -12,7 +12,7 @@ public class HandlerExecutionTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(1)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>()));
+                              .AddTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 
@@ -44,7 +44,7 @@ public class HandlerExecutionTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(2)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>()));
+                              .AddTransient<TestEvent, TestEventHandler>()));
 
         using var scope = services.CreateScope();
 

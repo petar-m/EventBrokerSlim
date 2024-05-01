@@ -12,7 +12,7 @@ public class RetryFromHandleTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 1, Delay: TimeSpan.FromMilliseconds(100)))
                     .AddSingleton<EventsTracker>());
 
@@ -42,7 +42,7 @@ public class RetryFromHandleTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 1, Delay: TimeSpan.Zero))
                     .AddSingleton<EventsTracker>());
 
@@ -72,7 +72,7 @@ public class RetryFromHandleTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
                     .AddSingleton<EventsTracker>());
 
@@ -104,7 +104,7 @@ public class RetryFromHandleTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddKeyedTransient<TestEvent, TestEventHandler>())
+                              .AddTransient<TestEvent, TestEventHandler>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
                     .AddSingleton<EventsTracker>());
 

@@ -20,12 +20,11 @@ public class EventHandlerRegistryBuilder
 
     /// <summary>
     /// Adds a scoped service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
-    /// The service key is maintained internally.
     /// </summary>
     /// <typeparam name="TEvent">The type of the event handled.</typeparam>
     /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder AddKeyedScoped<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddScoped<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
         var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
@@ -36,12 +35,11 @@ public class EventHandlerRegistryBuilder
 
     /// <summary>
     /// Adds a singleton service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
-    /// The service key is maintained internally.
     /// </summary>
     /// <typeparam name="TEvent">The type of the event handled.</typeparam>
     /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder AddKeyedSingleton<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddSingleton<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
         var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
@@ -52,12 +50,11 @@ public class EventHandlerRegistryBuilder
 
     /// <summary>
     /// Adds a transient service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
-    /// The service key is maintained internally.
     /// </summary>
     /// <typeparam name="TEvent">The type of the event handled.</typeparam>
     /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public EventHandlerRegistryBuilder AddKeyedTransient<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
+    public EventHandlerRegistryBuilder AddTransient<TEvent, THandler>() where THandler : class, IEventHandler<TEvent>
     {
         var eventHandlerKey = Guid.NewGuid();
         _services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);

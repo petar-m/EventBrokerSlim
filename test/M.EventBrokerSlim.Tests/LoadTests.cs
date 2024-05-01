@@ -9,15 +9,15 @@ public class LoadTests
         var services = ServiceProviderHelper.Build(
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(5)
-                              .AddKeyedTransient<Event1, TestEventHandler1<Event1>>()
-                              .AddKeyedTransient<Event1, TestEventHandler2<Event1>>()
-                              .AddKeyedTransient<Event1, TestEventHandler3<Event1>>()
-                              .AddKeyedTransient<Event2, TestEventHandler1<Event2>>()
-                              .AddKeyedTransient<Event2, TestEventHandler2<Event2>>()
-                              .AddKeyedTransient<Event2, TestEventHandler3<Event2>>()
-                              .AddKeyedTransient<Event3, TestEventHandler1<Event3>>()
-                              .AddKeyedTransient<Event3, TestEventHandler2<Event3>>()
-                              .AddKeyedTransient<Event3, TestEventHandler3<Event3>>())
+                              .AddTransient<Event1, TestEventHandler1<Event1>>()
+                              .AddTransient<Event1, TestEventHandler2<Event1>>()
+                              .AddTransient<Event1, TestEventHandler3<Event1>>()
+                              .AddTransient<Event2, TestEventHandler1<Event2>>()
+                              .AddTransient<Event2, TestEventHandler2<Event2>>()
+                              .AddTransient<Event2, TestEventHandler3<Event2>>()
+                              .AddTransient<Event3, TestEventHandler1<Event3>>()
+                              .AddTransient<Event3, TestEventHandler2<Event3>>()
+                              .AddTransient<Event3, TestEventHandler3<Event3>>())
                     .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
                     .AddSingleton<EventsTracker>());
 

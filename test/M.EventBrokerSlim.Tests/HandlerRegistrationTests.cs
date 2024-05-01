@@ -7,7 +7,7 @@ public class HandlerRegistrationTests
     {
         var serviceCollection = new ServiceCollection()
             .AddEventBroker(
-                x => x.AddKeyedTransient<TestEvent, TestEventHandler>());
+                x => x.AddTransient<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -19,7 +19,7 @@ public class HandlerRegistrationTests
     {
         var serviceCollection = new ServiceCollection()
             .AddEventBroker(
-                x => x.AddKeyedScoped<TestEvent, TestEventHandler>());
+                x => x.AddScoped<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -31,7 +31,7 @@ public class HandlerRegistrationTests
     {
         var serviceCollection = new ServiceCollection()
             .AddEventBroker(
-                x => x.AddKeyedSingleton<TestEvent, TestEventHandler>());
+                x => x.AddSingleton<TestEvent, TestEventHandler>());
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -68,9 +68,9 @@ public class HandlerRegistrationTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
             sc => sc.AddEventBroker(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler2>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()
+                              .AddScoped<TestEvent, TestEventHandler1>()
+                              .AddScoped<TestEvent, TestEventHandler2>()));
 
         using var scope = services.CreateScope();
 
@@ -99,9 +99,9 @@ public class HandlerRegistrationTests
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
             sc => sc.AddEventHandlers(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler2>())
+                        x => x.AddTransient<TestEvent, TestEventHandler>()
+                              .AddScoped<TestEvent, TestEventHandler1>()
+                              .AddScoped<TestEvent, TestEventHandler2>())
                     .AddEventBroker());
 
         using var scope = services.CreateScope();
@@ -132,9 +132,9 @@ public class HandlerRegistrationTests
         var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
             sc => sc.AddEventBroker()
                     .AddEventHandlers(
-                        x => x.AddKeyedTransient<TestEvent, TestEventHandler>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler1>()
-                              .AddKeyedScoped<TestEvent, TestEventHandler2>()));
+                        x => x.AddTransient<TestEvent, TestEventHandler>()
+                              .AddScoped<TestEvent, TestEventHandler1>()
+                              .AddScoped<TestEvent, TestEventHandler2>()));
 
         using var scope = services.CreateScope();
 
@@ -162,9 +162,9 @@ public class HandlerRegistrationTests
     {
         // Arrange
         var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventHandlers(x => x.AddKeyedTransient<TestEvent, TestEventHandler>())
-                    .AddEventBroker(x => x.AddKeyedScoped<TestEvent, TestEventHandler1>())
-                    .AddEventHandlers(x => x.AddKeyedScoped<TestEvent, TestEventHandler2>()));
+            sc => sc.AddEventHandlers(x => x.AddTransient<TestEvent, TestEventHandler>())
+                    .AddEventBroker(x => x.AddScoped<TestEvent, TestEventHandler1>())
+                    .AddEventHandlers(x => x.AddScoped<TestEvent, TestEventHandler2>()));
 
         using var scope = services.CreateScope();
 
