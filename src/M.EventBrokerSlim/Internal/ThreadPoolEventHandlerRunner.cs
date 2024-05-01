@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal;
@@ -13,7 +14,7 @@ internal sealed class ThreadPoolEventHandlerRunner
     private readonly ChannelReader<object> _channelReader;
     private readonly EventHandlerRegistry _eventHandlerRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
+    private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
     private readonly SemaphoreSlim _semaphore;
     private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
 
@@ -27,7 +28,7 @@ internal sealed class ThreadPoolEventHandlerRunner
         _channelReader = channel.Reader;
         _eventHandlerRegistry = eventHandlerRegistry;
         _cancellationTokenSource = cancellationTokenSource;
-        _logger = logger;
+        _logger = logger ?? new NullLogger<ThreadPoolEventHandlerRunner>();
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
 
         var retryQueue = new RetryQueue(channel.Writer, cancellationTokenSource.Token);
@@ -56,7 +57,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                     var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
                     if(eventHandlers == default)
                     {
-                        if(!_eventHandlerRegistry.DisableMissingHandlerWarningLog && _logger is not null)
+                        if(!_eventHandlerRegistry.DisableMissingHandlerWarningLog)
                         {
                             _logger.LogNoEventHandlerForEvent(type);
                         }

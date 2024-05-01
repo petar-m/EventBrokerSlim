@@ -10,14 +10,14 @@ internal class HandlerExecutionContextPooledObjectPolicy : IPooledObjectPolicy<H
     private readonly DefaultObjectPool<RetryPolicy> _retryPolicyPool;
     private readonly SemaphoreSlim _semaphore;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
+    private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
     private readonly RetryQueue _retryQueue;
 
     internal HandlerExecutionContextPooledObjectPolicy(
         DefaultObjectPool<RetryPolicy> retryPolicyPool,
         SemaphoreSlim semaphore,
         IServiceScopeFactory serviceScopeFactory,
-        ILogger<ThreadPoolEventHandlerRunner>? logger,
+        ILogger<ThreadPoolEventHandlerRunner> logger,
         RetryQueue retryQueue)
     {
         _retryPolicyPool = retryPolicyPool;

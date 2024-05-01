@@ -12,11 +12,11 @@ internal class HandlerExecutionContext
     private readonly DefaultObjectPool<RetryPolicy> _retryPolicyPool;
     private readonly SemaphoreSlim _semaphore;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<ThreadPoolEventHandlerRunner>? _logger;
+    private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
     private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
     private readonly RetryQueue _retryQueue;
 
-    public HandlerExecutionContext(DefaultObjectPool<RetryPolicy> retryPolicyPool, SemaphoreSlim semaphore, IServiceScopeFactory serviceScopeFactory, ILogger<ThreadPoolEventHandlerRunner>? logger, DefaultObjectPool<HandlerExecutionContext> contextObjectPool, RetryQueue retryQueue)
+    public HandlerExecutionContext(DefaultObjectPool<RetryPolicy> retryPolicyPool, SemaphoreSlim semaphore, IServiceScopeFactory serviceScopeFactory, ILogger<ThreadPoolEventHandlerRunner> logger, DefaultObjectPool<HandlerExecutionContext> contextObjectPool, RetryQueue retryQueue)
     {
         _retryPolicyPool = retryPolicyPool;
         _semaphore = semaphore;
@@ -86,8 +86,8 @@ internal class HandlerExecutionContext
         => _serviceScopeFactory.CreateScope();
 
     public void LogEventHandlerResolvingError(Exception exception)
-        => _logger?.LogEventHandlerResolvingError(Event!.GetType(), exception);
+        => _logger.LogEventHandlerResolvingError(Event!.GetType(), exception);
 
     public void LogUnhandledExceptionFromOnError(Type serviceType, Exception exception)
-        => _logger?.LogUnhandledExceptionFromOnError(serviceType, exception);
+        => _logger.LogUnhandledExceptionFromOnError(serviceType, exception);
 }
