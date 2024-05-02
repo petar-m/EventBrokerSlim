@@ -392,7 +392,7 @@ public class EventBrokerTests
             _timestamp = timestamp;
         }
 
-        public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(@event);
 
@@ -412,7 +412,7 @@ public class EventBrokerTests
             }
         }
 
-        public async Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public async Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(exception, @event);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +19,7 @@ public interface IEventHandler<TEvent>
     /// <param name="event">An instance of <typeparamref name="TEvent"/> representing the event.</param>
     /// <param name="retryPolicy">Provides ability to request a retry for the same event by the handler. Do not keep a reference to this instance, it may be pooled and reused.</param>
     /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-    Task Handle(TEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken);
+    Task Handle(TEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken);
 
     /// <summary>
     /// Called when an unhadled exception is caught during execution.
@@ -29,5 +30,5 @@ public interface IEventHandler<TEvent>
     /// <param name="event">The event instance which handling caused the exception.</param>
     /// <param name="retryPolicy">Provides ability to request a retry for the same event by the handler. Do not keep a reference to this instance, it may be pooled and reused.</param>
     /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-    Task OnError(Exception exception, TEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken);
+    Task OnError(Exception exception, TEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken);
 }

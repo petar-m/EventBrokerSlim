@@ -30,12 +30,12 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
     {
     }
 
-    public async Task Handle(SomeEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+    public async Task Handle(SomeEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
         // process the event
     }
 
-    public async Task OnError(Exception exception, SomeEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+    public async Task OnError(Exception exception, SomeEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
         // called on unhandled exeption from Handle 
         // optionally use retryPolicy.RetryAfter(TimeSpan)
@@ -166,14 +166,14 @@ Retrying within event hadler can become a bottleneck. Imagine `EventBroker` is r
 
 Another option will be to use `IEventBroker.PublishDeferred`. This will eliminate the bottleneck but will itroduce different problems. The same event will be handled again by all handlers, meaning specaial care should be taken to make all handlers idempotent. Any additional information (e.g. number of retries) needs to be known, it should be carried with the event, introducing accidential complexity.  
 
-To avoid these problems, both `IEventBroker` `Handle` and `OnError` methods have `RetryPolicy` parameter.  
+To avoid these problems, both `IEventBroker` `Handle` and `OnError` methods have `IRetryPolicy` parameter.  
 
- `RetryPolicy.RetryAfter()` will schedule a retry only for the handler it is called from, without blocking. After the given time interval an instance of the handler will be resolved from the DI container (from a new scope) and executed with the same event instance.
+ `IRetryPolicy.RetryAfter()` will schedule a retry only for the handler it is called from, without blocking. After the given time interval an instance of the handler will be resolved from the DI container (from a new scope) and executed with the same event instance.
 
-`RetryPolicy.Attempt` is the current retry attempt for a given handler and event.  
-`RetryPolicy.LastDelay` is the time interval before the retry.  
+`IRetryPolicy.Attempt` is the current retry attempt for a given handler and event.  
+`IRetryPolicy.LastDelay` is the time interval before the retry.  
 
-`RetryPolicy.RetryRequested` is used to coordinate retry request between `Handle` and `OnError`. `RetryPolicy` is passed to both methods to enable error handling and retry request entirely in `Handle` method. `OnError` can check `RetryPolicy.RetryRequested` to know whether `Hanlde` had called `RetryPolicy.RetryAfter()`.  
+`IRetryPolicy.RetryRequested` is used to coordinate retry request between `Handle` and `OnError`. `IRetryPolicy` is passed to both methods to enable error handling and retry request entirely in `Handle` method. `OnError` can check `IRetryPolicy.RetryRequested` to know whether `Hanlde` had called `IRetryPolicy.RetryAfter()`.  
 
-**Caution:** the retry will not be exactly after the specified time interval in `RetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
+**Caution:** the retry will not be exactly after the specified time interval in `IRetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
 

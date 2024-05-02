@@ -148,7 +148,7 @@ public class ExceptionHandlingTests
             _eventsRecorder = eventBroker;
         }
 
-        public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
             if(@event.ThrowFromHandle)
@@ -159,7 +159,7 @@ public class ExceptionHandlingTests
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             if(@event.ThrowFromOnError)
@@ -179,8 +179,8 @@ public class ExceptionHandlingTests
             _input = input;
         }
 
-        public Task Handle(TestEvent @even, RetryPolicy retryPolicyt, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task Handle(TestEvent @even, IRetryPolicy retryPolicyt, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 }

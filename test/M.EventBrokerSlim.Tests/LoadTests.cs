@@ -81,7 +81,7 @@ public class LoadTests
             _tracker = tracker;
         }
 
-        public Task Handle(T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
             if(@event.Number % 250 == 0)
@@ -91,7 +91,7 @@ public class LoadTests
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             if(@event.Number % 250 == 0 && retryPolicy.Attempt < _settings.RetryAttempts)
             {
@@ -112,7 +112,7 @@ public class LoadTests
             _tracker = tracker;
         }
 
-        public Task Handle(T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
             if(@event.Number % 500 == 0 && retryPolicy.Attempt < _settings.RetryAttempts)
@@ -122,7 +122,7 @@ public class LoadTests
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -137,13 +137,13 @@ public class LoadTests
             _tracker = tracker;
         }
 
-        public Task Handle(T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event!);
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, T @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, T @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

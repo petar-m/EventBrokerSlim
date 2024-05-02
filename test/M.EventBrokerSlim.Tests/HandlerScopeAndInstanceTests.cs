@@ -117,14 +117,14 @@ public class HandlerScopeAndInstanceTests
             _scope = scope;
         }
 
-        public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
             _eventsRecorder.Notify(@event, handlerInstance: GetHashCode(), scopeInstance: _scope.GetHashCode());
             return Task.CompletedTask;
         }
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;

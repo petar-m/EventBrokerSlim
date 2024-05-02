@@ -50,7 +50,7 @@ public class RetryPolicyTests
             _tracker = tracker;
         }
 
-        public Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(retryPolicy);
             if(retryPolicy.Attempt < _settings.RetryAttempts)
@@ -60,7 +60,7 @@ public class RetryPolicyTests
             throw new NotImplementedException();
         }
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(retryPolicy);
             if(retryPolicy.Attempt < _settings.RetryAttempts)

@@ -112,13 +112,13 @@ public class RetryFromOnErrorUsingDelayDelegateTests
             _tracker = tracker;
         }
 
-        public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             await Task.Delay(_random.Next(1, 10));
             throw new NotImplementedException();
         }
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
 

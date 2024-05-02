@@ -61,7 +61,7 @@ public class OrderOfRetriesTests
             _tracker = tracker;
         }
 
-        public Task Handle(TestEvent1 @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent1 @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
             if(retryPolicy.Attempt < 1)
@@ -71,7 +71,7 @@ public class OrderOfRetriesTests
             throw new NotImplementedException();
         }
 
-        public Task OnError(Exception exception, TestEvent1 @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent1 @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -86,7 +86,7 @@ public class OrderOfRetriesTests
             _tracker = tracker;
         }
 
-        public Task Handle(TestEvent2 @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent2 @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
             if(retryPolicy.Attempt < 2)
@@ -96,7 +96,7 @@ public class OrderOfRetriesTests
             throw new NotImplementedException();
         }
 
-        public Task OnError(Exception exception, TestEvent2 @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent2 @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

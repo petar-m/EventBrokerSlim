@@ -26,12 +26,12 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
     {
     }
 
-    public async Task Handle(SomeEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+    public async Task Handle(SomeEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
         // process the event
     }
 
-    public async Task OnError(Exception exception, SomeEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+    public async Task OnError(Exception exception, SomeEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
         // called on unhandled exeption from Handle 
         // optionally use retryPolicy.RetryAfter(TimeSpan)

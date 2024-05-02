@@ -156,7 +156,7 @@ public class HandlerExecutionTests
             _eventsRecoder = eventsRecorder;
         }
 
-        public async Task Handle(TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             if(@event.TimeToRun != default)
             {
@@ -166,7 +166,7 @@ public class HandlerExecutionTests
             _eventsRecoder.Notify(@event);
         }
 
-        public Task OnError(Exception exception, TestEvent @event, RetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecoder.Notify(exception, @event);
             return Task.CompletedTask;
