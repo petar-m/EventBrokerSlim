@@ -47,7 +47,7 @@ public class HandlerRegistrationTests
             paramName: "maxConcurrentHandlers",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(0)));
 
-        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero. (Parameter 'maxConcurrentHandlers')", exception.Message);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class HandlerRegistrationTests
             paramName: "maxConcurrentHandlers",
             testCode: () => serviceCollection.AddEventBroker(x => x.WithMaxConcurrentHandlers(rand.Next(int.MinValue, -1))));
 
-        Assert.Equal("MaxConcurrentHandlers should be greater than zero (Parameter 'maxConcurrentHandlers')", exception.Message);
+        Assert.Equal("MaxConcurrentHandlers should be greater than zero. (Parameter 'maxConcurrentHandlers')", exception.Message);
     }
 
     [Fact]

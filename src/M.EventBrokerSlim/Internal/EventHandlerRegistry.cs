@@ -25,6 +25,6 @@ internal sealed class EventHandlerRegistry
     internal ImmutableArray<EventHandlerDescriptor> GetEventHandlers(Type eventType)
     {
         _eventHandlerDescriptors.TryGetValue(eventType, out var handlers);
-        return handlers;
+        return handlers.IsDefault ? ImmutableArray<EventHandlerDescriptor>.Empty : handlers;
     }
 }

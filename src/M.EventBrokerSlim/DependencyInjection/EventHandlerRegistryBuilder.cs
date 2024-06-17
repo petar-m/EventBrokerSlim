@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace M.EventBrokerSlim.DependencyInjection;
 
 /// <summary>
-/// Registers EventBorker event handlers in DI container.
+/// Registers EventBroker event handlers in DI container.
 /// </summary>
 public class EventHandlerRegistryBuilder
 {

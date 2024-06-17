@@ -21,4 +21,9 @@ internal static partial class LogMessages
         Message = "No event handler found for event {eventType}",
         Level = LogLevel.Warning)]
     internal static partial void LogNoEventHandlerForEvent(this ILogger logger, Type eventType);
+
+    [LoggerMessage(
+        Message = "Unhandled exception executing delegate handler for event {eventType}",
+        Level = LogLevel.Error)]
+    internal static partial void LogDelegateEventHandlerError(this ILogger logger, Type eventType, Exception exception);
 }
