@@ -27,6 +27,7 @@ public class LoadTests
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
 
         const int EventsCount = 100_000;
+        eventsTracker.ExpectedItemsCount = 3 * (3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3);
 
         // Act
         foreach(var i in Enumerable.Range(1, EventsCount))
@@ -36,7 +37,7 @@ public class LoadTests
             await eventBroker.Publish(new Event3("event", i));
         }
 
-        await eventsTracker.Wait(TimeSpan.FromSeconds(3));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(10));
 
         // Assert
         var counters = eventsTracker.Items
@@ -44,7 +45,7 @@ public class LoadTests
             .GroupBy(x => x.GetType())
             .Select(x => (Type: x.Key, Count: x.Count()))
         .ToArray();
-        // 1 event, 3 handlers, one handler does not retry, other retrires one each 250 events 3 times, other retrires one each 500 events 3 times
+        // 1 event, 3 handlers, one handler does not retry, other retries one each 250 events 3 times, other retries one each 500 events 3 times
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[0].Count);
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[1].Count);
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[2].Count);

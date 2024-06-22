@@ -22,6 +22,12 @@ public class EventsTracker
         }
     }
 
+    public Task TrackAsync(object @event)
+    {
+        Track(@event);
+        return Task.CompletedTask;
+    }
+
     public ConcurrentBag<(object Event, DateTime Timestamp)> Items { get; } = new();
 
     public async Task Wait(TimeSpan timeout)

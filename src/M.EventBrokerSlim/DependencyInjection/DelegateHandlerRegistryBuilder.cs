@@ -33,7 +33,7 @@ public class DelegateHandlerRegistryBuilder
     {
         if(IsClosed)
         {
-            throw new InvalidOperationException("Registry is closed. Please complete registrations before IEventBroker is resolved");
+            throw new InvalidOperationException("Registry is closed. Please complete registrations before IEventBroker is resolved.");
         }
 
         var descriptor = DelegateHelper.BuildDelegateHandlerDescriptor(handler, typeof(TEvent));
@@ -48,13 +48,8 @@ public class DelegateHandlerRegistryBuilder
 
     internal List<DelegateHandlerDescriptor> HandlerDescriptors { get; } = new();
 
-    internal static DelegateHandlerRegistry Build(IEnumerable<DelegateHandlerRegistryBuilder>? builders)
+    internal static DelegateHandlerRegistry Build(IEnumerable<DelegateHandlerRegistryBuilder> builders)
     {
-        if(builders is null)
-        {
-            return new DelegateHandlerRegistry(Array.Empty<DelegateHandlerDescriptor>());
-        }
-
         return new DelegateHandlerRegistry(
             builders.SelectMany(x =>
             {

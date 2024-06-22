@@ -13,7 +13,7 @@ internal static class DelegateHelper
     {
         if(delegateHandler.Method.ReturnType != typeof(Task))
         {
-            throw new ArgumentException("Delegate must return Task.");
+            throw new ArgumentException("Delegate must return a Task.");
         }
 
         ParameterInfo[] delegateParameters = delegateHandler.Method.GetParameters();
