@@ -44,16 +44,19 @@ public class RegistrationTests
 
         _builder.RegisterHandler<Event1>(GetHandler(handlerParametersCount, _eventsTracker));
 
+        _eventsTracker.ExpectedItemsCount = 1;
+
         using var scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(20));
+        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(200));
 
         // Assert
         Assert.Single(_eventsTracker.Items);
+        _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");
     }
 
     [Fact]
@@ -117,16 +120,19 @@ public class RegistrationTests
         _builder.RegisterHandler<Event1>(() => Task.CompletedTask)
                 .WrapWith(GetHandler(handlerParametersCount, _eventsTracker));
 
+        _eventsTracker.ExpectedItemsCount = 1;
+
         using var scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(20));
+        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(200));
 
         // Assert
         Assert.Single(_eventsTracker.Items);
+        _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");
     }
 
     [Fact]
@@ -182,6 +188,40 @@ public class RegistrationTests
 
         // Assert
         Assert.Single(_eventsTracker.Items);
+    }
+
+    [Fact]
+    public async Task Multiple_Builders_Registered()
+    {
+        _builder.RegisterHandler<Event1>(async (EventsTracker tracker) => await tracker.TrackAsync("handler1"));
+
+        var builder2 = new DelegateHandlerRegistryBuilder();
+        builder2.RegisterHandler<Event1>(async (EventsTracker tracker) => await tracker.TrackAsync("handler2"));
+
+        var builder3 = new DelegateHandlerRegistryBuilder();
+        builder3.RegisterHandler<Event1>(async (EventsTracker tracker) => await tracker.TrackAsync("handler3"));
+
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithLogger(
+            sc => sc.AddEventBroker()
+                    .AddSingleton(_builder)
+                    .AddSingleton(builder2)
+                    .AddSingleton(builder3)
+                    .AddSingleton(_eventsTracker));
+
+        using var scope = services.CreateScope();
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+
+        _eventsTracker.ExpectedItemsCount = 3;
+
+        // Act
+        await eventBroker.Publish(new Event1(1));
+
+        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(20));
+
+        // Assert
+        Assert.Equal(3, _eventsTracker.Items.Count);
+        Assert.Equal(new[] { "handler1", "handler2", "handler3" }, _eventsTracker.Items.Select(x => x.Item).Cast<string>().Order().ToArray());
     }
 
     private Delegate GetHandler(int parametersCount, EventsTracker _eventsTracker)

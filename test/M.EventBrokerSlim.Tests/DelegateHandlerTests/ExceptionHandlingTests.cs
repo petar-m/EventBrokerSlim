@@ -80,4 +80,34 @@ public class ExceptionHandlingTests
         Assert.Equal($"Unhandled exception executing delegate handler for event {typeof(Event1).FullName}", log.Message);
         Assert.Equal("The method or operation is not implemented.", log.Exception?.Message);
     }
+
+    [Fact]
+    public async Task Shutdown_During_Handling_TaskCanceledException_IsLogged()
+    {
+        // Arrange
+        var services = ServiceProviderHelper.BuildWithLogger(
+            sc => sc.AddEventBroker()
+                    .AddSingleton(_builder)
+                    .AddSingleton(_eventsTracker));
+
+        _builder.RegisterHandler<Event1>(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken));
+
+        using var scope = services.CreateScope();
+
+        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
+
+        // Act
+        await eventBroker.Publish(new Event1(1));
+        await Task.Delay(50);
+        eventBroker.Shutdown();
+        await Task.Delay(50);
+
+        // Assert
+        var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
+
+        var log = Assert.Single(provider.Sink.LogEntries);
+        Assert.Equal(LogLevel.Error, log.LogLevel);
+        Assert.Equal($"Unhandled exception executing delegate handler for event {typeof(Event1).FullName}", log.Message);
+        Assert.Equal("A task was canceled.", log.Exception?.Message);
+    }
 }
