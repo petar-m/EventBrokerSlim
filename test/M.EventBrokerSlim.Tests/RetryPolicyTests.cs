@@ -28,8 +28,8 @@ public class RetryPolicyTests
 
         // Assert
         Assert.Equal(8, eventsTracker.Items.Count);
-        var retryPolicy = eventsTracker.Items.First().Event;
-        Assert.All(eventsTracker.Items.Select(x => x.Event), x => Assert.Same(retryPolicy, x));
+        var retryPolicy = eventsTracker.Items.First().Item;
+        Assert.All(eventsTracker.Items.Select(x => x.Item), x => Assert.Same(retryPolicy, x));
     }
 
     public class TestEvent(string Info)

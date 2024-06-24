@@ -120,7 +120,7 @@ public class RetryFromHandleTests
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
-        Assert.All(eventsTracker.Items.Select(x => x.Event), x => Assert.Same(event1, x));
+        Assert.All(eventsTracker.Items.Select(x => x.Item), x => Assert.Same(event1, x));
     }
 
     public class TestEvent(string Info)

@@ -61,7 +61,7 @@ public class LoadTests
         _output.WriteLine($"Elapsed: {eventsTracker.Elapsed}");
 
         var counters = eventsTracker.Items
-            .Select(x => x.Event)
+            .Select(x => x.Item)
             .GroupBy(x => x.GetType())
             .Select(x => (Type: x.Key, Count: x.Count()))
         .ToArray();

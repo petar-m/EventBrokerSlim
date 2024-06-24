@@ -12,9 +12,9 @@ public class EventsTracker
 
     public TimeSpan Elapsed => _stopwatch.Elapsed;
 
-    public void Track(object @event)
+    public void Track(object item)
     {
-        Items.Add((@event, DateTime.UtcNow));
+        Items.Add((item, DateTime.UtcNow));
         if(Items.Count == ExpectedItemsCount && _cancellationTokenSource is not null)
         {
             _cancellationTokenSource.Cancel();
@@ -22,13 +22,13 @@ public class EventsTracker
         }
     }
 
-    public Task TrackAsync(object @event)
+    public Task TrackAsync(object item)
     {
-        Track(@event);
+        Track(item);
         return Task.CompletedTask;
     }
 
-    public ConcurrentBag<(object Event, DateTime Timestamp)> Items { get; } = new();
+    public ConcurrentBag<(object Item, DateTime Timestamp)> Items { get; } = new();
 
     public async Task Wait(TimeSpan timeout)
     {

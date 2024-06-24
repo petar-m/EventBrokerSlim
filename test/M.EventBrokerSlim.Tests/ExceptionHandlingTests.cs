@@ -166,6 +166,7 @@ public class ExceptionHandlingTests
             {
                 throw new NotImplementedException();
             }
+
             return Task.CompletedTask;
         }
     }
