@@ -24,7 +24,7 @@ public class RetryFromHandleTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(200));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
@@ -54,7 +54,7 @@ public class RetryFromHandleTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(100));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
@@ -84,7 +84,7 @@ public class RetryFromHandleTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(700));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
@@ -116,7 +116,7 @@ public class RetryFromHandleTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(700));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);

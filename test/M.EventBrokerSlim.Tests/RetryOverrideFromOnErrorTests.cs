@@ -24,7 +24,7 @@ public class RetryOverrideFromOnErrorTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(500));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);

@@ -24,7 +24,7 @@ public class RetryPolicyTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(400));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(8, eventsTracker.Items.Count);

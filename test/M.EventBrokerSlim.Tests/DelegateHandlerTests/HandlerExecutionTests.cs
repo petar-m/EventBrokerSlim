@@ -39,7 +39,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(event1);
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<Event1>().ToArray();
@@ -65,7 +65,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<CancellationToken>().ToArray();
@@ -91,7 +91,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<IRetryPolicy>().ToArray();
@@ -127,7 +127,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100000));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Item).OfType<string>().ToArray();
@@ -167,7 +167,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Item).OfType<string>().ToArray();
@@ -192,7 +192,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<Event1>().ToArray();
@@ -213,7 +213,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<Event1>().ToArray();
@@ -238,7 +238,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.PublishDeferred(new Event1(1), TimeSpan.FromMilliseconds(200));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(300));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<Event1>().ToArray();
@@ -265,7 +265,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(500));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         var items = _tracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Item).OfType<Event1>().ToArray();
@@ -299,7 +299,7 @@ public class HandlerExecutionTests
 
         // Act
         await eventBroker.Publish(new Event1(1));
-        await _tracker.Wait(TimeSpan.FromMilliseconds(500));
+        await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
 

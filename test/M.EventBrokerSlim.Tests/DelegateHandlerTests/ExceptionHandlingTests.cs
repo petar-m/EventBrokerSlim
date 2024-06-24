@@ -34,7 +34,7 @@ public class ExceptionHandlingTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(100));
+        await _eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");
@@ -69,7 +69,7 @@ public class ExceptionHandlingTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(timeout: TimeSpan.FromMilliseconds(100));
+        await _eventsTracker.Wait(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");

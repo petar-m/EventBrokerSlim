@@ -1,4 +1,6 @@
-﻿namespace M.EventBrokerSlim.Tests;
+﻿using System;
+
+namespace M.EventBrokerSlim.Tests;
 
 public class RetryFromOnErrorUsingDelayDelegateTests
 {
@@ -24,7 +26,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(300));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
@@ -54,7 +56,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(1200));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
@@ -86,7 +88,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(1200));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);

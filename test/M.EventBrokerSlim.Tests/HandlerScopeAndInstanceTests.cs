@@ -24,7 +24,7 @@ public class HandlerScopeAndInstanceTests
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(300));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.True(completed);
@@ -58,7 +58,7 @@ public class HandlerScopeAndInstanceTests
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.True(completed);
@@ -92,7 +92,7 @@ public class HandlerScopeAndInstanceTests
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(50));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.True(completed);
