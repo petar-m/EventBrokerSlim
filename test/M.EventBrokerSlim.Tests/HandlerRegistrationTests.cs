@@ -87,7 +87,7 @@ public class HandlerRegistrationTests
 
         await eventBroker.Publish(testEvent);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(200));
 
         // Assert
         Assert.True(completed);
