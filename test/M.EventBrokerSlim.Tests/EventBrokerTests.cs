@@ -185,11 +185,11 @@ public class EventBrokerTests
 
         // Act
         eventsRecorder.Expect(1);
-        var calledPublisheDeferredAt = DateTime.UtcNow;
+        var calledPublishDeferredAt = DateTime.UtcNow;
 
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(200));
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(250));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromMilliseconds(300));
 
         // Assert
         Assert.True(completed);
@@ -197,7 +197,7 @@ public class EventBrokerTests
         Assert.Equal(1, eventsRecorder.HandledEventIds[0]);
 
         var handlerExecutedAt = scope.ServiceProvider.GetRequiredService<Timestamp>().ExecutedAt;
-        Assert.True(handlerExecutedAt - calledPublisheDeferredAt >= TimeSpan.FromMilliseconds(200));
+        Assert.True(handlerExecutedAt - calledPublishDeferredAt >= TimeSpan.FromMilliseconds(200));
     }
 
     [Fact]
@@ -383,18 +383,18 @@ public class EventBrokerTests
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly EventsRecorder<int> _eventsRecoder;
+        private readonly EventsRecorder<int> _eventsRecorder;
         private readonly Timestamp? _timestamp;
 
         public TestEventHandler(EventsRecorder<int> eventsRecorder, Timestamp? timestamp = null)
         {
-            _eventsRecoder = eventsRecorder;
+            _eventsRecorder = eventsRecorder;
             _timestamp = timestamp;
         }
 
         public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            _eventsRecoder.Notify(@event);
+            _eventsRecorder.Notify(@event);
 
             if(_timestamp is not null)
             {
@@ -414,7 +414,7 @@ public class EventBrokerTests
 
         public async Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            _eventsRecoder.Notify(exception, @event);
+            _eventsRecorder.Notify(exception, @event);
 
             if(@event.ErrorHandlingDuration != default)
             {

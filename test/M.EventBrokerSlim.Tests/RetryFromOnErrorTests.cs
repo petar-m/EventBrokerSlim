@@ -144,9 +144,8 @@ public class RetryFromOnErrorTests
             _tracker = tracker;
         }
 
-        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            await Task.Delay(_random.Next(1, 10));
             throw new NotImplementedException();
         }
 

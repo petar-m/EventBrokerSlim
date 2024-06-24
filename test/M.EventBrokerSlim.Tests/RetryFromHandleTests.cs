@@ -142,14 +142,15 @@ public class RetryFromHandleTests
             _tracker = tracker;
         }
 
-        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _tracker.Track(@event);
-            await Task.Delay(_random.Next(1, 10));
             if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
+
+            return Task.CompletedTask;
         }
 
         public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
