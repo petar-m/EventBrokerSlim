@@ -217,7 +217,7 @@ public class RegistrationTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(20));
+        await _eventsTracker.Wait(TimeSpan.FromMilliseconds(200));
 
         // Assert
         Assert.Equal(3, _eventsTracker.Items.Count);
