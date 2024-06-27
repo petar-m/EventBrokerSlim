@@ -75,7 +75,7 @@ public class RetryFromHandleTests
             sc => sc.AddEventBroker(
                         x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
                               .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
+                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(200)))
                     .AddSingleton<EventsTracker>());
 
         using var scope = services.CreateScope();
@@ -92,9 +92,9 @@ public class RetryFromHandleTests
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
-        Assert.Equal(150, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
-        Assert.Equal(150, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 50);
-        Assert.Equal(150, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(200, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(200, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(200, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 50);
     }
 
     [Theory]
