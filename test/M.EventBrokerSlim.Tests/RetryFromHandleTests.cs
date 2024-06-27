@@ -20,6 +20,7 @@ public class RetryFromHandleTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 2;
         var event1 = new TestEvent("test");
 
         // Act
@@ -29,7 +30,7 @@ public class RetryFromHandleTests
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
-        Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 60);
+        Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
     }
 
     [Theory]
@@ -50,6 +51,7 @@ public class RetryFromHandleTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 2;
         var event1 = new TestEvent("test");
 
         // Act
@@ -59,7 +61,7 @@ public class RetryFromHandleTests
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
-        Assert.Equal(0, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 60);
+        Assert.Equal(0, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
     }
 
     [Theory]
@@ -80,18 +82,19 @@ public class RetryFromHandleTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 4;
         var event1 = new TestEvent("test");
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
-        Assert.Equal(150, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 65);
-        Assert.Equal(150, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 65);
-        Assert.Equal(150, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 65);
+        Assert.Equal(150, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(150, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(150, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 50);
     }
 
     [Theory]
@@ -112,11 +115,12 @@ public class RetryFromHandleTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 4;
         var event1 = new TestEvent("test");
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
