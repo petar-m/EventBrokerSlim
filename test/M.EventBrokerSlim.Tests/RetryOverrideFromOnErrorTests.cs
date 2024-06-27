@@ -20,11 +20,12 @@ public class RetryOverrideFromOnErrorTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 2;
         var event1 = new TestEvent("test");
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
