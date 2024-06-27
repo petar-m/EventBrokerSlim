@@ -5,7 +5,7 @@ namespace M.EventBrokerSlim.Tests;
 
 public class EventsTracker
 {
-    private readonly Stopwatch _stopwatch = new Stopwatch();
+    private readonly Stopwatch _stopwatch = new ();
     private CancellationTokenSource? _cancellationTokenSource;
 
     public int ExpectedItemsCount { get; set; } = int.MaxValue;
@@ -28,7 +28,7 @@ public class EventsTracker
         return Task.CompletedTask;
     }
 
-    public ConcurrentBag<(object Item, DateTime Timestamp)> Items { get; } = new();
+    public ConcurrentBag<(object Item, DateTime Timestamp)> Items { get; } = [];
 
     public async Task Wait(TimeSpan timeout)
     {

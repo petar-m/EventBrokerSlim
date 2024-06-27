@@ -224,7 +224,8 @@ public class RegistrationTests
         Assert.Equal(new[] { "handler1", "handler2", "handler3" }, _eventsTracker.Items.Select(x => x.Item).Cast<string>().Order().ToArray());
     }
 
-    private Delegate GetHandler(int parametersCount, EventsTracker _eventsTracker)
+#pragma warning disable RCS1163 // Unused parameter
+    private static Delegate GetHandler(int parametersCount, EventsTracker _eventsTracker)
         => parametersCount switch
         {
             0 => async () => await _eventsTracker.TrackAsync(1),
@@ -247,6 +248,7 @@ public class RegistrationTests
             17 => async (A1 a1, A2 a2, A3 a3, A4 a4, A4 a5, A4 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, A13 a13, A14 a14,  A15 a15, A16 a16, A17 a17) => await _eventsTracker.TrackAsync(1),
             _ => throw new NotImplementedException(),
         };
+#pragma warning restore RCS1163 // Unused parameter
 
     class Handler1(EventsTracker tracker) : IEventHandler<Event1>
     {

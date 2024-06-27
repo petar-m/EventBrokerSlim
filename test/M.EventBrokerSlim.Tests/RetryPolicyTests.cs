@@ -57,6 +57,7 @@ public class RetryPolicyTests
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
+
             throw new NotImplementedException();
         }
 

@@ -104,7 +104,6 @@ public class RetryFromHandleUsingDelayDelegateTests
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly Random _random = new();
         private readonly EventsTracker _tracker;
         private readonly HandlerSettings _settings;
 

@@ -180,7 +180,7 @@ public class ExceptionHandlingTests
             _input = input;
         }
 
-        public Task Handle(TestEvent @even, IRetryPolicy retryPolicyt, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task Handle(TestEvent @even, IRetryPolicy retryPolicy, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken) => throw new NotImplementedException();
     }

@@ -89,6 +89,7 @@ public class LoadTests
             {
                 throw new NotImplementedException();
             }
+
             return Task.CompletedTask;
         }
 
@@ -98,6 +99,7 @@ public class LoadTests
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
+
             return Task.CompletedTask;
         }
     }
@@ -120,6 +122,7 @@ public class LoadTests
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
+
             return Task.CompletedTask;
         }
 

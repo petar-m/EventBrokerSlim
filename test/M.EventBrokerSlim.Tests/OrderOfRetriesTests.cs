@@ -68,6 +68,7 @@ public class OrderOfRetriesTests
             {
                 retryPolicy.RetryAfter(TimeSpan.FromMilliseconds(800));
             }
+
             throw new NotImplementedException();
         }
 
@@ -93,6 +94,7 @@ public class OrderOfRetriesTests
             {
                 retryPolicy.RetryAfter(TimeSpan.FromMilliseconds(100));
             }
+
             throw new NotImplementedException();
         }
 

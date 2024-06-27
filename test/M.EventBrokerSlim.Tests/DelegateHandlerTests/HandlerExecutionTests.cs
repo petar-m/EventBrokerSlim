@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using Xunit.Abstractions;
-using static M.EventBrokerSlim.Tests.LoadTests;
+﻿using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
@@ -35,7 +33,7 @@ public class HandlerExecutionTests
         using var scope = _serviceProvider.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         _tracker.ExpectedItemsCount = 2;
-        Event1 event1 = new Event1(1);
+        var event1 = new Event1(1);
 
         // Act
         await eventBroker.Publish(event1);
