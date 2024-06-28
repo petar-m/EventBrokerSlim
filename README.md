@@ -90,7 +90,44 @@ There are no limits for publishers. Publishing is as fast as writing an event to
 
 Event handlers are resolved by event type in a new DI scope which is disposed after handler completes. Each handler execution is scheduled on the `ThreadPool` without blocking the producer. No more than configured maximum handlers run concurrently.
   
-![](docs/event_broker.png)
+```mermaid
+graph LR;
+
+subgraph "unlimited producers"
+    event1["event"]
+    event2["event"] 
+    event3["event"]
+end
+
+subgraph "event broker"
+    publish["publish"]
+    
+    subgraph "channel"
+        events(["events"])
+    end
+
+    event1 --> publish
+    event2 --> publish
+    event3 --> publish
+
+    publish --> events
+
+    subgraph "single consumer"
+        consumer["resolve\nhandlers"]
+    end
+
+    events --> consumer
+
+    subgraph "limited concurrent handlers"
+        handler1["handle(event)"]
+        handler2["handle(event)"]
+    end
+
+    consumer --> handler1
+    consumer --> handler2
+end
+
+```
 
 # Details
 
