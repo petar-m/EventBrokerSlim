@@ -15,7 +15,7 @@ Features:
 - built-in retry option
 - tightly integrated with Microsoft.Extensions.DependencyInjection
 - each handler is resolved and executed in a new DI container scope
-- **NEW** event can be handled by registered delegate
+- **NEW** event handlers can be delegates
 
 # How does it work
 
@@ -44,7 +44,7 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
 }
 ```  
 
-or create an instance of `DelegateHandlerRegistryBuilder` and register handlers: 
+or use `DelegateHandlerRegistryBuilder` to register delegate as handler: 
 
 ```csharp
 DelegateHandlerRegistryBuilder builder = new();
@@ -82,7 +82,7 @@ class MyClass
 }
 ```
 
-# Design  
+# Overview  
 
 `EventBroker` uses `System.Threading.Channels.Channel<T>` to decouple producers from consumers.  
 
@@ -175,9 +175,9 @@ builder.RegisterHandler<SomeEvent>(
     });
 ```
 
-Registered delegate must return a `Task`. Delegate can have 0 to 16 parameters. All of them will be resolved from dedicated container scope and passed when the delegate is invoked.  
+Registered delegate must return a `Task`. Delegate can have 0 to 16 parameters. All of them will be resolved from DI container scope and passed when the delegate is invoked.  
 There are few special cases of optional parameters managed by `EventBroker` (without being registered in DI container):  
-- `TEvent`  - an instance of the event being handled - this should match the type of the event the delegate was registered for.
+- `TEvent`  - an instance of the event being handled. Should match the type of the event the delegate was registered for.
 - `IRetryPolicy` - the instance of the retry policy for the handler (see [Retries](#retries) section).
 - `CancellationToken` - the `EventBroker` cancellation token. 
 - `INextHandler` - used to call the next wrapper in the chain or the handler if no more wrappers available (see below).
@@ -213,13 +213,12 @@ builder.RegisterHandler<SomeEvent>(
 
 Delegate wrappers are executed from the last registered moving "inwards" toward the handler.
 
-## Configuration  
+## DI Configuration  
 
-`EventBroker` is depending on `Microsoft.Extensions.DependencyInjection` container for resolving event handlers and their dependencies. It guarantees that each handler is resolved in a new scope which is disposed after the handler completes. There can be multiple handlers for the same event.    
+`EventBroker` is depending on `Microsoft.Extensions.DependencyInjection` container for resolving event handlers and their dependencies. It guarantees that each handler is resolved in a new scope, disposed after the handler completes. There can be multiple handlers for the same event.    
 
 `EventBroker` is configured with `AddEventBroker` extension method of `IServiceCollection` using a configuration delegate.  
 
-*Example:*
 ```csharp
 services.AddEventBroker(x => x.WithMaxConcurrentHandlers(3)
                               .DisableMissingHandlerWarningLog());
@@ -232,7 +231,7 @@ services.AddEventBroker(x => x.WithMaxConcurrentHandlers(3)
 ### Handlers Implementing `IEventHandler<TEvent>`
 
 Event handlers are registered by the event type and a corresponding `IEventHandler` implementation as transient, scoped, or singleton. `AddEventHandlers` extension method of `IServiceCollection` provides a configuration delegate.  
-*Example:*
+
 ```csharp
 services.AddEventHandlers(
             x => x.AddTransient<Event1, EventHandler1>()
@@ -241,7 +240,7 @@ services.AddEventHandlers(
 ```  
 
 Handler implementations can also be registered in the `AddEventBroker` method.  
-*Example:*
+
 ```csharp
 services.AddEventBroker(x => x.WithMaxConcurrentHandlers(3)
                               .DisableMissingHandlerWarningLog()
@@ -250,12 +249,14 @@ services.AddEventBroker(x => x.WithMaxConcurrentHandlers(3)
                               .AddSingleton<Event3, EventHandler3>());
 ```
 The order of calls to `AddEventBroker` and `AddEventHandlers` does not matter. `AddEventHandlers` can be called multiple times.  
-Note that handlers **not** registered using `AddEventBroker` or `AddEventHandlers` methods will be **ignored** by `EventBroker`.  
+
+> [!WARNING]
+> Handlers **not** registered using `AddEventBroker` or `AddEventHandlers` methods will be **ignored** by `EventBroker`.  
 
 ### Delegate Handlers
 
 Delegate event handlers are registered using  `DelegateHandlerRegistryBuilder` instance.  
-*Example:*
+
 ```csharp
 DelegateHandlerRegistryBuilder builder = new();
 builder.RegisterHandler<SomeEvent>(
@@ -267,7 +268,9 @@ builder.RegisterHandler<SomeEvent>(
 services.AddSingleton(builder);    
 ```  
 
-Multiple `DelegateHandlerRegistryBuilder` instances can be registered. They can be used to register delegate handlers after the service collection has been built. However registrations should be completed before `IEventBroker` instance is resolved.
+Multiple `DelegateHandlerRegistryBuilder` instances can be registered. Delegate handlers can be registered after the service collection has been built.  
+
+Registrations after `IEventBroker` instance is resolved are not allowed.
 
 ## Publishing Events  
 
@@ -303,7 +306,8 @@ To avoid these problems, both `IEventBroker` `Handle` and `OnError` methods have
 
 `IRetryPolicy.RetryRequested` is used to coordinate retry request between `Handle` and `OnError`. `IRetryPolicy` is passed to both methods to enable error handling and retry request entirely in `Handle` method. `OnError` can check `IRetryPolicy.RetryRequested` to know whether `Handle` had called `IRetryPolicy.RetryAfter()`.  
 
-If added as a parameter, the `IRetryPolicy` will be passed to delegate wrappers and handler.
+If added as a parameter, the `IRetryPolicy` will be passed to delegate wrappers and handler. It has the same behavior, allowing delegate handlers to be retired too.
 
-**Caution:** the retry will not be exactly after the specified time interval in `IRetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
+> [!WARNING] 
+> Retry will not be exactly after the specified time interval in `IRetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
 
