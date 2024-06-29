@@ -27,7 +27,7 @@ public class HandlerExecutionTests
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(100));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.True(completed);
@@ -59,7 +59,7 @@ public class HandlerExecutionTests
         await eventBroker.Publish(event1);
         await eventBroker.Publish(event2);
 
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromMilliseconds(150));
+        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.True(completed);
@@ -149,26 +149,26 @@ public class HandlerExecutionTests
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly EventsRecorder<int> _eventsRecoder;
+        private readonly EventsRecorder<int> _eventsRecorder;
 
         public TestEventHandler(EventsRecorder<int> eventsRecorder)
         {
-            _eventsRecoder = eventsRecorder;
+            _eventsRecorder = eventsRecorder;
         }
 
         public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             if(@event.TimeToRun != default)
             {
-                await Task.Delay(@event.TimeToRun);
+                await Task.Delay(@event.TimeToRun, cancellationToken);
             }
 
-            _eventsRecoder.Notify(@event);
+            _eventsRecorder.Notify(@event);
         }
 
         public Task OnError(Exception exception, TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            _eventsRecoder.Notify(exception, @event);
+            _eventsRecorder.Notify(exception, @event);
             return Task.CompletedTask;
         }
     }

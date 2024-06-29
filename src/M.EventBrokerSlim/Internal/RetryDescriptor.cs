@@ -1,3 +1,14 @@
 ﻿namespace M.EventBrokerSlim.Internal;
 
-internal record RetryDescriptor(object Event, EventHandlerDescriptor EventHandlerDescriptor, RetryPolicy RetryPolicy);
+internal abstract class RetryDescriptor
+{
+    protected RetryDescriptor(object @event, RetryPolicy retryPolicy)
+    {
+        Event = @event;
+        RetryPolicy = retryPolicy;
+    }
+
+    public object Event { get; }
+
+    public RetryPolicy RetryPolicy { get; }
+}

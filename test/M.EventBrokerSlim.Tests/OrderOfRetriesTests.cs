@@ -32,7 +32,7 @@ public class OrderOfRetriesTests
 
         // Assert
         Assert.Equal(5, eventsTracker.Items.Count);
-        var eventsByTimeHandled = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Event).ToArray();
+        var eventsByTimeHandled = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Item).ToArray();
         Assert.Equal(eventsByTimeHandled[0], event1);
         Assert.Equal(eventsByTimeHandled[1], event2);
         Assert.Equal(eventsByTimeHandled[2], event2);
@@ -68,6 +68,7 @@ public class OrderOfRetriesTests
             {
                 retryPolicy.RetryAfter(TimeSpan.FromMilliseconds(800));
             }
+
             throw new NotImplementedException();
         }
 
@@ -93,6 +94,7 @@ public class OrderOfRetriesTests
             {
                 retryPolicy.RetryAfter(TimeSpan.FromMilliseconds(100));
             }
+
             throw new NotImplementedException();
         }
 

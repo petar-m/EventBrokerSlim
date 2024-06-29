@@ -20,11 +20,12 @@ public class RetryOverrideFromOnErrorTests
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
         var eventsTracker = scope.ServiceProvider.GetRequiredService<EventsTracker>();
+        eventsTracker.ExpectedItemsCount = 2;
         var event1 = new TestEvent("test");
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(500));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Equal(2, eventsTracker.Items.Count);
@@ -41,7 +42,6 @@ public class RetryOverrideFromOnErrorTests
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        private readonly Random _random = new();
         private readonly EventsTracker _tracker;
         private readonly HandlerSettings _settings;
 
@@ -51,9 +51,8 @@ public class RetryOverrideFromOnErrorTests
             _tracker = tracker;
         }
 
-        public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
+        public Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
-            await Task.Delay(_random.Next(1, 10));
             if(retryPolicy.Attempt < _settings.RetryAttempts)
             {
                 retryPolicy.RetryAfter(_settings.Delay);

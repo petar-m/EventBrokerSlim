@@ -70,7 +70,7 @@ internal class RetryQueue
 
             self._polling = true;
             self._semaphore.Release();
-            await Task.Delay(TimeSpan.FromMilliseconds(50), self._cancellationToken).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromMilliseconds(25), self._cancellationToken).ConfigureAwait(false);
         }
     }
 }

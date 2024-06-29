@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +21,7 @@ public interface IEventHandler<TEvent>
     Task Handle(TEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Called when an unhadled exception is caught during execution.
+    /// Called when an unhandled exception is caught during execution.
     /// Exceptions thrown from this method are swallowed.
     /// If there is <see cref="ILogger"/> configured in the <see cref="IServiceCollection"/> an Error will be logged.
     /// </summary>

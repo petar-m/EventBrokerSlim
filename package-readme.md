@@ -6,15 +6,16 @@ Features:
 - in-memory, in-process
 - publishing is *Fire and Forget* style  
 - events don't have to implement specific interface  
-- event handlers are runned on a `ThreadPool` threads  
+- event handlers are executed on a `ThreadPool` threads  
 - the number of concurrent handlers running can be limited  
 - built-in retry option
 - tightly integrated with Microsoft.Extensions.DependencyInjection
-- each handler is resolved and runned in a new DI container scopee
+- each handler is resolved and executed in a new DI container scope
+- **NEW** event handlers can be delegates     
 
 # How does it work
 
-Define an event handler by implementing `IEventHadler<TEvent>` interface:
+Implement an event handler by implementing `IEventHandler<TEvent>` interface:
 
 ```csharp
 public record SomeEvent(string Message);
@@ -33,18 +34,28 @@ public class SomeEventHandler : IEventHandler<SomeEvent>
 
     public async Task OnError(Exception exception, SomeEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
-        // called on unhandled exeption from Handle 
+        // called on unhandled exception from Handle 
         // optionally use retryPolicy.RetryAfter(TimeSpan)
     }
 }
-```
+```  
 
-
-Use `AddEventBroker` extension method to register `IEventBroker` and handlers:
+or use `DelegateHandlerRegistryBuilder` to register delegate as handler: 
 
 ```csharp
-serviceCollection.AddEventBroker(
-     x => x.AddTransient<SomeEvent, SomeEventHandler>());
+DelegateHandlerRegistryBuilder builder = new();
+builder.RegisterHandler<SomeEvent>(
+    static async (SomeEvent someEvent, ISomeService service, CancellationToken cancellationToken) =>
+    {
+        await service.DoSomething(someEvent, cancellationToken);
+    });
+```  
+
+Add event broker implementation to DI container using `AddEventBroker` extension method and register handlers, optionally add delegate handler registries:
+
+```csharp
+serviceCollection.AddEventBroker(x => x.AddTransient<SomeEvent, SomeEventHandler>())
+                 .AddSingleton(builder);
 ```
 
 Inject `IEventBroker` and publish events:
@@ -66,4 +77,3 @@ class MyClass
     }
 }
 ```
-

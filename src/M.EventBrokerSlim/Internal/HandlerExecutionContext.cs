@@ -7,7 +7,7 @@ using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal;
 
-internal class HandlerExecutionContext
+internal sealed class HandlerExecutionContext
 {
     private readonly DefaultObjectPool<RetryPolicy> _retryPolicyPool;
     private readonly SemaphoreSlim _semaphore;
@@ -15,8 +15,18 @@ internal class HandlerExecutionContext
     private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
     private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
     private readonly RetryQueue _retryQueue;
+    private readonly DefaultObjectPool<object[]> _delegateParametersArrayObjectPool;
+    private readonly DefaultObjectPool<ThreadPoolEventHandlerRunner.Executor> _executorPool;
 
-    public HandlerExecutionContext(DefaultObjectPool<RetryPolicy> retryPolicyPool, SemaphoreSlim semaphore, IServiceScopeFactory serviceScopeFactory, ILogger<ThreadPoolEventHandlerRunner> logger, DefaultObjectPool<HandlerExecutionContext> contextObjectPool, RetryQueue retryQueue)
+    public HandlerExecutionContext(
+        DefaultObjectPool<RetryPolicy> retryPolicyPool,
+        SemaphoreSlim semaphore,
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<ThreadPoolEventHandlerRunner> logger,
+        DefaultObjectPool<HandlerExecutionContext> contextObjectPool,
+        RetryQueue retryQueue,
+        DefaultObjectPool<object[]> delegateParametersArrayObjectPool,
+        DefaultObjectPool<ThreadPoolEventHandlerRunner.Executor> executorPool)
     {
         _retryPolicyPool = retryPolicyPool;
         _semaphore = semaphore;
@@ -24,12 +34,15 @@ internal class HandlerExecutionContext
         _logger = logger;
         _contextObjectPool = contextObjectPool;
         _retryQueue = retryQueue;
+        _delegateParametersArrayObjectPool = delegateParametersArrayObjectPool;
+        _executorPool = executorPool;
     }
 
-    public HandlerExecutionContext Initialize(object @event, EventHandlerDescriptor eventHandlerDescriptor, RetryDescriptor? retryDescriptor, CancellationToken cancellationToken)
+    public HandlerExecutionContext Initialize(object @event, EventHandlerDescriptor? eventHandlerDescriptor, DelegateHandlerDescriptor? delegateHandlerDescriptor, RetryDescriptor? retryDescriptor, CancellationToken cancellationToken)
     {
         Event = @event;
         EventHandlerDescriptor = eventHandlerDescriptor;
+        DelegateHandlerDescriptor = delegateHandlerDescriptor;
         RetryDescriptor = retryDescriptor;
         CancellationToken = cancellationToken;
 
@@ -41,6 +54,7 @@ internal class HandlerExecutionContext
     {
         Event = null;
         EventHandlerDescriptor = null;
+        DelegateHandlerDescriptor = null;
         RetryDescriptor = null;
         CancellationToken = default;
 
@@ -50,6 +64,8 @@ internal class HandlerExecutionContext
     public object? Event { get; private set; }
 
     public EventHandlerDescriptor? EventHandlerDescriptor { get; private set; }
+
+    public DelegateHandlerDescriptor? DelegateHandlerDescriptor { get; private set; }
 
     public RetryDescriptor? RetryDescriptor { get; private set; }
 
@@ -65,10 +81,18 @@ internal class HandlerExecutionContext
             // first retry
             if(RetryDescriptor is null)
             {
-                RetryDescriptor = new RetryDescriptor(Event!, EventHandlerDescriptor!, RetryPolicy);
+                if(EventHandlerDescriptor is not null)
+                {
+                    RetryDescriptor = new EventHandlerRetryDescriptor(Event!, EventHandlerDescriptor!, RetryPolicy);
+                }
+
+                if(DelegateHandlerDescriptor is not null)
+                {
+                    RetryDescriptor = new DelegateHandlerRetryDescriptor(Event!, DelegateHandlerDescriptor!, RetryPolicy);
+                }
             }
 
-            await _retryQueue.Enqueue(RetryDescriptor).ConfigureAwait(false);
+            await _retryQueue.Enqueue(RetryDescriptor!).ConfigureAwait(false);
         }
         else
         {
@@ -85,9 +109,20 @@ internal class HandlerExecutionContext
     public IServiceScope CreateScope()
         => _serviceScopeFactory.CreateScope();
 
-    public void LogEventHandlerResolvingError(Exception exception)
+    public object[] BorrowDelegateParametersArray() => _delegateParametersArrayObjectPool.Get();
+
+    public void ReturnDelegateParametersArray(object[] parametersArray) => _delegateParametersArrayObjectPool.Return(parametersArray);
+
+    public ThreadPoolEventHandlerRunner.Executor BorrowExecutor() => _executorPool.Get();
+
+    public void ReturnExecutor(ThreadPoolEventHandlerRunner.Executor executor) => _executorPool.Return(executor);
+
+    internal void LogEventHandlerResolvingError(Exception exception)
         => _logger.LogEventHandlerResolvingError(Event!.GetType(), exception);
 
-    public void LogUnhandledExceptionFromOnError(Type serviceType, Exception exception)
+    internal void LogUnhandledExceptionFromOnError(Type serviceType, Exception exception)
         => _logger.LogUnhandledExceptionFromOnError(serviceType, exception);
+
+    internal void LogDelegateEventHandlerError(Type eventType, Exception exception)
+        => _logger.LogDelegateEventHandlerError(eventType, exception);
 }

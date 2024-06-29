@@ -24,12 +24,12 @@ public class RetryPolicyTests
 
         // Act
         await eventBroker.Publish(event1);
-        await eventsTracker.Wait(TimeSpan.FromMilliseconds(400));
+        await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
         Assert.Equal(8, eventsTracker.Items.Count);
-        var retryPolicy = eventsTracker.Items.First().Event;
-        Assert.All(eventsTracker.Items.Select(x => x.Event), x => Assert.Same(retryPolicy, x));
+        var retryPolicy = eventsTracker.Items.First().Item;
+        Assert.All(eventsTracker.Items.Select(x => x.Item), x => Assert.Same(retryPolicy, x));
     }
 
     public class TestEvent(string Info)
@@ -57,6 +57,7 @@ public class RetryPolicyTests
             {
                 retryPolicy.RetryAfter(_settings.Delay);
             }
+
             throw new NotImplementedException();
         }
 

@@ -6,10 +6,10 @@ public class EventsRecorder<T> where T : notnull
 {
     private readonly ConcurrentDictionary<T, object?> _expected = new();
     private readonly TimeSpan _waitForItemsTimeout = TimeSpan.FromMilliseconds(20);
-    private readonly ConcurrentBag<Exception> _exceptions = new();
-    private readonly ConcurrentBag<(T id, long tick)> _events = new();
-    private readonly ConcurrentBag<(int id, long tick)> _handlerInstances = new();
-    private readonly ConcurrentBag<(int id, long tick)> _scopeInstances = new();
+    private readonly ConcurrentBag<Exception> _exceptions = [];
+    private readonly ConcurrentBag<(T id, long tick)> _events = [];
+    private readonly ConcurrentBag<(int id, long tick)> _handlerInstances = [];
+    private readonly ConcurrentBag<(int id, long tick)> _scopeInstances = [];
 
     public Exception[] Exceptions => _exceptions.ToArray();
 

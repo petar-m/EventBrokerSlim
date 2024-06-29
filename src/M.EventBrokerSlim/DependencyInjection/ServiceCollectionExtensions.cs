@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey),
                 x.GetRequiredService<IServiceScopeFactory>(),
                 x.GetRequiredService<EventHandlerRegistry>(),
+                x.GetRequiredService<DelegateHandlerRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>()));
 
@@ -65,6 +66,13 @@ public static class ServiceCollectionExtensions
             {
                 var builders = x.GetServices<EventHandlerRegistryBuilder>();
                 return EventHandlerRegistryBuilder.Build(builders);
+            });
+
+        serviceCollection.AddSingleton(
+            x =>
+            {
+                var builders = x.GetServices<DelegateHandlerRegistryBuilder>();
+                return DelegateHandlerRegistryBuilder.Build(builders);
             });
 
         return serviceCollection;

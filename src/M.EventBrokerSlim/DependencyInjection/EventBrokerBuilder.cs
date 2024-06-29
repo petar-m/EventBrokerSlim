@@ -26,7 +26,7 @@ public class EventBrokerBuilder : EventHandlerRegistryBuilder
     {
         if(maxConcurrentHandlers <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxConcurrentHandlers), "MaxConcurrentHandlers should be greater than zero");
+            throw new ArgumentOutOfRangeException(nameof(maxConcurrentHandlers), "MaxConcurrentHandlers should be greater than zero.");
         }
 
         _maxConcurrentHandlers = maxConcurrentHandlers;
