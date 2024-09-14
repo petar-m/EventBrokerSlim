@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ internal sealed class ThreadPoolEventHandlerRunner
     private readonly DelegateHandlerRegistry _delegateHandlerRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
+    private readonly DynamicEventHandlers _dynamicEventHandlers;
     private readonly SemaphoreSlim _semaphore;
     private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
 
@@ -25,13 +27,15 @@ internal sealed class ThreadPoolEventHandlerRunner
         EventHandlerRegistry eventHandlerRegistry,
         DelegateHandlerRegistry delegateHandlerRegistry,
         CancellationTokenSource cancellationTokenSource,
-        ILogger<ThreadPoolEventHandlerRunner>? logger)
+        ILogger<ThreadPoolEventHandlerRunner>? logger,
+        DynamicEventHandlers dynamicEventHandlers)
     {
         _channelReader = channel.Reader;
         _eventHandlerRegistry = eventHandlerRegistry;
         _delegateHandlerRegistry = delegateHandlerRegistry;
         _cancellationTokenSource = cancellationTokenSource;
         _logger = logger ?? new NullLogger<ThreadPoolEventHandlerRunner>();
+        _dynamicEventHandlers = dynamicEventHandlers;
         _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
 
         var retryQueue = new RetryQueue(channel.Writer, cancellationTokenSource.Token);
@@ -58,10 +62,14 @@ internal sealed class ThreadPoolEventHandlerRunner
                 RetryDescriptor? retryDescriptor = @event as RetryDescriptor;
                 if(retryDescriptor is null)
                 {
-                    var type = @event.GetType();
-                    var eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
-                    var delegateEventHandlers = _delegateHandlerRegistry.GetHandlers(type);
-                    if(eventHandlers.Length == 0 && delegateEventHandlers.Length == 0)
+                    Type type = @event.GetType();
+                    ImmutableArray<EventHandlerDescriptor> eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
+                    ImmutableArray<DelegateHandlerDescriptor> delegateEventHandlers = _delegateHandlerRegistry.GetHandlers(type);
+                    ImmutableList<DelegateHandlerDescriptor>? dynamicEventHandlers = _dynamicEventHandlers.GetDelegateHandlerDescriptors(type);
+
+                    if(eventHandlers.Length == 0 &&
+                       delegateEventHandlers.Length == 0 &&
+                       (dynamicEventHandlers is null || dynamicEventHandlers.IsEmpty))
                     {
                         if(!_eventHandlerRegistry.DisableMissingHandlerWarningLog)
                         {
@@ -75,9 +83,9 @@ internal sealed class ThreadPoolEventHandlerRunner
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                        var eventHandlerDescriptor = eventHandlers[i];
+                        EventHandlerDescriptor eventHandlerDescriptor = eventHandlers[i];
 
-                        var context = _contextObjectPool.Get().Initialize(@event, eventHandlerDescriptor, null, retryDescriptor, token);
+                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, eventHandlerDescriptor, null, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEvent(x!), context);
                     }
 
@@ -85,9 +93,28 @@ internal sealed class ThreadPoolEventHandlerRunner
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                        var delegateHandlerDescriptor = delegateEventHandlers[i];
+                        DelegateHandlerDescriptor delegateHandlerDescriptor = delegateEventHandlers[i];
 
-                        var context = _contextObjectPool.Get().Initialize(@event, null, delegateHandlerDescriptor, retryDescriptor, token);
+                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, null, delegateHandlerDescriptor, retryDescriptor, token);
+                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
+                    }
+
+                    if(dynamicEventHandlers is null || dynamicEventHandlers.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    for(int i = 0; i < dynamicEventHandlers.Count; i++)
+                    {
+                        await _semaphore.WaitAsync(token).ConfigureAwait(false);
+
+                        DelegateHandlerDescriptor delegateHandlerDescriptor = dynamicEventHandlers[i];
+                        if(delegateHandlerDescriptor.ClaimTicket is null)
+                        {
+                            continue;
+                        }
+
+                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, null, delegateHandlerDescriptor, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
                     }
                 }

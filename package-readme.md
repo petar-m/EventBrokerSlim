@@ -11,7 +11,8 @@ Features:
 - built-in retry option
 - tightly integrated with Microsoft.Extensions.DependencyInjection
 - each handler is resolved and executed in a new DI container scope
-- **NEW** event handlers can be delegates     
+- **NEW** event handlers can be delegates   
+- **NEW** dynamic delegate event handlers    
 
 # How does it work
 

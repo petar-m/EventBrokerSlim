@@ -59,7 +59,8 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredService<EventHandlerRegistry>(),
                 x.GetRequiredService<DelegateHandlerRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
-                x.GetService<ILogger<ThreadPoolEventHandlerRunner>>()));
+                x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
+                x.GetRequiredService<DynamicEventHandlers>()));
 
         serviceCollection.AddSingleton(
             x =>
@@ -74,6 +75,10 @@ public static class ServiceCollectionExtensions
                 var builders = x.GetServices<DelegateHandlerRegistryBuilder>();
                 return DelegateHandlerRegistryBuilder.Build(builders);
             });
+
+        DynamicEventHandlers dynamicEventHandlers = new();
+        serviceCollection.AddSingleton<DynamicEventHandlers>(dynamicEventHandlers);
+        serviceCollection.AddSingleton<IDynamicEventHandlers>(dynamicEventHandlers);
 
         return serviceCollection;
     }

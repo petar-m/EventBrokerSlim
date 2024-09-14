@@ -12,4 +12,6 @@ internal sealed class DelegateHandlerDescriptor
     public required object Handler { get; init; }
 
     public List<DelegateHandlerDescriptor> Pipeline { get; } = new();
+
+    internal DynamicHandlerClaimTicket? ClaimTicket { get; set; }
 }
