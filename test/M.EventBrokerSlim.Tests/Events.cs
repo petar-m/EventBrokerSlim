@@ -1,4 +1,4 @@
-﻿namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
+﻿namespace M.EventBrokerSlim.Tests;
 
 public record TestEventBase(int Number);
 

@@ -15,7 +15,8 @@ Features:
 - built-in retry option
 - tightly integrated with Microsoft.Extensions.DependencyInjection
 - each handler is resolved and executed in a new DI container scope
-- **NEW** event handlers can be delegates
+- **NEW** event handlers can be delegates  
+- **NEW** dynamic delegate event handlers  
 
 # How does it work
 
@@ -211,7 +212,57 @@ builder.RegisterHandler<SomeEvent>(
             });            
 ```
 
-Delegate wrappers are executed from the last registered moving "inwards" toward the handler.
+Delegate wrappers are executed from the last registered moving "inwards" toward the handler.  
+
+### Dynamic Delegate Event Handlers 
+
+Delegate handlers can be added or removed after DI container was built. Dynamic delegate handlers are created using `DelegateHandlerRegistryBuilder` and support all delegate handler features (retries, wrappers, etc.).  
+
+EventBroker registration adds `IDynamicEventHandlers` which is used for managing handlers. Adding handlers returns `IDynamicHandlerClaimTicket` used to remove the handlers.  Since `DelegateHandlerRegistryBuilder` can define multiple handlers, all of them will be removed by the `IDynamicHandlerClaimTicket` instance.  
+
+```csharp
+public class DynamicEventHandlerExample : IDisposable
+{
+    private readonly IDynamicEventHandlers _dynamicEventHandlers;
+    private readonly IDynamicHandlerClaimTicket _claimTicket;
+
+    public DynamicEventHandlerExample(IDynamicEventHandlers dynamicEventHandlers)
+    {
+        _dynamicEventHandlers = dynamicEventHandlers;
+
+        DelegateHandlerRegistryBuilder handlerRegistryBuilder = new();
+        
+        // Define two handlers for different events
+        handlerRegistryBuilder
+            .RegisterHandler<Event1>(HandleEvent1)
+            .Builder()
+            .RegisterHandler<Event2>(HandleEvent2);
+
+        // Register with the event broker and keep a claim ticket
+        _claimTicket = _dynamicEventHandlers.Add(handlerRegistryBuilder);
+    }
+
+    // All delegate features are available, including injecting services registered in DI
+    private async Task HandleEvent1(Event1 event1, IRetryPolicy retryPolicy, ISomeService someService)
+    {
+        // event processing 
+    }
+
+    private async Task HandleEvent2(Event2 event2)
+    {
+        // event processing 
+    }
+
+    public void Dispose()
+    {
+        // Remove both event handlers using the IDynamicHandlerClaimTicket
+        _dynamicEventHandlers.Remove(_claimTicket);
+    }
+}
+
+```
+> [!IMPORTANT]
+> Make sure handlers are removed if containing classes are ephemeral. 
 
 ## DI Configuration  
 

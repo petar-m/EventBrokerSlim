@@ -2,7 +2,7 @@
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
-public class HandlerExecutionTests
+public class HandlerExecutionTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
     private readonly ServiceProvider _serviceProvider;
@@ -314,5 +314,10 @@ public class HandlerExecutionTests
         }
 
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
+    }
+
+    public void Dispose()
+    {
+        _serviceProvider.Dispose();
     }
 }
