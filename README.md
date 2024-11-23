@@ -114,7 +114,7 @@ subgraph "event broker"
     publish --> events
 
     subgraph "single consumer"
-        consumer["resolve\nhandlers"]
+        consumer["resolve handlers"]
     end
 
     events --> consumer
