@@ -64,7 +64,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.x
 
     - name: Restore dependencies
       run: dotnet restore EventBrokerSlim.sln
@@ -90,7 +90,7 @@ jobs:
         echo "$summary" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Unit Tests Code Coverage Report
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
+      uses: danielpalme/ReportGenerator-GitHub-Action@v5
       with:
         reports: "**/coverage.cobertura.xml"
         targetdir: "coveragereport"
