@@ -1,0 +1,37 @@
+﻿using System.Collections.Immutable;
+
+namespace Enfolder.Internal;
+
+internal class Pipeline : IPipeline
+{
+    internal Pipeline(string key, List<FunctionObject> functions)
+    {
+        ArgumentNullException.ThrowIfNull(key, nameof(key));
+        Key = key;
+
+        ArgumentNullException.ThrowIfNull(functions, nameof(functions));
+        Functions = functions.ToImmutableArray();
+    }
+
+    public IServiceProvider? ServiceProvider { get; set; }
+
+    public string Key { get; }
+
+    internal ImmutableArray<FunctionObject> Functions { get; }
+
+    public async Task<PipelineRunResult> RunAsync(PipelineRunContext? pipelineRunContext = null, CancellationToken cancellationToken = default)
+    {
+        var pipelineRunner = new PipelineRunner(this, pipelineRunContext, ServiceProvider, cancellationToken);
+
+        try
+        {
+            await pipelineRunner.RunAsync().ConfigureAwait(false);
+        }
+        catch(Exception ex)
+        {
+            return new PipelineRunResult(ex, pipelineRunner.Context);
+        }
+
+        return new PipelineRunResult(pipelineRunner.Context);
+    }
+}
