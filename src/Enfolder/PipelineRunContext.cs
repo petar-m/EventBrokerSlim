@@ -19,4 +19,6 @@ public class PipelineRunContext
         _contextItems.Remove(typeof(T));
         return this;
     }
+
+    public void Clear() => _contextItems.Clear();
 }
