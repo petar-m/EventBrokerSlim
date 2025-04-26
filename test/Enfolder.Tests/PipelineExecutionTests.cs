@@ -1,5 +1,7 @@
-
+using System.Threading;
+using System.Threading.Tasks;
 using FakeItEasy;
+using Xunit;
 
 namespace Enfolder.Tests;
 
@@ -8,7 +10,7 @@ public class PipelineExecutionTests
     [Fact]
     public async Task Execute_Called()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
@@ -32,7 +34,7 @@ public class PipelineExecutionTests
     [Fact]
     public async Task Calling_Next_Form_Execute_Has_No_Effect()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
@@ -60,7 +62,7 @@ public class PipelineExecutionTests
     [Fact]
     public async Task WrapWith_Called_In_Order_Before_Execute()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))
@@ -97,7 +99,7 @@ public class PipelineExecutionTests
     [Fact]
     public async Task Not_Calling_Next_Short_Circuits_Pipeline()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))

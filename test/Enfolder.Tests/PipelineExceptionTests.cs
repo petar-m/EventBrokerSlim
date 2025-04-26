@@ -1,5 +1,8 @@
-
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FakeItEasy;
+using Xunit;
 
 namespace Enfolder.Tests;
 
@@ -8,7 +11,7 @@ public class PipelineExceptionTests
     [Fact]
     public async Task Pipeline_Catches_Exceptions()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
@@ -37,7 +40,7 @@ public class PipelineExceptionTests
     [Fact]
     public async Task Exception_Short_Circuits_Pipeline()
     {
-        var cancellationToken = TestContext.Current.CancellationToken;
+        CancellationToken cancellationToken = default;
 
         var func = A.Fake<ITestStub>(x => x.Strict());
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))

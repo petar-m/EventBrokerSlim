@@ -74,7 +74,7 @@ public class RegistrationTests
     }
 
     [Fact]
-    public async void Registration_After_EvenBroker_Is_Created_Throws()
+    public async Task Registration_After_EvenBroker_Is_Created_Throws()
     {
         // Arrange
         var services = ServiceProviderHelper.Build(sc => sc.AddEventBroker().AddSingleton(_builder));
@@ -150,7 +150,7 @@ public class RegistrationTests
     }
 
     [Fact]
-    public async void Wrapper_Registration_After_EvenBroker_Is_Created_Throws()
+    public async Task Wrapper_Registration_After_EvenBroker_Is_Created_Throws()
     {
         // Arrange
         var services = ServiceProviderHelper.Build(sc => sc.AddEventBroker().AddSingleton(_builder));

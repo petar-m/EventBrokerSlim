@@ -1,6 +1,7 @@
+using System;
+using System.Threading.Tasks;
 using FakeItEasy;
-
-[assembly: CaptureConsole(CaptureOut = true, CaptureError = true)]
+using Xunit;
 
 namespace Enfolder.Tests;
 
