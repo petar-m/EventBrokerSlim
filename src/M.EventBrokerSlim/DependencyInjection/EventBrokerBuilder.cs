@@ -6,9 +6,9 @@ namespace M.EventBrokerSlim.DependencyInjection;
 /// <summary>
 /// Registers EventBroker and configures event broker behavior, optionally registers event handlers in DI container.
 /// </summary>
-public class EventBrokerBuilder : EventHandlerRegistryBuilder
+public class EventBrokerBuilder
 {
-    internal EventBrokerBuilder(IServiceCollection services) : base(services)
+    internal EventBrokerBuilder(IServiceCollection services)
     {
     }
 

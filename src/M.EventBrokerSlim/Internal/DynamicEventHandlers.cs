@@ -1,34 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
-using M.EventBrokerSlim.DependencyInjection;
+using Enfolder;
 
 namespace M.EventBrokerSlim.Internal;
 
 internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 {
     private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-    private readonly Dictionary<Type, ImmutableList<DelegateHandlerDescriptor>> _handlers = new Dictionary<Type, ImmutableList<DelegateHandlerDescriptor>>();
+    private readonly Dictionary<Type, ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>> _handlers = new();
 
-    public IDynamicHandlerClaimTicket Add(DelegateHandlerRegistryBuilder builder)
+    public IDynamicHandlerClaimTicket Add<TEvent>(IPipeline pipeline)
     {
+        var eventType = typeof(TEvent);
+        var claimTicket = new DynamicHandlerClaimTicket(Guid.NewGuid(), eventType);
+        _semaphore.Wait();
         try
         {
-            _semaphore.Wait();
-            var claimTicket = new DynamicHandlerClaimTicket(Guid.NewGuid());
-            foreach(DelegateHandlerDescriptor handler in builder.HandlerDescriptors)
+            if(!_handlers.TryGetValue(eventType, out ImmutableList<(DynamicHandlerClaimTicket, IPipeline)>? eventHandlersList))
             {
-                if(!_handlers.TryGetValue(handler.EventType, out ImmutableList<DelegateHandlerDescriptor>? value))
-                {
-                    value = ImmutableList<DelegateHandlerDescriptor>.Empty;
-                    _handlers[handler.EventType] = value;
-                }
-
-                handler.ClaimTicket = claimTicket;
-                _handlers[handler.EventType] = value.Add(handler);
+                eventHandlersList = ImmutableList<(DynamicHandlerClaimTicket, IPipeline)>.Empty;
+                _handlers.Add(eventType, eventHandlersList);
             }
-
+            
+            _handlers[eventType] = eventHandlersList.Add((claimTicket, pipeline));
             return claimTicket;
         }
         finally
@@ -39,27 +36,23 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 
     public void Remove(IDynamicHandlerClaimTicket claimTicket)
     {
+        ArgumentNullException.ThrowIfNull(claimTicket);
+        var ticket = claimTicket as DynamicHandlerClaimTicket;
+        if(ticket is null)
+        {
+            return;
+        }
+
+        _semaphore.Wait();
         try
         {
-            _semaphore.Wait();
-            foreach(var key in _handlers.Keys)
+            if(!_handlers.TryGetValue(ticket.EventType, out ImmutableList<(DynamicHandlerClaimTicket, IPipeline)>? eventHandlersList))
             {
-                _handlers[key] = _handlers[key].RemoveAll(x =>
-                {
-                    if(x.ClaimTicket is null)
-                    {
-                        return true;
-                    }
-
-                    if(x.ClaimTicket.Equals(claimTicket))
-                    {
-                        x.ClaimTicket = null;
-                        return true;
-                    }
-
-                    return false;
-                });
+                return;
             }
+
+            _handlers[ticket.EventType] = _handlers[ticket.EventType].RemoveAll(x => x.ticket.Id == ticket.Id);
+            
         }
         finally
         {
@@ -69,27 +62,23 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 
     public void RemoveRange(IEnumerable<IDynamicHandlerClaimTicket> claimTickets)
     {
+        ArgumentNullException.ThrowIfNull(claimTickets);
+        if(!claimTickets.All(x => x is DynamicHandlerClaimTicket))
+        {
+            return;
+        }
+
+        _semaphore.Wait();
         try
         {
-            _semaphore.Wait();
-            var claimTicketSet = new HashSet<IDynamicHandlerClaimTicket>(claimTickets);
-            foreach(var key in _handlers.Keys)
+            foreach(var ticket in claimTickets.Cast<DynamicHandlerClaimTicket>())
             {
-                _handlers[key] = _handlers[key].RemoveAll(x =>
+                if(!_handlers.TryGetValue(ticket.EventType, out ImmutableList<(DynamicHandlerClaimTicket, IPipeline)>? eventHandlersList))
                 {
-                    if(x.ClaimTicket is null)
-                    {
-                        return true;
-                    }
+                    continue;
+                }
 
-                    if(claimTicketSet.Contains(x.ClaimTicket))
-                    {
-                        x.ClaimTicket = null;
-                        return true;
-                    }
-
-                    return false;
-                });
+                _handlers[ticket.EventType] = _handlers[ticket.EventType].RemoveAll(x => x.ticket.Id == ticket.Id);
             }
         }
         finally
@@ -98,9 +87,17 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
         }
     }
 
-    internal ImmutableList<DelegateHandlerDescriptor>? GetDelegateHandlerDescriptors(Type eventType)
+    internal ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>? GetDelegateHandlerDescriptors(Type eventType)
     {
-        _ = _handlers.TryGetValue(eventType, out ImmutableList<DelegateHandlerDescriptor>? handlerDescriptors);
-        return handlerDescriptors;
+        _semaphore.Wait();
+        try
+        {
+            _ = _handlers.TryGetValue(eventType, out ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>? handlers);
+            return handlers;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }

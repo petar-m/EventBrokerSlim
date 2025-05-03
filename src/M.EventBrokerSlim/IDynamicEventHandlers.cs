@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using M.EventBrokerSlim.DependencyInjection;
+using Enfolder;
 
 namespace M.EventBrokerSlim;
 
@@ -13,7 +13,7 @@ public interface IDynamicEventHandlers
     /// </summary>
     /// <param name="builder">An instance of <see cref="DelegateHandlerRegistryBuilder"/> describing the handlers.</param>
     /// <returns><see cref="IDynamicHandlerClaimTicket"/> identifying added handlers.</returns>
-    IDynamicHandlerClaimTicket Add(DelegateHandlerRegistryBuilder builder);
+    IDynamicHandlerClaimTicket Add<TEvent>(IPipeline pipeline);
 
     /// <summary>
     /// Removes one or more delegate handlers by <see cref="IDynamicHandlerClaimTicket"/>

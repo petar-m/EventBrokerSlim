@@ -15,9 +15,9 @@ public class PipelineArgumentsResolution
         CancellationToken cancellationToken = default;
         ITestStub referenceType = A.Fake<ITestStub>(x => x.Strict());
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
-              .Execute((ITestStub x, CancellationToken ct) => 
+        IPipeline pipeline = PipelineBuilder.Create()
+            .NewPipeline()
+              .Execute((ITestStub x, CancellationToken ct) =>
               {
                   referenceType = x;
                   return Task.CompletedTask;
@@ -37,8 +37,8 @@ public class PipelineArgumentsResolution
         CancellationToken cancellationToken = default;
         (string, int) valueType = ("abc", 123);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+            .NewPipeline()
               .Execute(((string, int) x, CancellationToken ct) =>
               {
                   valueType = x;
@@ -68,8 +68,8 @@ public class PipelineArgumentsResolution
             .AddSingleton<ITestStub>(serviceProviderFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = new PipelineBuilder(serviceProvider)
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+            .NewPipeline()
               .Execute(static async(ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
@@ -98,13 +98,13 @@ public class PipelineArgumentsResolution
         A.CallTo(() => contextFunc.ExecuteAsync("from context", default))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set<ITestStub>(contextFunc);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), contextFunc);
 
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = new PipelineBuilder(serviceProvider)
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+            .NewPipeline()
               .Execute(static async(ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
@@ -133,17 +133,21 @@ public class PipelineArgumentsResolution
         A.CallTo(() => contextFunc.ExecuteAsync("from context", default))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set<ITestStub>(contextFunc);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), contextFunc);
 
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = new PipelineBuilder(serviceProvider)
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+            .NewPipeline()
               .Execute(static async(PipelineRunContext c, CancellationToken ct) =>
               {
-                  var x = c.Get<ITestStub>() ?? throw new ArgumentNullException();
-                  var message = x.Execute<string>();
+                  if(!c.TryGet<ITestStub>(out var x))
+                  {
+                      throw new ArgumentNullException();
+                  }
+
+                  var message = x!.Execute<string>();
                   await x.ExecuteAsync(message, ct);
               })
               .Build()
@@ -157,4 +161,6 @@ public class PipelineArgumentsResolution
         A.CallTo(() => contextFunc.ExecuteAsync("from context", default))
             .MustHaveHappenedOnceExactly();
     }
+
+    // TODO: test for scopes
 }

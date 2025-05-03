@@ -16,10 +16,10 @@ public class PipelineExecutionTests
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
               .Build()
               .Pipelines[0];
@@ -40,10 +40,10 @@ public class PipelineExecutionTests
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await next.RunAsync();
@@ -68,10 +68,10 @@ public class PipelineExecutionTests
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
               .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
@@ -105,10 +105,10 @@ public class PipelineExecutionTests
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
               .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
               {

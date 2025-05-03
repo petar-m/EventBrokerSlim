@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.ObjectPool;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.ObjectPool;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.ObjectPools;
 
 internal class RetryPolicyPooledObjectPolicy : IPooledObjectPolicy<RetryPolicy>
 {

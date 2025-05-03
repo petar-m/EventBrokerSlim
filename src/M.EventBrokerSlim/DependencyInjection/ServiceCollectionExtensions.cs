@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
+using Enfolder;
 using M.EventBrokerSlim.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,15 +24,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection serviceCollection,
         Action<EventBrokerBuilder>? eventBrokerConfiguration = null)
     {
-        var eventHandlerRegistryBuilder = new EventBrokerBuilder(serviceCollection);
-        eventBrokerConfiguration?.Invoke(eventHandlerRegistryBuilder);
-
-        serviceCollection.AddSingleton<EventHandlerRegistryBuilder>(eventHandlerRegistryBuilder);
+        var eventBrokerBuilder = new EventBrokerBuilder(serviceCollection);
+        eventBrokerConfiguration?.Invoke(eventBrokerBuilder);
 
         var eventBrokerKey = Guid.NewGuid();
 
         CancellationTokenSource eventBrokerCancellationTokenSource = new();
-
         serviceCollection.AddKeyedSingleton(eventBrokerKey, eventBrokerCancellationTokenSource);
 
         serviceCollection.AddKeyedSingleton(
@@ -45,58 +44,123 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddSingleton<IEventBroker>(
             x =>
             {
-                var eventHandlerRunner = x.GetRequiredService<ThreadPoolEventHandlerRunner>();
+                var eventHandlerRunner = x.GetRequiredKeyedService<ThreadPoolEventHandlerRunner>(eventBrokerKey);
                 eventHandlerRunner.Run();
                 return new EventBroker(
                     x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Writer,
                     x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
             });
 
-        serviceCollection.AddSingleton(
-            x => new ThreadPoolEventHandlerRunner(
+        serviceCollection.AddKeyedSingleton(
+            eventBrokerKey,
+            (x, key) => new ThreadPoolEventHandlerRunner(
                 x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey),
                 x.GetRequiredService<IServiceScopeFactory>(),
-                x.GetRequiredService<EventHandlerRegistry>(),
-                x.GetRequiredService<DelegateHandlerRegistry>(),
+                x.GetRequiredService<PipelineRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
-                x.GetRequiredService<DynamicEventHandlers>()));
+                x.GetRequiredService<DynamicEventHandlers>(),
+                new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
 
         serviceCollection.AddSingleton(
             x =>
             {
-                var builders = x.GetServices<EventHandlerRegistryBuilder>();
-                return EventHandlerRegistryBuilder.Build(builders);
-            });
-
-        serviceCollection.AddSingleton(
-            x =>
-            {
-                var builders = x.GetServices<DelegateHandlerRegistryBuilder>();
-                return DelegateHandlerRegistryBuilder.Build(builders);
+                var pipelines = x.GetServices<EventPipeline>();
+                IServiceProvider serviceProvider = x.GetRequiredService<IServiceProvider>();
+                return new PipelineRegistry(pipelines, serviceProvider);
             });
 
         DynamicEventHandlers dynamicEventHandlers = new();
-        serviceCollection.AddSingleton<DynamicEventHandlers>(dynamicEventHandlers);
         serviceCollection.AddSingleton<IDynamicEventHandlers>(dynamicEventHandlers);
 
         return serviceCollection;
     }
 
     /// <summary>
-    /// Adds EventBroker event handlers to the specified <see cref="IServiceCollection" />.
+    /// Adds a scoped service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <param name="serviceCollection">The <see cref="IServiceCollection" /> to add services to.</param>
-    /// <param name="eventHandlersConfiguration">The <see cref="EventHandlerRegistryBuilder"/> configuration delegate.</param>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddEventHandlers(
-        this IServiceCollection serviceCollection,
-        Action<EventHandlerRegistryBuilder> eventHandlersConfiguration)
+    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
+    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
+    /// <returns>A reference to this instance after the operation has completed.</returns>
+    public static IServiceCollection AddScopedEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
-        var eventHandlerRegistryBuilder = new EventHandlerRegistryBuilder(serviceCollection);
-        eventHandlersConfiguration(eventHandlerRegistryBuilder);
+        services.AddScoped<IEventHandler<TEvent>, THandler>();
+        key ??= Guid.NewGuid().ToString();
+        services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(key);
+        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        return services;
+    }
 
-        serviceCollection.AddSingleton(eventHandlerRegistryBuilder);
-        return serviceCollection;
+    public static IServiceCollection AddSingletonEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    {
+        services.AddSingleton<IEventHandler<TEvent>, THandler>();
+        key ??= Guid.NewGuid().ToString();
+        services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(key);
+        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        return services;
+    }
+
+    public static IServiceCollection AddTransientEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    {
+        services.AddTransient<IEventHandler<TEvent>, THandler>();
+        key ??= Guid.NewGuid().ToString();
+        services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(key);
+        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        return services;
+    }
+
+    public static IServiceCollection AddEventHandlerPileline<TEvent>(this IServiceCollection services, IPipeline pipeline) 
+        => services.AddSingleton(new EventPipeline(typeof(TEvent), pipeline));
+
+    private static EventPipeline CreateEventPipeline<TEvent>(string key)
+    {
+        var pipeline = PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute(static async (
+                IEventHandler<TEvent> handler,
+                [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
+                TEvent @event,
+                [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
+                IRetryPolicy retryPolicy,
+                [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
+                CancellationToken ct,
+                ILogger logger) =>
+            {
+                try
+                {
+                    await handler.Handle(@event, retryPolicy, ct);
+                }
+                catch(Exception x)
+                {
+                    await handler.OnError(x, @event, retryPolicy, ct);
+                }
+            },
+            new Dictionary<int, ResolveFromAttribute>
+            {
+                {
+                    0,
+                    new ResolveFromAttribute
+                    {
+                        PrimarySource = Source.Services,
+                        Fallback = false,
+                        PrimaryNotFound = NotFoundBehavior.ThrowException,
+                        Key = key
+                    }
+                }
+            })
+            .WrapWith(static async (ILogger logger, INext next) =>
+            {
+                try
+                {
+                    await next.RunAsync();
+                }
+                catch(Exception x)
+                {
+                    logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
+                }
+            })
+            .Build();
+
+        return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0]);
     }
 }

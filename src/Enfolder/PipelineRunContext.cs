@@ -6,17 +6,27 @@ public class PipelineRunContext
 
     internal bool TryGet(Type type, out object? value) => _contextItems.TryGetValue(type, out value);
 
-    public T? Get<T>() => _contextItems.TryGetValue(typeof(T), out object? value) ? (T)value : default;
-
-    public PipelineRunContext Set<T>(T contextItem) where T : notnull
+    public bool TryGet<T>(out T? value)
     {
-        _contextItems[typeof(T)] = contextItem;
+        if(_contextItems.TryGetValue(typeof(T), out object? item))
+        {
+            value = (T)item;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    public PipelineRunContext Set(Type itemType, object contextItem)
+    {
+        _contextItems[itemType] = contextItem;
         return this;
     }
 
-    public PipelineRunContext Remove<T>()
+    public PipelineRunContext Remove(Type itemType)
     {
-        _contextItems.Remove(typeof(T));
+        _contextItems.Remove(itemType);
         return this;
     }
 

@@ -3,6 +3,9 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Enfolder;
+using M.EventBrokerSlim.DependencyInjection;
+using M.EventBrokerSlim.Internal.ObjectPools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -13,38 +16,42 @@ namespace M.EventBrokerSlim.Internal;
 internal sealed class ThreadPoolEventHandlerRunner
 {
     private readonly ChannelReader<object> _channelReader;
-    private readonly EventHandlerRegistry _eventHandlerRegistry;
-    private readonly DelegateHandlerRegistry _delegateHandlerRegistry;
+    private readonly PipelineRegistry _pipelineRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly ILogger<ThreadPoolEventHandlerRunner> _logger;
+    private readonly ILogger _logger;
     private readonly DynamicEventHandlers _dynamicEventHandlers;
+    private readonly EventBrokerSettings _settings;
     private readonly SemaphoreSlim _semaphore;
-    private readonly DefaultObjectPool<HandlerExecutionContext> _contextObjectPool;
 
     internal ThreadPoolEventHandlerRunner(
         Channel<object> channel,
         IServiceScopeFactory serviceScopeFactory,
-        EventHandlerRegistry eventHandlerRegistry,
-        DelegateHandlerRegistry delegateHandlerRegistry,
+        PipelineRegistry pipelineRegistry,
         CancellationTokenSource cancellationTokenSource,
-        ILogger<ThreadPoolEventHandlerRunner>? logger,
-        DynamicEventHandlers dynamicEventHandlers)
+        ILogger? logger,
+        DynamicEventHandlers dynamicEventHandlers,
+        EventBrokerSettings settings)
     {
         _channelReader = channel.Reader;
-        _eventHandlerRegistry = eventHandlerRegistry;
-        _delegateHandlerRegistry = delegateHandlerRegistry;
+        _pipelineRegistry = pipelineRegistry;
         _cancellationTokenSource = cancellationTokenSource;
         _logger = logger ?? new NullLogger<ThreadPoolEventHandlerRunner>();
         _dynamicEventHandlers = dynamicEventHandlers;
-        _semaphore = new SemaphoreSlim(_eventHandlerRegistry.MaxConcurrentHandlers, _eventHandlerRegistry.MaxConcurrentHandlers);
-
+        _settings = settings;
+        _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);
         var retryQueue = new RetryQueue(channel.Writer, cancellationTokenSource.Token);
-        var retryPolicyPool = new DefaultObjectPool<RetryPolicy>(new RetryPolicyPooledObjectPolicy(), _eventHandlerRegistry.MaxConcurrentHandlers);
-        var executorPool = new DefaultObjectPool<Executor>(new ExecutorPooledObjectPolicy(), _eventHandlerRegistry.MaxConcurrentHandlers * _delegateHandlerRegistry.MaxPipelineLength());
-        var delegateParametersArrayObjectPool = new DefaultObjectPool<object[]>(new DelegateParameterArrayPooledObjectPolicy(), _eventHandlerRegistry.MaxConcurrentHandlers);
-        var contextPooledObjectPolicy = new HandlerExecutionContextPooledObjectPolicy(retryPolicyPool, _semaphore, serviceScopeFactory, _logger, retryQueue, delegateParametersArrayObjectPool, executorPool);
-        _contextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(contextPooledObjectPolicy, _eventHandlerRegistry.MaxConcurrentHandlers);
-        contextPooledObjectPolicy.ContextObjectPool = _contextObjectPool;
+
+        RetryPolicyPool.Instance =
+            new DefaultObjectPool<RetryPolicy>(
+                new RetryPolicyPooledObjectPolicy(), _settings.MaxConcurrentHandlers);
+
+        HandlerExecutionContextPool.Instance =
+            new DefaultObjectPool<HandlerExecutionContext>(
+                new HandlerExecutionContextPooledObjectPolicy(_semaphore, _logger, retryQueue), _settings.MaxConcurrentHandlers);
+
+        PipelineRunContextPool.Instance =
+            new DefaultObjectPool<PipelineRunContext>(
+                new PipelineRunContextPooledObjectPolicy(), _settings.MaxConcurrentHandlers);
     }
 
     public void Run()
@@ -63,15 +70,12 @@ internal sealed class ThreadPoolEventHandlerRunner
                 if(retryDescriptor is null)
                 {
                     Type type = @event.GetType();
-                    ImmutableArray<EventHandlerDescriptor> eventHandlers = _eventHandlerRegistry.GetEventHandlers(type);
-                    ImmutableArray<DelegateHandlerDescriptor> delegateEventHandlers = _delegateHandlerRegistry.GetHandlers(type);
-                    ImmutableList<DelegateHandlerDescriptor>? dynamicEventHandlers = _dynamicEventHandlers.GetDelegateHandlerDescriptors(type);
+                    ImmutableArray<IPipeline> handlers = _pipelineRegistry.Get(type);
+                    ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>? dynamicEventHandlers = _dynamicEventHandlers.GetDelegateHandlerDescriptors(type);
 
-                    if(eventHandlers.Length == 0 &&
-                       delegateEventHandlers.Length == 0 &&
-                       (dynamicEventHandlers is null || dynamicEventHandlers.IsEmpty))
+                    if(handlers.Length == 0 && (dynamicEventHandlers?.IsEmpty ?? true))
                     {
-                        if(!_eventHandlerRegistry.DisableMissingHandlerWarningLog)
+                        if(!_settings.DisableMissingHandlerWarningLog)
                         {
                             _logger.LogNoEventHandlerForEvent(type);
                         }
@@ -79,23 +83,14 @@ internal sealed class ThreadPoolEventHandlerRunner
                         continue;
                     }
 
-                    for(int i = 0; i < eventHandlers.Length; i++)
+                    for(int i = 0; i < handlers.Length; i++)
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                        EventHandlerDescriptor eventHandlerDescriptor = eventHandlers[i];
+                        IPipeline pipeline = handlers[i];
 
-                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, eventHandlerDescriptor, null, retryDescriptor, token);
-                        _ = Task.Factory.StartNew(static async x => await HandleEvent(x!), context);
-                    }
-
-                    for(int i = 0; i < delegateEventHandlers.Length; i++)
-                    {
-                        await _semaphore.WaitAsync(token).ConfigureAwait(false);
-
-                        DelegateHandlerDescriptor delegateHandlerDescriptor = delegateEventHandlers[i];
-
-                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, null, delegateHandlerDescriptor, retryDescriptor, token);
+                        HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
+                        context.Initialize(@event, pipeline, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
                     }
 
@@ -108,13 +103,10 @@ internal sealed class ThreadPoolEventHandlerRunner
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                        DelegateHandlerDescriptor delegateHandlerDescriptor = dynamicEventHandlers[i];
-                        if(delegateHandlerDescriptor.ClaimTicket is null)
-                        {
-                            continue;
-                        }
+                        IPipeline pipeline = dynamicEventHandlers[i].pipeline;
 
-                        HandlerExecutionContext context = _contextObjectPool.Get().Initialize(@event, null, delegateHandlerDescriptor, retryDescriptor, token);
+                        HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
+                        context.Initialize(@event, pipeline, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
                     }
                 }
@@ -122,180 +114,56 @@ internal sealed class ThreadPoolEventHandlerRunner
                 {
                     await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                    HandlerExecutionContext? context = null;
-                    if(retryDescriptor is EventHandlerRetryDescriptor)
-                    {
-                        context = _contextObjectPool.Get().Initialize(retryDescriptor.Event, ((EventHandlerRetryDescriptor)retryDescriptor).EventHandlerDescriptor, null, retryDescriptor, token);
-                        _ = Task.Factory.StartNew(static async x => await HandleEvent(x!), context);
-                    }
-                    else if(retryDescriptor is DelegateHandlerRetryDescriptor)
-                    {
-                        context = _contextObjectPool.Get().Initialize(retryDescriptor.Event, null, ((DelegateHandlerRetryDescriptor)retryDescriptor).DelegateHandlerDescriptor, retryDescriptor, token);
-                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
-                    }
+                    HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
+                    context.Initialize(retryDescriptor.Event, retryDescriptor.Pipeline, retryDescriptor, token);
+                    _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
                 }
             }
-        }
-    }
-
-    private static async Task HandleEvent(object state)
-    {
-        var context = (HandlerExecutionContext)state;
-        var retryPolicy = context.RetryPolicy!;
-        var @event = context.Event!;
-        var handler = context.EventHandlerDescriptor!.Handle;
-        var errorHandler = context.EventHandlerDescriptor!.OnError;
-
-        if(context.CancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        object? service = null;
-        using var scope = context.CreateScope();
-        try
-        {
-            service = context.GetService(scope.ServiceProvider);
-
-            await handler(service, @event, retryPolicy, context.CancellationToken).ConfigureAwait(false);
-        }
-        catch(Exception exception)
-        {
-            if(service is null)
-            {
-                context.LogEventHandlerResolvingError(exception);
-                return;
-            }
-
-            try
-            {
-                await errorHandler(service, @event, exception, retryPolicy, context.CancellationToken).ConfigureAwait(false);
-            }
-            catch(Exception errorHandlingException)
-            {
-                // suppress further exceptions
-                context.LogUnhandledExceptionFromOnError(service.GetType(), errorHandlingException);
-            }
-        }
-        finally
-        {
-            await context.CompleteAsync().ConfigureAwait(false);
         }
     }
 
     private static async Task HandleEventWithDelegate(object state)
     {
         var context = (HandlerExecutionContext)state;
-        var retryPolicy = context.RetryPolicy!;
         var @event = context.Event!;
+        var pipeline = context.Pipeline!;
 
         if(context.CancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        DelegateHandlerDescriptor handlerDescriptor = context.DelegateHandlerDescriptor!;
+        var retryPolicy = context.RetryDescriptor?.RetryPolicy ?? RetryPolicyPool.Instance.Get();
 
-        object[] services = context.BorrowDelegateParametersArray();
-        using var scope = context.CreateScope();
-        var executor = context.BorrowExecutor().Initialize(scope, handlerDescriptor, context.Event!, services, retryPolicy, context.CancellationToken);
+        var pipelineRunContext = PipelineRunContextPool.Instance.Get();
+        pipelineRunContext
+            .Set(@event.GetType(), @event)
+            .Set(typeof(IRetryPolicy), retryPolicy)
+            .Set(typeof(CancellationToken), context.CancellationToken);
         try
         {
-            await executor.Execute();
-        }
-        catch(Exception exception)
-        {
-            context.LogDelegateEventHandlerError(handlerDescriptor.EventType, exception);
+            var result = await pipeline.RunAsync(pipelineRunContext, context.CancellationToken);
+            if(result.Exception is not null)
+            {
+                context.Logger?.LogDelegateEventHandlerError(@event.GetType(), result.Exception);
+            }
         }
         finally
         {
-            context.ReturnDelegateParametersArray(services);
-            context.ReturnExecutor(executor);
-            await context.CompleteAsync().ConfigureAwait(false);
-        }
-    }
-
-    internal class Executor : INextHandler
-    {
-        private static readonly int _endOfPipeline = -1;
-
-#pragma warning disable CS8618 // Justification: Due to object pooling, these cannot be passed in the constructor.
-        private IServiceScope _scope;
-        private DelegateHandlerDescriptor _handler;
-        private object _event;
-        private object[] _parameters;
-        private IRetryPolicy _retryPolicy;
-        private CancellationToken _cancellationToken;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-
-        private int _currentHandler;
-
-        public Executor Initialize(IServiceScope scope, DelegateHandlerDescriptor handler, object @event, object[] parameters, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
-        {
-            _scope = scope;
-            _handler = handler;
-            _event = @event;
-            _parameters = parameters;
-            _retryPolicy = retryPolicy;
-            _cancellationToken = cancellationToken;
-
-            _currentHandler = handler.Pipeline.Count > 0 ? handler.Pipeline.Count - 1 : _endOfPipeline;
-            return this;
-        }
-
-        public async Task Execute()
-        {
-            if(HandlerAlreadyExecuted())
+            if(retryPolicy.RetryRequested)
             {
-                // if handler call INextHandler.Execute() - do nothing, causing it to continue execution
-                return;
+                retryPolicy.NextAttempt();
+                var retryDescriptor = context.RetryDescriptor ?? new RetryDescriptor(@event, retryPolicy, pipeline);
+                await context.RetryQueue.Enqueue(retryDescriptor).ConfigureAwait(false);
+            }
+            else
+            {
+                RetryPolicyPool.Instance.Return(retryPolicy);
             }
 
-            var handler = ShouldExecuteHandler() ? _handler : _handler.Pipeline[_currentHandler];
-            _currentHandler--;
-            Array.Clear(_parameters);
-            for(int i = 0; i < handler.ParamTypes.Length; i++)
-            {
-                if(handler.ParamTypes[i] == _event.GetType())
-                {
-                    _parameters[i] = _event;
-                }
-                else if(handler.ParamTypes[i] == typeof(CancellationToken))
-                {
-                    _parameters[i] = _cancellationToken;
-                }
-                else if(handler.ParamTypes[i] == typeof(IRetryPolicy))
-                {
-                    _parameters[i] = _retryPolicy;
-                }
-                else if(handler.ParamTypes[i] == typeof(INextHandler))
-                {
-                    _parameters[i] = this;
-                }
-                else
-                {
-                    _parameters[i] = _scope.ServiceProvider.GetRequiredService(handler.ParamTypes[i]);
-                }
-            }
-
-            await DelegateHelper.ExecuteDelegateHandler(handler.Handler, _parameters, handler.ParamTypes.Length).ConfigureAwait(false);
-        }
-
-        private bool ShouldExecuteHandler() => _currentHandler == -1;
-
-        private bool HandlerAlreadyExecuted() => _currentHandler < -1;
-
-        internal void Clear()
-        {
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            _scope = null;
-            _handler = null;
-            _event = null;
-            _parameters = null;
-            _retryPolicy = null;
-            _cancellationToken = default;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-            _currentHandler = 0;
+            PipelineRunContextPool.Instance.Return(pipelineRunContext);
+            HandlerExecutionContextPool.Instance.Return(context);
+            context.Semaphore.Release();
         }
     }
 }

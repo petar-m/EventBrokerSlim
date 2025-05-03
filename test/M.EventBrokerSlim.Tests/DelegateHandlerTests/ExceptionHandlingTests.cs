@@ -1,4 +1,5 @@
-﻿using MELT;
+﻿using Enfolder;
+using MELT;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
@@ -6,14 +7,12 @@ namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
 public class ExceptionHandlingTests
 {
-    private readonly DelegateHandlerRegistryBuilder _builder;
     private readonly ITestOutputHelper _output;
     private readonly EventsTracker _eventsTracker;
 
     public ExceptionHandlingTests(ITestOutputHelper output)
     {
         _output = output;
-        _builder = new DelegateHandlerRegistryBuilder();
         _eventsTracker = new EventsTracker();
     }
 
@@ -21,12 +20,12 @@ public class ExceptionHandlingTests
     public async Task Exception_WhenResolvingHandlerParameters_IsLogged()
     {
         // Arrange
+        var pipeline = PipelineBuilder.Create().NewPipeline().Execute((string notRegistered) => Task.CompletedTask).BuildSingle();
+
         var services = ServiceProviderHelper.BuildWithLogger(
             sc => sc.AddEventBroker()
-                    .AddSingleton(_builder)
-                    .AddSingleton(_eventsTracker));
-
-        _builder.RegisterHandler<Event1>((string notRegistered) => Task.CompletedTask);
+                    .AddSingleton(_eventsTracker)
+                    .AddEventHandlerPileline<Event1>(pipeline));
 
         using var scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -50,18 +49,21 @@ public class ExceptionHandlingTests
     public async Task Unhandled_Exception_WhenExecuting_IsLogged()
     {
         // Arrange
+        var pipeline = PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute(async (Event1 @event, EventsTracker tracker) =>
+            {
+                await Task.CompletedTask;
+                tracker.Track(@event);
+                throw new NotImplementedException();
+            })
+            .BuildSingle();
+
         var services = ServiceProviderHelper.BuildWithLogger(
             sc => sc.AddEventBroker()
-                    .AddSingleton(_builder)
-                    .AddSingleton(_eventsTracker));
-
-        _builder.RegisterHandler<Event1>(async (Event1 @event, EventsTracker tracker) =>
-        {
-            await Task.CompletedTask;
-            tracker.Track(@event);
-            throw new NotImplementedException();
-        });
-
+                    .AddSingleton(_eventsTracker)
+                    .AddEventHandlerPileline<Event1>(pipeline));
+        
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -85,15 +87,17 @@ public class ExceptionHandlingTests
     public async Task Shutdown_During_Handling_TaskCanceledException_IsLogged()
     {
         // Arrange
+        var pipeline = PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken))
+            .BuildSingle();
+
         var services = ServiceProviderHelper.BuildWithLogger(
             sc => sc.AddEventBroker()
-                    .AddSingleton(_builder)
-                    .AddSingleton(_eventsTracker));
-
-        _builder.RegisterHandler<Event1>(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken));
+                    .AddSingleton(_eventsTracker)
+                    .AddEventHandlerPileline<Event1>(pipeline));
 
         using var scope = services.CreateScope();
-
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act

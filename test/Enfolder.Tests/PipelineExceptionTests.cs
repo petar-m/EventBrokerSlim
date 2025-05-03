@@ -17,10 +17,10 @@ public class PipelineExceptionTests
         A.CallTo(() => func.ExecuteAsync(cancellationToken))
             .Throws(new Exception("Test"));
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   await x.ExecuteAsync(ct);
@@ -46,10 +46,10 @@ public class PipelineExceptionTests
         A.CallTo(() => func.ExecuteAsync(A<string>.Ignored, cancellationToken))
             .Returns(Task.CompletedTask);
 
-        var context = new PipelineRunContext().Set(func);
+        var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = new PipelineBuilder()
-              .For("1")
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
               .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
               {

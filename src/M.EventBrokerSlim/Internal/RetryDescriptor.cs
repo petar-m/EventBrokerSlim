@@ -1,14 +1,19 @@
-﻿namespace M.EventBrokerSlim.Internal;
+﻿using Enfolder;
 
-internal abstract class RetryDescriptor
+namespace M.EventBrokerSlim.Internal;
+
+internal class RetryDescriptor
 {
-    protected RetryDescriptor(object @event, RetryPolicy retryPolicy)
+    internal RetryDescriptor(object @event, RetryPolicy retryPolicy, IPipeline pipeline)
     {
         Event = @event;
         RetryPolicy = retryPolicy;
+        Pipeline = pipeline;
     }
 
     public object Event { get; }
 
     public RetryPolicy RetryPolicy { get; }
+
+    public IPipeline Pipeline { get; }
 }

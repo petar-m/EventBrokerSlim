@@ -4,18 +4,13 @@ namespace Enfolder.Internal;
 
 internal class Pipeline : IPipeline
 {
-    internal Pipeline(string key, List<FunctionObject> functions)
+    internal Pipeline(List<FunctionObject> functions)
     {
-        ArgumentNullException.ThrowIfNull(key, nameof(key));
-        Key = key;
-
         ArgumentNullException.ThrowIfNull(functions, nameof(functions));
         Functions = functions.ToImmutableArray();
     }
 
     public IServiceProvider? ServiceProvider { get; set; }
-
-    public string Key { get; }
 
     internal ImmutableArray<FunctionObject> Functions { get; }
 
