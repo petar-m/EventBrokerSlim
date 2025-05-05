@@ -156,17 +156,6 @@ public class PipelineBuilder
             return _pipelineBuilder;
         }
 
-        public IPipeline BuildSingle(Action<IPipeline>? onBuild = null)
-        {
-            var pipeline = new Pipeline(_functions)
-            {
-                ServiceProvider = _pipelineBuilder.ServiceProvider
-            };
-            _pipelineBuilder.AddPipeline(pipeline);
-            onBuild?.Invoke(pipeline);
-            return pipeline;
-        }
-
         public WrapFunc WrapWith(Func<Task> function)
         {
             _functions.Add(FunctionObject.Create(function));

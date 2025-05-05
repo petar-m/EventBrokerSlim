@@ -24,6 +24,12 @@ public class PipelineRunContext
         return this;
     }
 
+    public PipelineRunContext Set<T>(object contextItem)
+    {
+        _contextItems[typeof(T)] = contextItem;
+        return this;
+    }
+
     public PipelineRunContext Remove(Type itemType)
     {
         _contextItems.Remove(itemType);

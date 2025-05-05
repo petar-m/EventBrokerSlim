@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Xunit;
@@ -16,7 +17,6 @@ public class PipelineBuilderTests
               .Build();
 
         Assert.Single(pipelineBuilder.Pipelines);
-        Assert.Fail("Test not implemented yet.");
     }
 
     [Fact]
@@ -29,7 +29,6 @@ public class PipelineBuilderTests
               .WrapWith((bool b, INext next) => next.RunAsync())
               .Build();
 
-        Assert.Fail();
         Assert.Single(pipelineBuilder.Pipelines);
     }
 
@@ -49,44 +48,16 @@ public class PipelineBuilderTests
 
 
     [Fact]
-    public void Build_Multiple_Pipelines()
+    public void OnBuild_Callback_Is_Called()
     {
+        object? setInCallback = null;
+
         var pipelineBuilder = PipelineBuilder.Create()
               .NewPipeline()
               .Execute((int i) => Task.FromResult(i))
-              .Build()
-              .NewPipeline()
-              .Execute((int i) => Task.FromResult(i))
-              .WrapWith((string s, INext next) => next.RunAsync())
-              .Build()
-              .NewPipeline()
-              .Execute((int i) => Task.FromResult(i))
-              .WrapWith((string s, INext next) => next.RunAsync())
-              .WrapWith((bool b, INext next) => next.RunAsync())
-              .Build();
+              .Build(x => setInCallback = x);
 
-        Assert.Fail("Test not implemented yet.");
-    }
-
-    [Fact]
-    public void Build_Multiple_Pipelines_For_Same_Key()
-    {
-        var pipelineBuilder = PipelineBuilder.Create()
-              .NewPipeline()
-              .Execute((int i) => Task.FromResult(i))
-              .Build()
-              .NewPipeline()
-              .Execute((int i) => Task.FromResult(i))
-              .WrapWith((string s, INext next) => next.RunAsync())
-              .Build()
-              .NewPipeline()
-              .Execute((int i) => Task.FromResult(i))
-              .WrapWith((string s, INext next) => next.RunAsync())
-              .WrapWith((bool b, INext next) => next.RunAsync())
-              .Build();
-
-        Assert.Fail();
-        Assert.Equal(3, pipelineBuilder.Pipelines.Count);
-        
+        Assert.NotNull(setInCallback);
+        Assert.IsType<IPipeline>(setInCallback, exactMatch: false);
     }
 }

@@ -133,4 +133,34 @@ public class PipelineExecutionTests
         A.CallTo(() => func.ExecuteAsync("func", cancellationToken))
             .MustNotHaveHappened();
     }
+
+    [Fact]
+    public async Task Context_Available_In_Result()
+    {
+        var context = new PipelineRunContext();
+
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
+              .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
+              .Build()
+              .Pipelines[0];
+
+        PipelineRunResult result = await pipeline.RunAsync(context);
+
+        Assert.Equal(context, result.Context);
+    }
+
+    [Fact]
+    public async Task Context_InternallyCreated_Available_In_Result()
+    {
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
+              .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
+              .Build()
+              .Pipelines[0];
+
+        PipelineRunResult result = await pipeline.RunAsync();
+
+        Assert.NotNull(result.Context);
+    }
 }

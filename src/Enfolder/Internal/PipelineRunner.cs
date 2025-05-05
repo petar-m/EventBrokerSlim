@@ -67,52 +67,56 @@ internal class PipelineRunner : INext
     private object? Resolve(FunctionObject.Parameter parameter)
     {
         ResolveFromAttribute resolveFromAttribute = parameter.ResolveFrom;
-        if(resolveFromAttribute.PrimarySource == Source.Services)
+        switch(resolveFromAttribute.PrimarySource)
         {
-            if(!resolveFromAttribute.Fallback)
-            {
-                return GetFromServices(parameter, resolveFromAttribute.PrimaryNotFound);
-            }
+            case Source.Services:
+                {
+                    if(!resolveFromAttribute.Fallback)
+                    {
+                        return GetFromServices(parameter, resolveFromAttribute.PrimaryNotFound);
+                    }
 
-            object? value = GetService(parameter);
+                    object? value = GetService(parameter);
 
-            if(value is not null)
-            {
-                return value;
-            }
+                    if(value is not null)
+                    {
+                        return value;
+                    }
 
-            if(Context.TryGet(parameter.Type, out value))
-            {
-                return value;
-            }
+                    if(Context.TryGet(parameter.Type, out value))
+                    {
+                        return value;
+                    }
 
-            return GetDefaultOrThrow(parameter, resolveFromAttribute.SecondaryNotFound);
+                    return GetDefaultOrThrow(parameter, resolveFromAttribute.SecondaryNotFound);
+                }
+
+            case Source.Context:
+                {
+                    if(Context.TryGet(parameter.Type, out object? value))
+                    {
+                        return value;
+                    }
+
+                    if(!resolveFromAttribute.Fallback)
+                    {
+                        return GetDefaultOrThrow(parameter, resolveFromAttribute.PrimaryNotFound);
+                    }
+
+                    return GetFromServices(parameter, resolveFromAttribute.SecondaryNotFound);
+                }
+
+            default:
+                throw new ArgumentException($"{nameof(Source)} enum value {resolveFromAttribute.PrimarySource} is not supported. {parameter.ResolveFrom}.");
         }
-
-        if(resolveFromAttribute.PrimarySource == Source.Context)
-        {
-            if(Context.TryGet(parameter.Type, out object? value))
-            {
-                return value;
-            }
-
-            if(!resolveFromAttribute.Fallback)
-            {
-                return GetDefaultOrThrow(parameter, resolveFromAttribute.PrimaryNotFound);
-            }
-
-            return GetFromServices(parameter, resolveFromAttribute.SecondaryNotFound);
-        }
-
-        throw new ArgumentException($"ResolveFrom value {resolveFromAttribute.PrimarySource} is not supported. {parameter}.");
     }
 
     private static object? GetDefaultOrThrow(FunctionObject.Parameter parameter, NotFoundBehavior notFoundBehavior)
         => notFoundBehavior switch
         {
             NotFoundBehavior.ReturnTypeDefault => parameter.DefaultValue,
-            NotFoundBehavior.ThrowException => throw new ArgumentException($"Service provider is null. Cannot resolve {parameter.Type.Name}."),// TODO: fix exception type and message
-            _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} value {notFoundBehavior} is not supported. {parameter}"),
+            NotFoundBehavior.ThrowException => throw new ArgumentException($"No {parameter.Type.FullName} found in {nameof(PipelineRunContext)}. {parameter.ResolveFrom}"),
+            _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} enum value {notFoundBehavior} is not supported. {parameter.ResolveFrom}"),
         };
 
     private object? GetFromServices(FunctionObject.Parameter parameter, NotFoundBehavior notFoundBehavior)
@@ -120,19 +124,27 @@ internal class PipelineRunner : INext
         {
             NotFoundBehavior.ThrowException => GetRequiredService(parameter),
             NotFoundBehavior.ReturnTypeDefault => GetService(parameter),
-            _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} value {notFoundBehavior} is not supported. {parameter}"),
+            _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} enum value {notFoundBehavior} is not supported. {parameter.ResolveFrom}"),
         };
 
     private object? GetRequiredService(FunctionObject.Parameter parameter)
     {
         if(_serviceProvider is null)
         {
-            throw new InvalidOperationException($"ServiceProvider is null. Cannot resolve {parameter}.");
+            throw new ArgumentException($"IPipeline.ServiceProvider is null. Cannot resolve parameter of type {parameter.Type.FullName}. {parameter.ResolveFrom}");
         }
 
-        return parameter.ResolveFrom.Key is null
-            ? _serviceProvider.GetRequiredService(parameter.Type)
-            : _serviceProvider.GetRequiredKeyedService(parameter.Type, parameter.ResolveFrom.Key);
+        try
+        {
+            return parameter.ResolveFrom.Key is null
+                ? _serviceProvider.GetRequiredService(parameter.Type)
+                : _serviceProvider.GetRequiredKeyedService(parameter.Type, parameter.ResolveFrom.Key);
+        }
+        catch(InvalidOperationException ex)
+        {
+            var withKey = parameter.ResolveFrom.Key is null ? string.Empty : $" with key {parameter.ResolveFrom.Key}";
+            throw new ArgumentException($"No service for type {parameter.Type.FullName} has been registered{withKey}. {parameter.ResolveFrom}.", ex);
+        }
     }
 
     private object? GetService(FunctionObject.Parameter parameter)

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Enfolder.Tests;
 
-public class PipelineArgumentsResolution
+public class ArgumentsResolutionDefaultBehaviorTests
 {
     [Fact]
     public async Task No_ServiceProvider_NoContext_ReferenceType_Parameter_Is_Null()
@@ -161,6 +161,4 @@ public class PipelineArgumentsResolution
         A.CallTo(() => contextFunc.ExecuteAsync("from context", default))
             .MustHaveHappenedOnceExactly();
     }
-
-    // TODO: test for scopes
 }

@@ -20,12 +20,16 @@ public class ExceptionHandlingTests
     public async Task Exception_WhenResolvingHandlerParameters_IsLogged()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create().NewPipeline().Execute((string notRegistered) => Task.CompletedTask).BuildSingle();
-
         var services = ServiceProviderHelper.BuildWithLogger(
-            sc => sc.AddEventBroker()
-                    .AddSingleton(_eventsTracker)
-                    .AddEventHandlerPileline<Event1>(pipeline));
+            sc =>
+            {
+                sc.AddEventBroker()
+                  .AddSingleton(_eventsTracker);
+                PipelineBuilder.Create()
+                .NewPipeline()
+                .Execute((string notRegistered) => Task.CompletedTask)
+                .BuildSingle(x => sc.AddEventHandlerPileline<Event1>(x));
+            });
 
         using var scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();

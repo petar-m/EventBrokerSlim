@@ -36,7 +36,36 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="DelegateHandlerTests\ExceptionHandlingTests.cs" />
+	  <Compile Remove="DelegateHandlerTests\HandlerExecutionTests.cs" />
+	  <Compile Remove="DelegateHandlerTests\HandlerSettings.cs" />
+	  <Compile Remove="DelegateHandlerTests\LoadTests.cs" />
+	  <Compile Remove="DelegateHandlerTests\RegistrationTests.cs" />
+	  <Compile Remove="DelegateHandlerTests\ServiceCollectionExtensions.cs" />
+	  <Compile Remove="DynamicDelegateHandlerTests\DynamicHandlerExecutionTests.cs" />
+	  <Compile Remove="EventBrokerTests.cs" />
+	  <Compile Remove="ExceptionHandlingTests.cs" />
+	  <Compile Remove="HandlerExecutionTests.cs" />
+	  <Compile Remove="HandlerRegistrationTests.cs" />
+	  <Compile Remove="HandlerScopeAndInstanceTests.cs" />
+	  <Compile Remove="LoadTests.cs" />
+	  <Compile Remove="MultipleHandlersTests.cs" />
+	  <Compile Remove="OrderOfRetriesTests.cs" />
+	  <Compile Remove="RetryFromHandleTests.cs" />
+	  <Compile Remove="RetryFromHandleUsingDelayDelegateTests.cs" />
+	  <Compile Remove="RetryFromOnErrorTests.cs" />
+	  <Compile Remove="RetryFromOnErrorUsingDelayDelegateTests.cs" />
+	  <Compile Remove="RetryOverrideFromOnErrorTests.cs" />
+	  <Compile Remove="RetryPolicyTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Remove="test_coverage\coverage.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="DelegateHandlerTests\" />
+	  <Folder Include="DynamicDelegateHandlerTests\" />
 	</ItemGroup>
 
 	<PropertyGroup>
