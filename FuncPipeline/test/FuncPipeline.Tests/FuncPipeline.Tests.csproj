@@ -24,10 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\FuncPipeline\FuncPipeline.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <Compile Remove="test_coverage\coverage\**" />
         <EmbeddedResource Remove="test_coverage\coverage\**" />
         <None Remove="test_coverage\coverage\**" />
@@ -35,6 +31,10 @@
 
     <ItemGroup>
         <None Remove="test_coverage\coverage.xml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\FuncPipeline\FuncPipeline.csproj" />
     </ItemGroup>
 
     <PropertyGroup>
