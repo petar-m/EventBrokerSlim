@@ -1,4 +1,4 @@
-﻿namespace Enfolder;
+﻿namespace FuncPipeline;
 
 public interface INext
 {

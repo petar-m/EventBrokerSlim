@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using Enfolder;
+using FuncPipeline;
 using Microsoft.Extensions.Logging;
 
 namespace M.EventBrokerSlim.Internal;

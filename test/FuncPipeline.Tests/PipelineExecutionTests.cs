@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using FakeItEasy;
 using Xunit;
 
-namespace Enfolder.Tests;
+namespace FuncPipeline.Tests;
 
 public class PipelineExecutionTests
 {

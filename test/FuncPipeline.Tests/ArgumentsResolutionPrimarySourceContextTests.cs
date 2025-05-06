@@ -5,7 +5,7 @@ using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Enfolder.Tests;
+namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionPrimarySourceContextTests
 {
@@ -42,7 +42,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .MustNotHaveHappened();
 
         Assert.IsType<ArgumentException>(result.Exception);
-        Assert.Equal("No Enfolder.Tests.ITestStub found in PipelineRunContext. ResolveFromAttribute { PrimarySource = Context, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }",
+        Assert.Equal("No FuncPipeline.Tests.ITestStub found in PipelineRunContext. ResolveFromAttribute { PrimarySource = Context, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }",
                      result.Exception.Message);
     }
 
@@ -91,7 +91,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .MustNotHaveHappened();
 
         Assert.IsType<ArgumentException>(result.Exception);
-        Assert.Equal("No Enfolder.Tests.ITestStub found in PipelineRunContext. ResolveFromAttribute { PrimarySource = Context, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }",
+        Assert.Equal("No FuncPipeline.Tests.ITestStub found in PipelineRunContext. ResolveFromAttribute { PrimarySource = Context, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }",
                      result.Exception.Message);
     }
 
@@ -310,7 +310,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
 
         Assert.IsType<ArgumentException>(result.Exception);
         Assert.Equal(
-            "No service for type Enfolder.Tests.ITestStub has been registered. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }.",
+            "No service for type FuncPipeline.Tests.ITestStub has been registered. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }.",
             result.Exception.Message);
     }
 
@@ -355,7 +355,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
 
         Assert.IsType<ArgumentException>(result.Exception);
         Assert.Equal(
-            "No service for type Enfolder.Tests.ITestStub has been registered. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }.",
+            "No service for type FuncPipeline.Tests.ITestStub has been registered. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }.",
             result.Exception.Message);
     }
 
@@ -384,7 +384,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
 
         Assert.IsType<ArgumentException>(result.Exception);
         Assert.Equal(
-            "IPipeline.ServiceProvider is null. Cannot resolve parameter of type Enfolder.Tests.ITestStub. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }",
+            "IPipeline.ServiceProvider is null. Cannot resolve parameter of type FuncPipeline.Tests.ITestStub. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }",
             result.Exception.Message);
     }
 
@@ -542,7 +542,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
 
         Assert.IsType<ArgumentException>(result.Exception);
         Assert.Equal(
-            "No service for type Enfolder.Tests.ITestStub has been registered with key service_key. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key = service_key }.",
+            "No service for type FuncPipeline.Tests.ITestStub has been registered with key service_key. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key = service_key }.",
             result.Exception.Message);
     }
 
@@ -588,7 +588,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
 
         Assert.IsType<ArgumentException>(result.Exception);
         Assert.Equal(
-            "No service for type Enfolder.Tests.ITestStub has been registered with key service_key. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key = service_key }.",
+            "No service for type FuncPipeline.Tests.ITestStub has been registered with key service_key. ResolveFromAttribute { PrimarySource = Context, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key = service_key }.",
             result.Exception.Message);
     }
 }

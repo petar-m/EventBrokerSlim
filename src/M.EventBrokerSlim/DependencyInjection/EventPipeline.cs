@@ -1,5 +1,5 @@
 ﻿using System;
-using Enfolder;
+using FuncPipeline;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 

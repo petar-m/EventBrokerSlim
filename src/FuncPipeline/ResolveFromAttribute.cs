@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Enfolder;
+namespace FuncPipeline;
 
 [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 public class ResolveFromAttribute : Attribute

@@ -1,4 +1,4 @@
-﻿using Enfolder;
+﻿using FuncPipeline;
 
 namespace M.EventBrokerSlim.Internal;
 

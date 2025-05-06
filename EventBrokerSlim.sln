@@ -32,9 +32,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enfolder", "src\Enfolder\Enfolder.csproj", "{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline", "src\FuncPipeline\FuncPipeline.csproj", "{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enfolder.Tests", "test\Enfolder.Tests\Enfolder.Tests.csproj", "{2640C49C-494F-423F-B0ED-D10D7C27ABA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline.Tests", "test\FuncPipeline.Tests\FuncPipeline.Tests.csproj", "{2640C49C-494F-423F-B0ED-D10D7C27ABA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

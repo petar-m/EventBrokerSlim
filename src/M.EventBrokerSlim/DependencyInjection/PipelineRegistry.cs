@@ -3,7 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Enfolder;
+using FuncPipeline;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 

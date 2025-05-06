@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Enfolder.Internal;
+namespace FuncPipeline.Internal;
 
 internal sealed class FunctionObject
 {

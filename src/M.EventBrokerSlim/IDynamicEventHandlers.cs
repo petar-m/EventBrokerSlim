@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Enfolder;
+using FuncPipeline;
 
 namespace M.EventBrokerSlim;
 

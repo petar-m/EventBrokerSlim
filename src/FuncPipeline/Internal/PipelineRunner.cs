@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Enfolder.Internal;
+namespace FuncPipeline.Internal;
 
 internal class PipelineRunner : INext
 {

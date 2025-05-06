@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Enfolder\Enfolder.csproj" />
+	  <ProjectReference Include="..\FuncPipeline\FuncPipeline.csproj" />
 	</ItemGroup>
 
 </Project>

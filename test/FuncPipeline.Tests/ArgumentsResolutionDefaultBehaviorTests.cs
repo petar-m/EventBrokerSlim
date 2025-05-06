@@ -5,7 +5,7 @@ using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Enfolder.Tests;
+namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionDefaultBehaviorTests
 {

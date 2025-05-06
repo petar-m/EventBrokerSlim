@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Enfolder;
+using FuncPipeline;
 using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal.ObjectPools;

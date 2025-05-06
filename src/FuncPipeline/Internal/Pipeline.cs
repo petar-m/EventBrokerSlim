@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace Enfolder.Internal;
+namespace FuncPipeline.Internal;
 
 internal class Pipeline : IPipeline
 {

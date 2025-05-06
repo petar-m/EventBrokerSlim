@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Enfolder.Tests;
+namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionUnknownPropertyValuesTests
 {

@@ -1,5 +1,5 @@
 ﻿
-namespace Enfolder;
+namespace FuncPipeline;
 
 public interface IPipeline
 {

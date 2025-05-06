@@ -1,6 +1,6 @@
-﻿using Enfolder.Internal;
+﻿using FuncPipeline.Internal;
 
-namespace Enfolder;
+namespace FuncPipeline;
 
 public class PipelineBuilder
 {
