@@ -27,8 +27,8 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<None Include="../../package-icon.png" Pack="true" PackagePath="" />
-		<None Include="../../package-readme.md" Pack="true" PackagePath="" />
+		<None Include="../../../package-icon.png" Pack="true" PackagePath="" />
+		<None Include="../../../package-readme.md" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FuncPipeline\FuncPipeline.csproj" />
+	  <ProjectReference Include="..\..\..\FuncPipeline\src\FuncPipeline\FuncPipeline.csproj" />
 	</ItemGroup>
 
 </Project>
