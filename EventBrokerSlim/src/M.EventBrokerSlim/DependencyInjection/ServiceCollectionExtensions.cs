@@ -51,6 +51,9 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
             });
 
+        DynamicEventHandlers dynamicEventHandlers = new();
+        serviceCollection.AddSingleton<IDynamicEventHandlers>(dynamicEventHandlers);
+
         serviceCollection.AddKeyedSingleton(
             eventBrokerKey,
             (x, key) => new ThreadPoolEventHandlerRunner(
@@ -59,7 +62,7 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredService<PipelineRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
-                x.GetRequiredService<DynamicEventHandlers>(),
+                dynamicEventHandlers,
                 new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
 
         serviceCollection.AddSingleton(
@@ -69,9 +72,6 @@ public static class ServiceCollectionExtensions
                 IServiceProvider serviceProvider = x.GetRequiredService<IServiceProvider>();
                 return new PipelineRegistry(pipelines, serviceProvider);
             });
-
-        DynamicEventHandlers dynamicEventHandlers = new();
-        serviceCollection.AddSingleton<IDynamicEventHandlers>(dynamicEventHandlers);
 
         return serviceCollection;
     }
@@ -109,13 +109,24 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddEventHandlerPileline<TEvent>(this IServiceCollection services, IPipeline pipeline) 
+    public static IServiceCollection AddEventHandlerPileline<TEvent>(this IServiceCollection services, IPipeline pipeline)
         => services.AddSingleton(new EventPipeline(typeof(TEvent), pipeline));
 
     private static EventPipeline CreateEventPipeline<TEvent>(string key)
     {
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
+            .Execute(static async (ILogger logger, INext next) =>
+            {
+                try
+                {
+                    await next.RunAsync();
+                }
+                catch(Exception x)
+                {
+                    logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
+                }
+            })
             .Execute(static async (
                 IEventHandler<TEvent> handler,
                 [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
@@ -146,20 +157,18 @@ public static class ServiceCollectionExtensions
                         PrimaryNotFound = NotFoundBehavior.ThrowException,
                         Key = key
                     }
+                },
+                {
+                    1,
+                    new ResolveFromAttribute
+                    {
+                        PrimarySource = Source.Context,
+                        Fallback = false,
+                        PrimaryNotFound = NotFoundBehavior.ThrowException,
+                        Key = key
+                    }
                 }
             })
-            // TODO: FIX !!!
-            //.WrapWith(static async (ILogger logger, INext next) =>
-            //{
-            //    try
-            //    {
-            //        await next.RunAsync();
-            //    }
-            //    catch(Exception x)
-            //    {
-            //        logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
-            //    }
-            //})
             .Build();
 
         return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0]);

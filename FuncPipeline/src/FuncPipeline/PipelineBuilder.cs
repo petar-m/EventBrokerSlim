@@ -30,6 +30,7 @@ public class PipelineBuilder
     /// <summary>
     /// Starts the creation of a new pipeline by defining its execution functions.
     /// </summary>
+    /// <param name="options">Optional <see cref="PipelineRunOptions"/> specifying pipeline run behavior.</param>
     /// <returns>An <see cref="ExecuteFunc"/> object to define execution functions.</returns>
     public ExecuteFunc NewPipeline(PipelineRunOptions? options = null) => new ExecuteFunc(this, options);
 
@@ -48,6 +49,7 @@ public class PipelineBuilder
         /// Initializes a new instance of the <see cref="PipelineBuilder.ExecuteFunc"/> class.
         /// </summary>
         /// <param name="pipelineBuilder">The <see cref="PipelineBuilder"/> instance associated with this execution function.</param>
+        /// <param name="options">The options to configure the pipeline run behavior.</param>
         internal protected ExecuteFunc(PipelineBuilder pipelineBuilder, PipelineRunOptions? options)
         {
             _pipelineBuilder = pipelineBuilder;
