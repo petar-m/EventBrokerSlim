@@ -8,15 +8,16 @@ internal class PipelineRunner : INext
     private readonly IServiceProvider? _serviceProvider;
     private readonly Pipeline _pipeline;
     private readonly CancellationToken _cancellationToken;
-
+    private readonly IServiceScope? _scope;
     private int _current;
 
-    internal PipelineRunner(Pipeline pipeline, PipelineRunContext? context, IServiceProvider? serviceProvider, CancellationToken cancellationToken = default)
+    internal PipelineRunner(Pipeline pipeline, PipelineRunContext? context, IServiceProvider? serviceProvider, CancellationToken cancellationToken = default, IServiceScope? scope = null)
     {
         _pipeline = pipeline;
         Context = context ?? new PipelineRunContext();
         _serviceProvider = serviceProvider;
         _cancellationToken = cancellationToken;
+        _scope = scope;
         _current = -1;
     }
 
@@ -31,7 +32,9 @@ internal class PipelineRunner : INext
         }
 
         FunctionObject function = _pipeline.Functions[_current];
-        using IServiceScope? scope = _serviceProvider?.CreateScope();
+        IServiceScope? scope = _pipeline.Options.ServiceScopePerFunction 
+            ? _serviceProvider?.CreateScope()
+            : _scope;
         object?[] parameterValues = ArrayPool<object?>.Shared.Rent(function.Parameters.Length);
         try
         {
@@ -51,8 +54,7 @@ internal class PipelineRunner : INext
                 }
                 else
                 {
-                    parameterValues[i] = Resolve(function.Parameters[i]);
-
+                    parameterValues[i] = Resolve(function.Parameters[i], scope);
                 }
             }
 
@@ -61,10 +63,14 @@ internal class PipelineRunner : INext
         finally
         {
             ArrayPool<object?>.Shared.Return(parameterValues);
+            if(_pipeline.Options.ServiceScopePerFunction)
+            {
+                scope?.Dispose();
+            }
         }
     }
 
-    private object? Resolve(FunctionObject.Parameter parameter)
+    private object? Resolve(FunctionObject.Parameter parameter, IServiceScope? scope)
     {
         ResolveFromAttribute resolveFromAttribute = parameter.ResolveFrom;
         switch(resolveFromAttribute.PrimarySource)
@@ -73,10 +79,10 @@ internal class PipelineRunner : INext
                 {
                     if(!resolveFromAttribute.Fallback)
                     {
-                        return GetFromServices(parameter, resolveFromAttribute.PrimaryNotFound);
+                        return GetFromServices(parameter, resolveFromAttribute.PrimaryNotFound, scope);
                     }
 
-                    object? value = GetService(parameter);
+                    object? value = GetService(parameter, scope);
 
                     if(value is not null)
                     {
@@ -103,7 +109,7 @@ internal class PipelineRunner : INext
                         return GetDefaultOrThrow(parameter, resolveFromAttribute.PrimaryNotFound);
                     }
 
-                    return GetFromServices(parameter, resolveFromAttribute.SecondaryNotFound);
+                    return GetFromServices(parameter, resolveFromAttribute.SecondaryNotFound, scope);
                 }
 
             default:
@@ -119,17 +125,17 @@ internal class PipelineRunner : INext
             _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} enum value {notFoundBehavior} is not supported. {parameter.ResolveFrom}"),
         };
 
-    private object? GetFromServices(FunctionObject.Parameter parameter, NotFoundBehavior notFoundBehavior)
+    private object? GetFromServices(FunctionObject.Parameter parameter, NotFoundBehavior notFoundBehavior, IServiceScope? scope)
         => notFoundBehavior switch
         {
-            NotFoundBehavior.ThrowException => GetRequiredService(parameter),
-            NotFoundBehavior.ReturnTypeDefault => GetService(parameter),
+            NotFoundBehavior.ThrowException => GetRequiredService(parameter, scope),
+            NotFoundBehavior.ReturnTypeDefault => GetService(parameter, scope),
             _ => throw new ArgumentException($"{nameof(NotFoundBehavior)} enum value {notFoundBehavior} is not supported. {parameter.ResolveFrom}"),
         };
 
-    private object? GetRequiredService(FunctionObject.Parameter parameter)
+    private object? GetRequiredService(FunctionObject.Parameter parameter, IServiceScope? scope)
     {
-        if(_serviceProvider is null)
+        if(scope is null)
         {
             throw new ArgumentException($"IPipeline.ServiceProvider is null. Cannot resolve parameter of type {parameter.Type.FullName}. {parameter.ResolveFrom}");
         }
@@ -137,8 +143,8 @@ internal class PipelineRunner : INext
         try
         {
             return parameter.ResolveFrom.Key is null
-                ? _serviceProvider.GetRequiredService(parameter.Type)
-                : _serviceProvider.GetRequiredKeyedService(parameter.Type, parameter.ResolveFrom.Key);
+                ? scope.ServiceProvider.GetRequiredService(parameter.Type)
+                : scope.ServiceProvider.GetRequiredKeyedService(parameter.Type, parameter.ResolveFrom.Key);
         }
         catch(InvalidOperationException ex)
         {
@@ -147,10 +153,10 @@ internal class PipelineRunner : INext
         }
     }
 
-    private object? GetService(FunctionObject.Parameter parameter)
+    private object? GetService(FunctionObject.Parameter parameter, IServiceScope? scope)
     {
         return parameter.ResolveFrom.Key is null
-            ? _serviceProvider?.GetService(parameter.Type)
-            : (_serviceProvider as IKeyedServiceProvider)?.GetKeyedService(parameter.Type, parameter.ResolveFrom.Key);
+            ? scope?.ServiceProvider.GetService(parameter.Type)
+            : (scope?.ServiceProvider as IKeyedServiceProvider)?.GetKeyedService(parameter.Type, parameter.ResolveFrom.Key);
     }
 }

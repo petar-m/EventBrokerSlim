@@ -1,22 +1,32 @@
 ﻿using System.Collections.Immutable;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FuncPipeline.Internal;
 
 internal class Pipeline : IPipeline
 {
-    internal Pipeline(List<FunctionObject> functions)
+    internal Pipeline(List<FunctionObject> functions, PipelineRunOptions options)
     {
         ArgumentNullException.ThrowIfNull(functions, nameof(functions));
         Functions = functions.ToImmutableArray();
+        Options = options;
     }
 
     public IServiceProvider? ServiceProvider { get; set; }
+    
+    public PipelineRunOptions Options { get; }
 
     internal ImmutableArray<FunctionObject> Functions { get; }
 
     public async Task<PipelineRunResult> RunAsync(PipelineRunContext? pipelineRunContext = null, CancellationToken cancellationToken = default)
     {
-        var pipelineRunner = new PipelineRunner(this, pipelineRunContext, ServiceProvider, cancellationToken);
+        IServiceScope? scope = null;
+        if(!Options.ServiceScopePerFunction)
+        {
+            scope = ServiceProvider?.CreateScope();
+        }
+
+        var pipelineRunner = new PipelineRunner(this, pipelineRunContext, ServiceProvider, cancellationToken, scope);
 
         try
         {
@@ -25,6 +35,13 @@ internal class Pipeline : IPipeline
         catch(Exception ex)
         {
             return new PipelineRunResult(ex, pipelineRunner.Context);
+        }
+        finally
+        {
+            if(!Options.ServiceScopePerFunction)
+            {
+                scope?.Dispose();
+            }
         }
 
         return new PipelineRunResult(pipelineRunner.Context);
