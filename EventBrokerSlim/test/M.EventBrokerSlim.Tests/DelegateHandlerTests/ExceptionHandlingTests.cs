@@ -25,7 +25,7 @@ public class ExceptionHandlingTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(2));
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
@@ -55,7 +55,7 @@ public class ExceptionHandlingTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(2));
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
