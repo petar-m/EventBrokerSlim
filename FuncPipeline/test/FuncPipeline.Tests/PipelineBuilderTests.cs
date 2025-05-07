@@ -9,7 +9,7 @@ namespace FuncPipeline.Tests;
 public class PipelineBuilderTests
 {
     [Fact]
-    public void Build_Pipeline_Without_Wrappers()
+    public void Build_Pipeline_Single_Function()
     {
         var pipelineBuilder = PipelineBuilder.Create()
               .NewPipeline()
@@ -20,13 +20,13 @@ public class PipelineBuilderTests
     }
 
     [Fact]
-    public void Build_Pipeline_With_Wrappers()
+    public void Build_Pipeline_Multiple_Functions()
     {
         var pipelineBuilder = PipelineBuilder.Create()
               .NewPipeline()
               .Execute((int i) => Task.FromResult(i))
-              .WrapWith((string s, INext next) => next.RunAsync())
-              .WrapWith((bool b, INext next) => next.RunAsync())
+              .Execute((string s, INext next) => next.RunAsync())
+              .Execute((bool b, INext next) => next.RunAsync())
               .Build();
 
         Assert.Single(pipelineBuilder.Pipelines);

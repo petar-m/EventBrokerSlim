@@ -7,6 +7,33 @@ namespace FuncPipeline.Tests;
 public class PipelineBuilderExecuteOverloadsTests
 {
     [Fact]
+    public async Task Inject_0_Parameters()
+    {
+        // Arrange
+        var mock = A.Fake<IMock>(x => x.Strict());
+        A.CallTo(() => mock.Do())
+         .Returns(Task.CompletedTask);
+
+        var context = new PipelineRunContext()
+            .Set<IMock>(mock);
+
+        IPipeline pipeline = PipelineBuilder.Create()
+              .NewPipeline()
+              .Execute(mock.Do)
+              .Build()
+              .Pipelines[0];
+
+        // Act
+        PipelineRunResult result = await pipeline.RunAsync(context);
+
+        // Assert
+        Assert.True(result.IsSuccessful, result.Exception?.ToString());
+        Assert.Null(result.Exception);
+        A.CallTo(() => mock.Do())
+         .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
     public async Task Inject_1_Parameters()
     {
         // Arrange
