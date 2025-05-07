@@ -31,7 +31,7 @@ public class PipelineBuilder
     /// Starts the creation of a new pipeline by defining its execution functions.
     /// </summary>
     /// <returns>An <see cref="ExecuteFunc"/> object to define execution functions.</returns>
-    public ExecuteFunc NewPipeline() => new ExecuteFunc(this);
+    public ExecuteFunc NewPipeline(PipelineRunOptions? options = null) => new ExecuteFunc(this, options);
 
     private void AddPipeline(Pipeline pipeline) => _pipelines.Add(pipeline);
 
@@ -41,15 +41,17 @@ public class PipelineBuilder
     public class ExecuteFunc
     {
         private readonly PipelineBuilder _pipelineBuilder;
+        private readonly PipelineRunOptions _options;
         private readonly List<FunctionObject> _functions = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PipelineBuilder.ExecuteFunc"/> class.
         /// </summary>
         /// <param name="pipelineBuilder">The <see cref="PipelineBuilder"/> instance associated with this execution function.</param>
-        internal protected ExecuteFunc(PipelineBuilder pipelineBuilder)
+        internal protected ExecuteFunc(PipelineBuilder pipelineBuilder, PipelineRunOptions? options)
         {
             _pipelineBuilder = pipelineBuilder;
+            _options = options ?? PipelineRunOptions.Default;
         }
 
         /// <summary>
@@ -59,7 +61,7 @@ public class PipelineBuilder
         /// <returns>The <see cref="PipelineBuilder"/> instance.</returns>
         public PipelineBuilder Build(Action<IPipeline>? onBuild = null)
         {
-            var pipeline = new Pipeline(_functions)
+            var pipeline = new Pipeline(_functions, _options)
             {
                 ServiceProvider = _pipelineBuilder.ServiceProvider
             };
