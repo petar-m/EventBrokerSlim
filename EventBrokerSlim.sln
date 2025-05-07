@@ -39,6 +39,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1F68FA29-95E5-40B4-AB1C-2839A61F9020}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FuncPipeline", "FuncPipeline", "{F527E434-6ECA-4B5D-B4E0-AD333C13C56B}"
+	ProjectSection(SolutionItems) = preProject
+		FuncPipeline\ReadMe.md = FuncPipeline\ReadMe.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{174328D0-4863-4A12-9496-E0CF658EFA3C}"
 EndProject

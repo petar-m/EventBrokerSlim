@@ -60,7 +60,7 @@ public class PipelineExecutionTests
     }
 
     [Fact]
-    public async Task WrapWith_Called_In_Order_Before_Execute()
+    public async Task Execute_Called_In_Order_Of_Definition()
     {
         CancellationToken cancellationToken = default;
 
@@ -72,17 +72,19 @@ public class PipelineExecutionTests
 
         IPipeline pipeline = PipelineBuilder.Create()
               .NewPipeline()
+              .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
+              {
+                  await x.ExecuteAsync("before wrapper 1", ct);
+                  await next.RunAsync();
+                  await x.ExecuteAsync("after wrapper 1", ct);
+              })
+              .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
+              {
+                  await x.ExecuteAsync("before wrapper 2", ct);
+                  await next.RunAsync();
+                  await x.ExecuteAsync("after wrapper 2", ct);
+              })
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
-              .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
-              {
-                  await x.ExecuteAsync("wrapper 1", ct);
-                  await next.RunAsync();
-              })
-              .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
-              {
-                  await x.ExecuteAsync("wrapper 2", ct);
-                  await next.RunAsync();
-              })
               .Build()
               .Pipelines[0];
 
@@ -90,10 +92,12 @@ public class PipelineExecutionTests
 
         Assert.True(result.IsSuccessful);
         Assert.Null(result.Exception);
-        A.CallTo(() => func.ExecuteAsync("wrapper 2", cancellationToken))
+        A.CallTo(() => func.ExecuteAsync("before wrapper 1", cancellationToken))
             .MustHaveHappenedOnceExactly()
-            .Then(A.CallTo(() => func.ExecuteAsync("wrapper 1", cancellationToken)).MustHaveHappenedOnceExactly())
-            .Then(A.CallTo(() => func.ExecuteAsync("func", cancellationToken)).MustHaveHappenedOnceExactly());
+            .Then(A.CallTo(() => func.ExecuteAsync("before wrapper 2", cancellationToken)).MustHaveHappenedOnceExactly())
+            .Then(A.CallTo(() => func.ExecuteAsync("func", cancellationToken)).MustHaveHappenedOnceExactly())
+            .Then(A.CallTo(() => func.ExecuteAsync("after wrapper 2", cancellationToken)).MustHaveHappenedOnceExactly())
+            .Then(A.CallTo(() => func.ExecuteAsync("after wrapper 1", cancellationToken)).MustHaveHappenedOnceExactly());
     }
 
     [Fact]
@@ -109,16 +113,17 @@ public class PipelineExecutionTests
 
         IPipeline pipeline = PipelineBuilder.Create()
               .NewPipeline()
-              .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
-              .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
+              .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
-                  await x.ExecuteAsync("wrapper 1", ct);
+                  await x.ExecuteAsync("before wrapper 1", ct);
                   await next.RunAsync();
+                  await x.ExecuteAsync("after wrapper 1", ct);
               })
-              .WrapWith(static async (ITestStub x, INext next, CancellationToken ct) =>
+              .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await x.ExecuteAsync("wrapper 2", ct);
               })
+              .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
               .Build()
               .Pipelines[0];
 
@@ -126,10 +131,12 @@ public class PipelineExecutionTests
 
         Assert.True(result.IsSuccessful);
         Assert.Null(result.Exception);
-        A.CallTo(() => func.ExecuteAsync("wrapper 2", cancellationToken))
+        A.CallTo(() => func.ExecuteAsync("before wrapper 1", cancellationToken))
             .MustHaveHappenedOnceExactly();
-        A.CallTo(() => func.ExecuteAsync("wrapper 1", cancellationToken))
-           .MustNotHaveHappened();
+        A.CallTo(() => func.ExecuteAsync("wrapper 2", cancellationToken))
+           .MustHaveHappenedOnceExactly();
+        A.CallTo(() => func.ExecuteAsync("after wrapper 1", cancellationToken))
+           .MustHaveHappenedOnceExactly();
         A.CallTo(() => func.ExecuteAsync("func", cancellationToken))
             .MustNotHaveHappened();
     }

@@ -17,15 +17,15 @@ internal class PipelineRunner : INext
         Context = context ?? new PipelineRunContext();
         _serviceProvider = serviceProvider;
         _cancellationToken = cancellationToken;
-        _current = pipeline.Functions.Length;
+        _current = -1;
     }
 
     internal PipelineRunContext Context { get; }
 
     public async Task RunAsync()
     {
-        _current--;
-        if(_current < 0)
+        _current++;
+        if(_current >= _pipeline.Functions.Length)
         {
             return;
         }

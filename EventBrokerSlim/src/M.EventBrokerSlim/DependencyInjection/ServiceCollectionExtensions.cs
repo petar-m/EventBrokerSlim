@@ -148,17 +148,18 @@ public static class ServiceCollectionExtensions
                     }
                 }
             })
-            .WrapWith(static async (ILogger logger, INext next) =>
-            {
-                try
-                {
-                    await next.RunAsync();
-                }
-                catch(Exception x)
-                {
-                    logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
-                }
-            })
+            // TODO: FIX !!!
+            //.WrapWith(static async (ILogger logger, INext next) =>
+            //{
+            //    try
+            //    {
+            //        await next.RunAsync();
+            //    }
+            //    catch(Exception x)
+            //    {
+            //        logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
+            //    }
+            //})
             .Build();
 
         return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0]);
