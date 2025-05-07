@@ -1,73 +1,53 @@
-﻿using Enfolder;
+﻿using FuncPipeline;
 using MELT;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
 public class ExceptionHandlingTests
 {
-    private readonly ITestOutputHelper _output;
-    private readonly EventsTracker _eventsTracker;
-
-    public ExceptionHandlingTests(ITestOutputHelper output)
-    {
-        _output = output;
-        _eventsTracker = new EventsTracker();
-    }
-
     [Fact]
     public async Task Exception_WhenResolvingHandlerParameters_IsLogged()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithLogger(
-            sc =>
-            {
-                sc.AddEventBroker()
-                  .AddSingleton(_eventsTracker);
-                PipelineBuilder.Create()
-                .NewPipeline()
-                .Execute((string notRegistered) => Task.CompletedTask)
-                .BuildSingle(x => sc.AddEventHandlerPileline<Event1>(x));
-            });
+        var serviceCollection = ServiceProviderHelper.NewWithLogger()
+                .AddEventBroker();
 
-        using var scope = services.CreateScope();
+        PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute(([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]string notRegistered) => Task.CompletedTask)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
+
+        using ServiceProvider services = serviceCollection.BuildServiceProvider(true);
+        using IServiceScope scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Assert
-        _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
 
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Error, log.LogLevel);
-        Assert.Equal($"Unhandled exception executing delegate handler for event {typeof(Event1).FullName}", log.Message);
-        Assert.Equal("No service for type 'System.String' has been registered.", log.Exception?.Message);
+        Assert.Equal($"Unhandled exception executing handler for event {typeof(Event1).FullName}", log.Message);
+        Assert.Equal("No service for type System.String has been registered. ResolveFromAttribute { PrimarySource = Services, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }.", log.Exception?.Message);
     }
 
     [Fact]
     public async Task Unhandled_Exception_WhenExecuting_IsLogged()
     {
         // Arrange
+        var serviceCollection = ServiceProviderHelper.NewWithLogger().AddEventBroker();
+
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
-            .Execute(async (Event1 @event, EventsTracker tracker) =>
-            {
-                await Task.CompletedTask;
-                tracker.Track(@event);
-                throw new NotImplementedException();
-            })
-            .BuildSingle();
+            .Execute(static (Event1 @event) => throw new NotImplementedException())
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
 
-        var services = ServiceProviderHelper.BuildWithLogger(
-            sc => sc.AddEventBroker()
-                    .AddSingleton(_eventsTracker)
-                    .AddEventHandlerPileline<Event1>(pipeline));
-        
+        using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -75,15 +55,14 @@ public class ExceptionHandlingTests
         // Act
         await eventBroker.Publish(new Event1(1));
 
-        await _eventsTracker.Wait(timeout: TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Assert
-        _output.WriteLine($"Elapsed: {_eventsTracker.Elapsed}");
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
 
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Error, log.LogLevel);
-        Assert.Equal($"Unhandled exception executing delegate handler for event {typeof(Event1).FullName}", log.Message);
+        Assert.Equal($"Unhandled exception executing handler for event {typeof(Event1).FullName}", log.Message);
         Assert.Equal("The method or operation is not implemented.", log.Exception?.Message);
     }
 
@@ -91,16 +70,14 @@ public class ExceptionHandlingTests
     public async Task Shutdown_During_Handling_TaskCanceledException_IsLogged()
     {
         // Arrange
+        var serviceCollection = ServiceProviderHelper.NewWithLogger().AddEventBroker();
+
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
             .Execute(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken))
-            .BuildSingle();
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
 
-        var services = ServiceProviderHelper.BuildWithLogger(
-            sc => sc.AddEventBroker()
-                    .AddSingleton(_eventsTracker)
-                    .AddEventHandlerPileline<Event1>(pipeline));
-
+        using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
@@ -115,7 +92,7 @@ public class ExceptionHandlingTests
 
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Error, log.LogLevel);
-        Assert.Equal($"Unhandled exception executing delegate handler for event {typeof(Event1).FullName}", log.Message);
+        Assert.Equal($"Unhandled exception executing handler for event {typeof(Event1).FullName}", log.Message);
         Assert.Equal("A task was canceled.", log.Exception?.Message);
     }
 }

@@ -36,7 +36,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="DelegateHandlerTests\ExceptionHandlingTests.cs" />
 	  <Compile Remove="DelegateHandlerTests\HandlerExecutionTests.cs" />
 	  <Compile Remove="DelegateHandlerTests\HandlerSettings.cs" />
 	  <Compile Remove="DelegateHandlerTests\LoadTests.cs" />

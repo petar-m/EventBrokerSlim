@@ -32,6 +32,13 @@ public static class ServiceProviderHelper
         return serviceCollection.BuildServiceProvider(true);
     }
 
+    public static ServiceCollection NewWithLogger()
+    {
+        ServiceCollection serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(x => x.AddDebug().AddTest());
+        return serviceCollection;
+    }
+
     private static ServiceCollection CreateServiceCollection(Action<IServiceCollection> configure)
     {
         var serviceCollection = new ServiceCollection();

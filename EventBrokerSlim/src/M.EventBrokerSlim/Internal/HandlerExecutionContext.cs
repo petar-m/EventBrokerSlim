@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using FuncPipeline;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +6,6 @@ namespace M.EventBrokerSlim.Internal;
 
 internal sealed class HandlerExecutionContext
 {
-
     public HandlerExecutionContext(
         SemaphoreSlim semaphore,
         ILogger logger,
