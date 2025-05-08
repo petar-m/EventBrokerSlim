@@ -36,9 +36,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="DelegateHandlerTests\RegistrationTests.cs" />
-	  <Compile Remove="DelegateHandlerTests\ServiceCollectionExtensions.cs" />
-	  <Compile Remove="DynamicDelegateHandlerTests\DynamicHandlerExecutionTests.cs" />
 	  <Compile Remove="EventBrokerTests.cs" />
 	  <Compile Remove="ExceptionHandlingTests.cs" />
 	  <Compile Remove="HandlerExecutionTests.cs" />

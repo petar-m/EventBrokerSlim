@@ -51,8 +51,8 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
             });
 
-        DynamicEventHandlers dynamicEventHandlers = new();
-        serviceCollection.AddSingleton<IDynamicEventHandlers>(dynamicEventHandlers);
+        serviceCollection.AddSingleton<DynamicEventHandlers>();
+        serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredService<DynamicEventHandlers>());
 
         serviceCollection.AddKeyedSingleton(
             eventBrokerKey,
@@ -62,7 +62,7 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredService<PipelineRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
-                dynamicEventHandlers,
+                x.GetRequiredService<DynamicEventHandlers>(),
                 new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
 
         serviceCollection.AddSingleton(
