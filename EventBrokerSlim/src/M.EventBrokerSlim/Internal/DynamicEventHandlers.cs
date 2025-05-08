@@ -11,11 +11,18 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 {
     private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
     private readonly Dictionary<Type, ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>> _handlers = new();
+    private readonly IServiceProvider _serviceProvider;
+
+    public DynamicEventHandlers(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
 
     public IDynamicHandlerClaimTicket Add<TEvent>(IPipeline pipeline)
     {
         var eventType = typeof(TEvent);
         var claimTicket = new DynamicHandlerClaimTicket(Guid.NewGuid(), eventType);
+        pipeline.ServiceProvider ??= _serviceProvider;
         _semaphore.Wait();
         try
         {
