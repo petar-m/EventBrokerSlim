@@ -1,4 +1,5 @@
 ﻿using FuncPipeline.Internal;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FuncPipeline;
 
@@ -9,23 +10,23 @@ public class PipelineBuilder
 {
     private readonly List<Pipeline> _pipelines = new();
 
-    internal PipelineBuilder(IServiceProvider? serviceProvider = null)
+    internal PipelineBuilder(IServiceScopeFactory? serviceScopeFactory = null)
     {
-        ServiceProvider = serviceProvider;
+        ServiceScopeFactory = serviceScopeFactory;
     }
 
     /// <summary>
     /// Creates a new instance of the <see cref="PipelineBuilder"/> class.
     /// </summary>
-    /// <param name="serviceProvider">The service provider to use for dependency resolution.</param>
-    public static PipelineBuilder Create(IServiceProvider? serviceProvider = null) => new PipelineBuilder(serviceProvider);
+    /// <param name="serviceScopeFactory">The service scope factory to use to create scopes for dependency resolution.</param>
+    public static PipelineBuilder Create(IServiceScopeFactory? serviceScopeFactory = null) => new PipelineBuilder(serviceScopeFactory);
 
     /// <summary>
     /// Gets the collection of pipelines created by this builder.
     /// </summary>
     public IReadOnlyList<IPipeline> Pipelines => _pipelines;
 
-    internal IServiceProvider? ServiceProvider { get; }
+    internal IServiceScopeFactory? ServiceScopeFactory { get; }
 
     /// <summary>
     /// Starts the creation of a new pipeline by defining its execution functions.
@@ -65,7 +66,7 @@ public class PipelineBuilder
         {
             var pipeline = new Pipeline(_functions, _options)
             {
-                ServiceProvider = _pipelineBuilder.ServiceProvider
+                ServiceScopeFactory = _pipelineBuilder.ServiceScopeFactory
             };
             _pipelineBuilder.AddPipeline(pipeline);
             onBuild?.Invoke(pipeline);

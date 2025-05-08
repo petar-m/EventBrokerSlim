@@ -48,7 +48,7 @@ PipelineRunResult result = await pipeline.RunAsync();
 ## Parameter Resolution  
 
 FuncPipeline supports function parameter resolution from:  
-- **IServiceProvider**: Using the service provider either passed in `PipelineBuilder.Create(IServiceProvider? serviceProvider = null)` or set to the `IPipeline.ServiceProvider` property.  
+- **IServiceProvider**: Using the service provider either passed in `PipelineBuilder.Create(IServiceScopeFactory? serviceScopeFactory = null)` or set to the `IPipeline.ServiceScopeFactory` property.  
 Function dependencies are always resolved from a new `IServiceScope`, disposed of after each run. Functions can share a scope, or alternatively, each function uses a separate scope. This is controlled on a pipeline level by passing `PipelineRunOptions` to `PipelineBuilder.NewPipeline(PipelineRunOptions? options = null)`.  
 The default is `PipelineRunOptions.ServiceScopePerFunction = true`.
 - **PipelineRunContext**: Using the `PipelineRunContext` instance passed to `IPipeline.RunAsync()`.

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace FuncPipeline.Tests;
@@ -35,15 +36,15 @@ public class PipelineBuilderTests
     [Fact]
     public void Build_Pipeline_With_ServiceProvider()
     {
-        var serviceProvider = A.Fake<IServiceProvider>(x => x.Strict());
+        var serviceScopeFactory = A.Fake<IServiceScopeFactory>(x => x.Strict());
 
-        var pipelineBuilder = PipelineBuilder.Create(serviceProvider)
+        var pipelineBuilder = PipelineBuilder.Create(serviceScopeFactory)
               .NewPipeline()
               .Execute((int i) => Task.FromResult(i))
               .Build();
 
         Assert.Single(pipelineBuilder.Pipelines);
-        Assert.Equal(serviceProvider, pipelineBuilder.Pipelines[0].ServiceProvider);
+        Assert.Equal(serviceScopeFactory, pipelineBuilder.Pipelines[0].ServiceScopeFactory);
     }
 
 

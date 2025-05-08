@@ -1,4 +1,6 @@
-﻿namespace FuncPipeline;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace FuncPipeline;
 
 /// <summary>
 /// Represents a pipeline that can execute a series of functions in a defined order.
@@ -14,7 +16,7 @@ public interface IPipeline
     Task<PipelineRunResult> RunAsync(PipelineRunContext? pipelineRunContext = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets or sets the service provider used for resolving dependencies during pipeline execution.
+    /// Gets or sets the service scope factory used to creates scopes for resolving dependencies during pipeline execution.
     /// </summary>
-    IServiceProvider? ServiceProvider { get; set; }
+    IServiceScopeFactory? ServiceScopeFactory { get; set; }
 }

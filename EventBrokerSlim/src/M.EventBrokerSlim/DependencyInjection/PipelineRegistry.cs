@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using FuncPipeline;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
@@ -11,12 +12,12 @@ public class PipelineRegistry
 {
     private readonly FrozenDictionary<Type, ImmutableArray<IPipeline>> _pipelines;
 
-    public PipelineRegistry(IEnumerable<EventPipeline> pipelines, IServiceProvider? serviceProvider = null)
+    public PipelineRegistry(IEnumerable<EventPipeline> pipelines, IServiceScopeFactory? serviceScopeFactory = null)
     {
         _pipelines = pipelines
             .Select(x =>
             {
-                x.Pipeline.ServiceProvider ??= serviceProvider;
+                x.Pipeline.ServiceScopeFactory ??= serviceScopeFactory;
                 return x;
             })
             .GroupBy(x => x.Event)
