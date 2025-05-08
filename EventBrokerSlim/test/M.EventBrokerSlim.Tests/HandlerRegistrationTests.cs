@@ -6,8 +6,8 @@ public class HandlerRegistrationTests
     public void RegisterHandlerAsTransient_AddsToServiceCollection()
     {
         var serviceCollection = new ServiceCollection()
-            .AddEventBroker(
-                x => x.AddTransient<TestEvent, TestEventHandler>());
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>();
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -18,8 +18,8 @@ public class HandlerRegistrationTests
     public void RegisterHandlerAsScoped_AddsToServiceCollection()
     {
         var serviceCollection = new ServiceCollection()
-            .AddEventBroker(
-                x => x.AddScoped<TestEvent, TestEventHandler>());
+            .AddEventBroker()
+            .AddScopedEventHandler<TestEvent, TestEventHandler>();
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -30,8 +30,8 @@ public class HandlerRegistrationTests
     public void RegisterHandlerAsSingleton_AddsToServiceCollection()
     {
         var serviceCollection = new ServiceCollection()
-            .AddEventBroker(
-                x => x.AddSingleton<TestEvent, TestEventHandler>());
+            .AddEventBroker()
+            .AddSingletonEventHandler<TestEvent, TestEventHandler>();
 
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
@@ -63,47 +63,16 @@ public class HandlerRegistrationTests
     }
 
     [Fact]
-    public async Task Handlers_RegisteredWith_AddEventBroker_AreExecuted()
-    {
-        // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()
-                              .AddScoped<TestEvent, TestEventHandler1>()
-                              .AddScoped<TestEvent, TestEventHandler2>()));
-
-        using var scope = services.CreateScope();
-
-        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
-
-        // Act
-        var testEvent = new TestEvent(CorrelationId: "1");
-
-        eventsRecorder.Expect(
-            $"1_{typeof(TestEventHandler).Name}",
-            $"1_{typeof(TestEventHandler1).Name}",
-            $"1_{typeof(TestEventHandler2).Name}");
-
-        await eventBroker.Publish(testEvent);
-
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
-
-        // Assert
-        Assert.True(completed);
-    }
-
-    [Fact]
     public async Task Handlers_RegisteredBefore_AddEventBroker_AreExecuted()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventHandlers(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()
-                              .AddScoped<TestEvent, TestEventHandler1>()
-                              .AddScoped<TestEvent, TestEventHandler2>())
-                    .AddEventBroker());
-
+        using var services = new ServiceCollection()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddScopedEventHandler<TestEvent, TestEventHandler1>()
+            .AddScopedEventHandler<TestEvent, TestEventHandler2>()
+            .AddEventBroker()
+            .AddSingleton<EventsRecorder<string>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -129,43 +98,13 @@ public class HandlerRegistrationTests
     public async Task Handlers_RegisteredAfter_AddEventBroker_AreExecuted()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventBroker()
-                    .AddEventHandlers(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()
-                              .AddScoped<TestEvent, TestEventHandler1>()
-                              .AddScoped<TestEvent, TestEventHandler2>()));
-
-        using var scope = services.CreateScope();
-
-        var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
-        var eventsRecorder = scope.ServiceProvider.GetRequiredService<EventsRecorder<string>>();
-
-        // Act
-        var testEvent = new TestEvent(CorrelationId: "1");
-
-        eventsRecorder.Expect(
-            $"1_{typeof(TestEventHandler).Name}",
-            $"1_{typeof(TestEventHandler1).Name}",
-            $"1_{typeof(TestEventHandler2).Name}");
-
-        await eventBroker.Publish(testEvent);
-
-        var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
-
-        // Assert
-        Assert.True(completed);
-    }
-
-    [Fact]
-    public async Task Handlers_RegisteredBeforeAndAfter_AddEventBroker_AreExecuted()
-    {
-        // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventHandlers(x => x.AddTransient<TestEvent, TestEventHandler>())
-                    .AddEventBroker(x => x.AddScoped<TestEvent, TestEventHandler1>())
-                    .AddEventHandlers(x => x.AddScoped<TestEvent, TestEventHandler2>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddScopedEventHandler<TestEvent, TestEventHandler1>()
+            .AddScopedEventHandler<TestEvent, TestEventHandler2>()
+            .AddSingleton<EventsRecorder<string>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
