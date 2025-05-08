@@ -1,4 +1,5 @@
 ﻿using FuncPipeline;
+using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DynamicDelegateHandlerTests;
@@ -13,8 +14,11 @@ public class DynamicHandlerExecutionTests
     {
         _output = output;
         _tracker = new EventsTracker();
-        _serviceCollection = ServiceProviderHelper.NewWithLogger();
-        _serviceCollection.AddEventBroker().AddSingleton(_tracker);
+        _serviceCollection = new ServiceCollection();
+        _serviceCollection
+            .AddEventBroker()
+            .AddLogging(x => x.AddTest())
+            .AddSingleton(_tracker);
     }
 
     [Fact]

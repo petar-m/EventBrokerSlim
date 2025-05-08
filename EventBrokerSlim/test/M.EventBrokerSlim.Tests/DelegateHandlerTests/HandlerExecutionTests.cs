@@ -1,4 +1,5 @@
 ﻿using FuncPipeline;
+using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
@@ -13,9 +14,10 @@ public class HandlerExecutionTests
     {
         _output = output;
         _tracker = new EventsTracker();
-        _serviceCollection = ServiceProviderHelper.NewWithLogger();
+        _serviceCollection = new ServiceCollection();
         _serviceCollection
             .AddEventBroker()
+            .AddLogging(x => x.AddTest())
             .AddSingleton(_tracker);
     }
 
