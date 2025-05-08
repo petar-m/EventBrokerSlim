@@ -9,11 +9,11 @@ public class HandlerExecutionTests
     public async Task MaxConcurrentHandlers_IsOne_HandlersAreExecuted_Sequentially()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(1)
-                              .AddTransient<TestEvent, TestEventHandler>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(1))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -41,11 +41,11 @@ public class HandlerExecutionTests
     public async Task MaxConcurrentHandlers_IsGreaterThanOne_HandlersAreExecuted_InParallel()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(2)
-                              .AddTransient<TestEvent, TestEventHandler>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(2))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -73,9 +73,10 @@ public class HandlerExecutionTests
     public async Task NoHandlerRegistered_NoLogger_NothingHappens()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -97,9 +98,11 @@ public class HandlerExecutionTests
     public async Task NoHandlerRegistered_LogsWarning_IfEnabled()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
-            sc => sc.AddEventBroker());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddLogging(x => x.AddTest())
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -124,9 +127,11 @@ public class HandlerExecutionTests
     public async Task NoHandlerRegistered_LogsWarning_IfDisabled()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
-            sc => sc.AddEventBroker(x => x.DisableMissingHandlerWarningLog()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.DisableMissingHandlerWarningLog())
+            .AddLogging(x => x.AddTest())
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
