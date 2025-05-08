@@ -18,9 +18,10 @@ public class LoadTests
     public async Task Load_MultipleDelegateHandlers_With_Retry()
     {
         // Arrange
-        var serviceCollection = ServiceProviderHelper.NewWithLogger()
+        var serviceCollection = new ServiceCollection()
             .AddEventBroker(x => x.WithMaxConcurrentHandlers(5))
             .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
+            .AddLogging(x => x.AddTest())
             .AddSingleton<EventsTracker>();
 
         PipelineBuilder.Create()

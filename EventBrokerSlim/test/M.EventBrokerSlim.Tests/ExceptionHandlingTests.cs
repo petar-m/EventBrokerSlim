@@ -8,10 +8,11 @@ public class ExceptionHandlingTests
     public async Task UnhandledException_FromEventHandler_IsPassedTo_OnError()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -33,11 +34,11 @@ public class ExceptionHandlingTests
     public async Task Exception_WhenResolvingHandler_IsHandled()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        // TestEventHandler1 has dependency on string not configured in the DI container 
-                        x => x.AddSingleton<TestEvent, TestEventHandler1>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler1>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -59,11 +60,12 @@ public class ExceptionHandlingTests
     public async Task Exception_WhenResolvingHandler_Is_Logged()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
-            sc => sc.AddEventBroker(
-                        // TestEventHandler1 has dependency on string not configured in the DI container 
-                        x => x.AddSingleton<TestEvent, TestEventHandler1>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler1>()
+            .AddSingleton<EventsRecorder<int>>()
+            .AddLogging(builder => builder.AddTest())
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -74,24 +76,27 @@ public class ExceptionHandlingTests
 
         await eventBroker.Publish(testEvent);
 
-        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
 
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Error, log.LogLevel);
-        Assert.Equal("Can't resolve event handler for event M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEvent", log.Message);
+        Assert.Equal("Unhandled exception executing M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEventHandler1.OnError()", log.Message);
+        Assert.IsType<ArgumentException>(log.Exception);
+        Assert.StartsWith("No service for type M.EventBrokerSlim.IEventHandler`1[[M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEvent, M.EventBrokerSlim.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]] has been registered with key ", log.Exception.Message);
     }
 
     [Fact]
     public async Task UnhandledException_FromOnError_IsSuppressed()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -113,10 +118,12 @@ public class ExceptionHandlingTests
     public async Task UnhandledException_FromOnError_IsLogged()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .AddLogging(builder => builder.AddTest())
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -127,7 +134,7 @@ public class ExceptionHandlingTests
 
         await eventBroker.Publish(event1);
 
-        await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
+        await eventsRecorder.Wait(timeout: TimeSpan.FromSeconds(1));
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);

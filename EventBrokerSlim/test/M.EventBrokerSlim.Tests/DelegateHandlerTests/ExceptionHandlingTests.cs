@@ -10,8 +10,8 @@ public class ExceptionHandlingTests
     public async Task Exception_WhenResolvingHandlerParameters_IsLogged()
     {
         // Arrange
-        var serviceCollection = ServiceProviderHelper.NewWithLogger()
-                .AddEventBroker();
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
         PipelineBuilder.Create()
             .NewPipeline()
@@ -40,7 +40,8 @@ public class ExceptionHandlingTests
     public async Task Unhandled_Exception_WhenExecuting_IsLogged()
     {
         // Arrange
-        var serviceCollection = ServiceProviderHelper.NewWithLogger().AddEventBroker();
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
@@ -70,7 +71,8 @@ public class ExceptionHandlingTests
     public async Task Shutdown_During_Handling_TaskCanceledException_IsLogged()
     {
         // Arrange
-        var serviceCollection = ServiceProviderHelper.NewWithLogger().AddEventBroker();
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
