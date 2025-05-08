@@ -86,7 +86,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
         return services;
     }
 
@@ -95,7 +95,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
         return services;
     }
 
@@ -104,18 +104,18 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent>(key));
+        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
         return services;
     }
 
     public static IServiceCollection AddEventHandlerPileline<TEvent>(this IServiceCollection services, IPipeline pipeline)
         => services.AddSingleton(new EventPipeline(typeof(TEvent), pipeline));
 
-    private static EventPipeline CreateEventPipeline<TEvent>(string key)
+    private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key) where THandler : class, IEventHandler<TEvent>
     {
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
-            .Execute(static async (ILogger logger, INext next) =>
+            .Execute(static async (ILogger<THandler> logger, INext next) =>
             {
                 try
                 {
@@ -123,18 +123,16 @@ public static class ServiceCollectionExtensions
                 }
                 catch(Exception x)
                 {
-                    logger?.LogUnhandledExceptionFromOnError(typeof(IEventHandler<TEvent>), x);
+                    logger?.LogUnhandledExceptionFromOnError(typeof(THandler), x);
                 }
             })
             .Execute(static async (
                 IEventHandler<TEvent> handler,
-                [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
                 TEvent @event,
                 [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
                 IRetryPolicy retryPolicy,
                 [ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]
-                CancellationToken ct,
-                ILogger logger) =>
+                CancellationToken ct) =>
             {
                 try
                 {
