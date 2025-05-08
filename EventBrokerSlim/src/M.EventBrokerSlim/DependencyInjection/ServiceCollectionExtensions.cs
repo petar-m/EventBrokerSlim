@@ -120,7 +120,7 @@ public static class ServiceCollectionExtensions
             {
                 try
                 {
-                    await next.RunAsync();
+                    await next.RunAsync().ConfigureAwait(false);
                 }
                 catch(Exception x)
                 {
@@ -139,11 +139,11 @@ public static class ServiceCollectionExtensions
             {
                 try
                 {
-                    await handler.Handle(@event, retryPolicy, ct);
+                    await handler.Handle(@event, retryPolicy, ct).ConfigureAwait(false);
                 }
                 catch(Exception x)
                 {
-                    await handler.OnError(x, @event, retryPolicy, ct);
+                    await handler.OnError(x, @event, retryPolicy, ct).ConfigureAwait(false);
                 }
             },
             new Dictionary<int, ResolveFromAttribute>

@@ -91,7 +91,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                         HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
                         context.Initialize(@event, pipeline, retryDescriptor, token);
-                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
+                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                     }
 
                     if(dynamicEventHandlers is null || dynamicEventHandlers.IsEmpty)
@@ -107,7 +107,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                         HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
                         context.Initialize(@event, pipeline, retryDescriptor, token);
-                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
+                        _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                     }
                 }
                 else
@@ -116,7 +116,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                     HandlerExecutionContext context = HandlerExecutionContextPool.Instance.Get();
                     context.Initialize(retryDescriptor.Event, retryDescriptor.Pipeline, retryDescriptor, token);
-                    _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!), context);
+                    _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                 }
             }
         }
@@ -142,7 +142,7 @@ internal sealed class ThreadPoolEventHandlerRunner
             .Set(typeof(CancellationToken), context.CancellationToken);
         try
         {
-            var result = await pipeline.RunAsync(pipelineRunContext, context.CancellationToken);
+            var result = await pipeline.RunAsync(pipelineRunContext, context.CancellationToken).ConfigureAwait(false);
             if(result.Exception is not null)
             {
                 context.Logger?.LogDelegateEventHandlerError(@event.GetType(), result.Exception);
