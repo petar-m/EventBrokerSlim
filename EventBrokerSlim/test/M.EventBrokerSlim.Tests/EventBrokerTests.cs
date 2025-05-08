@@ -10,9 +10,10 @@ public class EventBrokerTests
     public async Task Publish_Null_Throws()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -27,9 +28,10 @@ public class EventBrokerTests
     public async Task PublishDeferred_Event_Is_Null_Throws()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -44,9 +46,10 @@ public class EventBrokerTests
     public async Task PublishDeferred_DeferDuration_Is_LessToZero_Throws()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -60,9 +63,10 @@ public class EventBrokerTests
     public async Task PublishDeferred_DeferDuration_Is_Zero_Throws()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -76,9 +80,9 @@ public class EventBrokerTests
     public void Shutdown_CanBeCalledMultipleTimes()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -98,9 +102,11 @@ public class EventBrokerTests
     public async Task Publish_AfterShutdown_Throws()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -126,9 +132,11 @@ public class EventBrokerTests
     public async Task PublishDeferred_AfterShutdown_DoesNotThrow()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -173,11 +181,12 @@ public class EventBrokerTests
     public async Task PublishDeferred_ExecutesHandler_After_DeferredDuration()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton<Timestamp>());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .AddSingleton<Timestamp>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -204,9 +213,11 @@ public class EventBrokerTests
     public async Task PublishDeferred_DoesNotBlock_Publish()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -230,11 +241,11 @@ public class EventBrokerTests
     public async Task PublishDeferred_DelayedTasks_Cancelled_OnShutdown()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton<Timestamp>());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -262,12 +273,11 @@ public class EventBrokerTests
     public async Task Shutdown_WhileHandlingEvent_TaskCancelledException_HandledByOnError()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(2)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton<Timestamp>());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -303,12 +313,11 @@ public class EventBrokerTests
     public async Task Shutdown_PendingEvents_AreNot_Processed()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(2)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton<Timestamp>());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -342,12 +351,13 @@ public class EventBrokerTests
     public async Task Shutdown_WhileHandlingError_TaskCancelledException_IsLogged()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorderAndLogger<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(2)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton<Timestamp>());
-
+        using var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .AddSingleton<Timestamp>()
+            .AddLogging(x => x.AddDebug().AddTest())
+            .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -366,7 +376,6 @@ public class EventBrokerTests
         await eventsRecorder.Wait(TimeSpan.FromMilliseconds(100));
 
         // Assert
-
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
 
         var log = Assert.Single(provider.Sink.LogEntries);
