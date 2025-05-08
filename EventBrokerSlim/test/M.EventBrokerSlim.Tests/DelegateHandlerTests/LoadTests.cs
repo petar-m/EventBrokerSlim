@@ -1,4 +1,7 @@
-﻿using Xunit.Abstractions;
+﻿using FuncPipeline;
+using MELT;
+using Microsoft.Extensions.Logging;
+using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
@@ -15,30 +18,44 @@ public class LoadTests
     public async Task Load_MultipleDelegateHandlers_With_Retry()
     {
         // Arrange
-        var registryBuilder = new DelegateHandlerRegistryBuilder();
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(x => x.WithMaxConcurrentHandlers(5))
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
-                    .AddSingleton<EventsTracker>()
-                    .AddSingleton(registryBuilder));
+        var serviceCollection = ServiceProviderHelper.NewWithLogger()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(5))
+            .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
+            .AddSingleton<EventsTracker>();
 
-        registryBuilder
-            .RegisterHandler<Event1>(DelegateEventHandlers.TestEventHandler1<Event1>)
-            .WrapWith(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event1>)
-            .Builder()
-            .RegisterHandler<Event2>(DelegateEventHandlers.TestEventHandler1<Event2>)
-            .WrapWith(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event2>)
-            .Builder()
-            .RegisterHandler<Event3>(DelegateEventHandlers.TestEventHandler1<Event3>)
-            .WrapWith(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event3>);
+        PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute<Event1, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event1>)
+            .Execute<Event1, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event1>)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x))
+            .NewPipeline()
+            .Execute<Event2, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event2>)
+            .Execute<Event2, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event2>)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event2>(x))
+            .NewPipeline()
+            .Execute<Event3, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event3>)
+            .Execute<Event3, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event3>)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event3>(x))
+            .NewPipeline()
+            .Execute<Event1, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x))
+            .NewPipeline()
+            .Execute<Event2, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event2>(x))
+            .NewPipeline()
+            .Execute<Event3, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event3>(x))
+            .NewPipeline()
+            .Execute<Event1, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x))
+            .NewPipeline()
+            .Execute<Event2, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event2>(x))
+            .NewPipeline()
+            .Execute<Event3, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
+            .Build(x => serviceCollection.AddEventHandlerPileline<Event3>(x)); ;
 
-        registryBuilder.RegisterHandler<Event1>(DelegateEventHandlers.TestEventHandler2<Event1>);
-        registryBuilder.RegisterHandler<Event2>(DelegateEventHandlers.TestEventHandler2<Event2>);
-        registryBuilder.RegisterHandler<Event3>(DelegateEventHandlers.TestEventHandler2<Event3>);
-        registryBuilder.RegisterHandler<Event1>(DelegateEventHandlers.TestEventHandler3<Event1>);
-        registryBuilder.RegisterHandler<Event2>(DelegateEventHandlers.TestEventHandler3<Event2>);
-        registryBuilder.RegisterHandler<Event3>(DelegateEventHandlers.TestEventHandler3<Event3>);
-
+        using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
@@ -58,7 +75,10 @@ public class LoadTests
         await eventsTracker.Wait(TimeSpan.FromSeconds(10));
 
         // Assert
-        _output.WriteLine($"Elapsed: {eventsTracker.Elapsed}");
+        _output.WriteLine($"Processed: {eventsTracker.ExpectedItemsCount} events, Elapsed: {eventsTracker.Elapsed}");
+
+        var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
+        Assert.Empty(provider.Sink.LogEntries);
 
         var counters = eventsTracker.Items
             .Select(x => x.Item)
@@ -84,11 +104,11 @@ public class LoadTests
             return Task.CompletedTask;
         }
 
-        public static async Task TestEventHandler1ErrorHandler<T>(T @event, INextHandler nextHandler, HandlerSettings settings, IRetryPolicy retryPolicy, EventsTracker tracker) where T : TestEventBase
+        public static async Task TestEventHandler1ErrorHandler<T>(T @event, INext nextHandler, HandlerSettings settings, IRetryPolicy retryPolicy, EventsTracker tracker) where T : TestEventBase
         {
             try
             {
-                await nextHandler.Execute();
+                await nextHandler.RunAsync();
             }
             catch
             {
