@@ -20,7 +20,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -51,7 +51,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Services, Fallback = true, PrimaryNotFound = NotFoundBehavior.ReturnTypeDefault, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -82,7 +82,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .AddKeyedSingleton<ITestStub>("service key", contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException, Key = "service key")] ITestStub x) =>
             {
@@ -113,7 +113,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async (ITestStub x) =>
             {
@@ -157,7 +157,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .AddKeyedSingleton<ITestStub>("service key", contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async (ITestStub x) =>
             {
@@ -305,7 +305,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -333,7 +333,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ReturnTypeDefault, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -374,7 +374,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException, Key = "service key")] ITestStub x) =>
             {
@@ -402,7 +402,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ReturnTypeDefault, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -473,7 +473,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Services, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -504,7 +504,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static async (ITestStub x) =>
             {
@@ -544,7 +544,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ReturnTypeDefault)] ITestStub x) =>
             {
@@ -567,7 +567,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static (ITestStub x) =>
             {
@@ -603,7 +603,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Services, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
@@ -630,7 +630,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         // Arrange
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
             .Execute(static (ITestStub x) =>
             {

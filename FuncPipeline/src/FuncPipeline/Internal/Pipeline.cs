@@ -12,7 +12,7 @@ internal class Pipeline : IPipeline
         Options = options;
     }
 
-    public IServiceProvider? ServiceProvider { get; set; }
+    public IServiceScopeFactory? ServiceScopeFactory { get; set; }
     
     public PipelineRunOptions Options { get; }
 
@@ -23,10 +23,10 @@ internal class Pipeline : IPipeline
         IServiceScope? scope = null;
         if(!Options.ServiceScopePerFunction)
         {
-            scope = ServiceProvider?.CreateScope();
+            scope = ServiceScopeFactory?.CreateScope();
         }
 
-        var pipelineRunner = new PipelineRunner(this, pipelineRunContext, ServiceProvider, cancellationToken, scope);
+        var pipelineRunner = new PipelineRunner(this, pipelineRunContext, ServiceScopeFactory, cancellationToken, scope);
 
         try
         {

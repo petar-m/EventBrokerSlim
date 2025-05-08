@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using FuncPipeline;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace M.EventBrokerSlim.Internal;
 
@@ -11,18 +12,18 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 {
     private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
     private readonly Dictionary<Type, ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>> _handlers = new();
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public DynamicEventHandlers(IServiceProvider serviceProvider)
+    public DynamicEventHandlers(IServiceScopeFactory serviceScopeFactory)
     {
-        _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public IDynamicHandlerClaimTicket Add<TEvent>(IPipeline pipeline)
     {
         var eventType = typeof(TEvent);
         var claimTicket = new DynamicHandlerClaimTicket(Guid.NewGuid(), eventType);
-        pipeline.ServiceProvider ??= _serviceProvider;
+        pipeline.ServiceScopeFactory ??= _serviceScopeFactory;
         _semaphore.Wait();
         try
         {

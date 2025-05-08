@@ -14,7 +14,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = true })
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {
@@ -44,7 +44,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = true })
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {
@@ -74,7 +74,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = false })
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {

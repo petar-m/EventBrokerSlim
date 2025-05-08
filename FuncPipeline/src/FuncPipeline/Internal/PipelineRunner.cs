@@ -5,17 +5,17 @@ namespace FuncPipeline.Internal;
 
 internal class PipelineRunner : INext
 {
-    private readonly IServiceProvider? _serviceProvider;
+    private readonly IServiceScopeFactory? _serviceScopeFactory;
     private readonly Pipeline _pipeline;
     private readonly CancellationToken _cancellationToken;
     private readonly IServiceScope? _scope;
     private int _current;
 
-    internal PipelineRunner(Pipeline pipeline, PipelineRunContext? context, IServiceProvider? serviceProvider, CancellationToken cancellationToken = default, IServiceScope? scope = null)
+    internal PipelineRunner(Pipeline pipeline, PipelineRunContext? context, IServiceScopeFactory? serviceScopeFactory, CancellationToken cancellationToken = default, IServiceScope? scope = null)
     {
         _pipeline = pipeline;
         Context = context ?? new PipelineRunContext();
-        _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
         _cancellationToken = cancellationToken;
         _scope = scope;
         _current = -1;
@@ -33,7 +33,7 @@ internal class PipelineRunner : INext
 
         FunctionObject function = _pipeline.Functions[_current];
         IServiceScope? scope = _pipeline.Options.ServiceScopePerFunction 
-            ? _serviceProvider?.CreateScope()
+            ? _serviceScopeFactory?.CreateScope()
             : _scope;
         object?[] parameterValues = ArrayPool<object?>.Shared.Rent(function.Parameters.Length);
         try

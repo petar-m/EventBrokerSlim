@@ -35,7 +35,7 @@ public class ResolveFromAttribute : Attribute
     /// Gets or sets an optional key to use for resolving the parameter, when the service is registered as keyed.
     /// </summary>
     /// <remarks>
-    /// This is only applicable when resolving service from <see cref="IPipeline.ServiceProvider"/>.
+    /// This is only applicable when resolving service from scope <see cref="IPipeline.ServiceScopeFactory"/>.
     /// </remarks>
     public string? Key { get; init; } = null;
 

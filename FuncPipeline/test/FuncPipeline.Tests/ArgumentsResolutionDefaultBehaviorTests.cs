@@ -68,7 +68,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
             .AddSingleton<ITestStub>(serviceProviderFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
               .Execute(static async(ITestStub x, CancellationToken ct) =>
               {
@@ -103,7 +103,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
               .Execute(static async(ITestStub x, CancellationToken ct) =>
               {
@@ -138,7 +138,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider)
+        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
               .Execute(static async(PipelineRunContext c, CancellationToken ct) =>
               {

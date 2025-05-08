@@ -69,8 +69,7 @@ public static class ServiceCollectionExtensions
             x =>
             {
                 var pipelines = x.GetServices<EventPipeline>();
-                IServiceProvider serviceProvider = x.GetRequiredService<IServiceProvider>();
-                return new PipelineRegistry(pipelines, serviceProvider);
+                return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
             });
 
         return serviceCollection;
