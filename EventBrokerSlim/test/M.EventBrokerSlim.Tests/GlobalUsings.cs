@@ -5,3 +5,5 @@ global using System.Threading.Tasks;
 global using M.EventBrokerSlim.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection;
 global using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]

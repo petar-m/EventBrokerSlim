@@ -23,7 +23,7 @@ internal sealed class EventBroker : IEventBroker
         ArgumentNullException.ThrowIfNull(@event, nameof(@event));
         try
         {
-            await _channelWriter.WriteAsync(@event, cancellationToken);
+            await _channelWriter.WriteAsync(@event, cancellationToken).ConfigureAwait(false);
         }
         catch(ChannelClosedException exception)
         {

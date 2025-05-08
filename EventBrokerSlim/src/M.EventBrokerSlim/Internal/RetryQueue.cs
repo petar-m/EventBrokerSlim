@@ -32,7 +32,7 @@ internal class RetryQueue
             if(!_polling)
             {
                 _polling = true;
-                _ = Task.Factory.StartNew(static async x => await Poll(x!), this);
+                _ = Task.Factory.StartNew(static async x => await Poll(x!).ConfigureAwait(false), this);
             }
         }
         finally
@@ -46,7 +46,7 @@ internal class RetryQueue
         var self = (RetryQueue)state;
         while(true)
         {
-            await self._semaphore.WaitAsync(self._cancellationToken);
+            await self._semaphore.WaitAsync(self._cancellationToken).ConfigureAwait(false);
 
             while(self._retryQueue.TryPeek(out var retryDescriptor, out long ticks))
             {
