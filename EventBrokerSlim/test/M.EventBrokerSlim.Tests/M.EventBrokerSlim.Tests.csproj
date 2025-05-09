@@ -36,7 +36,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="MultipleHandlersTests.cs" />
 	  <Compile Remove="OrderOfRetriesTests.cs" />
 	  <Compile Remove="RetryFromHandleTests.cs" />
 	  <Compile Remove="RetryFromHandleUsingDelayDelegateTests.cs" />

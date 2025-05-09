@@ -6,11 +6,13 @@ public class MultipleHandlersTests
     public async Task MultipleHandlers_AllExecuted()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<string>(
-            sc => sc.AddEventBroker(
-                x => x.AddTransient<TestEvent, TestEventHandler>()
-                      .AddTransient<TestEvent, TestEventHandler1>()
-                      .AddTransient<TestEvent, TestEventHandler2>()));
+        var services = new ServiceCollection()
+            .AddEventBroker()
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddTransientEventHandler<TestEvent, TestEventHandler1>()
+            .AddTransientEventHandler<TestEvent, TestEventHandler2>()
+            .AddSingleton<EventsRecorder<string>>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
