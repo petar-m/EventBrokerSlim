@@ -9,12 +9,12 @@ public class RetryPolicyTests
     public async Task MultipleRetries_RetryPolicy_IsTheSameInstance_EveryTime(int maxConcurrentHandlers)
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
