@@ -9,12 +9,12 @@ public class OrderOfRetriesTests
     public async Task Retries_ExecutedInCorrectOrder_RespectingDelays(int maxConcurrentHandlers)
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddTransient<TestEvent1, TestEventHandler1>()
-                              .AddTransient<TestEvent2, TestEventHandler2>())
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers))
+            .AddTransientEventHandler<TestEvent1, TestEventHandler1>()
+            .AddTransientEventHandler<TestEvent2, TestEventHandler2>()
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
