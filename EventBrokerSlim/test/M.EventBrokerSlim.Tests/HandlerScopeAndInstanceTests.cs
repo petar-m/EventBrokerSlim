@@ -6,10 +6,11 @@ public class HandlerScopeAndInstanceTests
     public async Task Handler_RegisteredAsTransient_Executed_ByDifferentInstances_And_DifferentScopes()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(1)
-                              .AddTransient<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(1))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
@@ -40,10 +41,11 @@ public class HandlerScopeAndInstanceTests
     public async Task Handler_RegisteredAsSingleton_Executed_BySameInstance()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(1)
-                              .AddSingleton<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(1))
+            .AddSingletonEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
@@ -74,10 +76,11 @@ public class HandlerScopeAndInstanceTests
     public async Task Handler_RegisteredAsScoped_Executed_ByDifferentInstances_And_DifferentScopes()
     {
         // Arrange
-        var services = ServiceProviderHelper.BuildWithEventsRecorder<int>(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(1)
-                              .AddScoped<TestEvent, TestEventHandler>()));
+        using var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(1))
+            .AddScopedEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton<EventsRecorder<int>>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 

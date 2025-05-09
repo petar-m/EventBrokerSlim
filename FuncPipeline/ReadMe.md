@@ -85,12 +85,12 @@ Values are stored in the context based on their type. This allows them to be inj
 ```csharp
 serviceCollection.Add<IService, Service>();
 ...
-var pipelineBuilder = pipelineBuilder.Create(serviceProvider)
+var pipelineBuilder = pipelineBuilder.Create(serviceScopeFactory)
     .NewPipeline()
     .Execute(async (
         INext next /* always available */, 
         PipelineRunContext context /* always available */,
-        IService service /* resolved from serviceProvider */) 
+        IService service /* resolved from IServiceProvider */) 
         =>
         {
             context.Set<int>(123); 

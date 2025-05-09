@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading;
+﻿using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 
@@ -20,8 +19,6 @@ internal sealed class HandlerExecutionContextPooledObjectPolicy : IPooledObjectP
         _logger = logger;
         _retryQueue = retryQueue;
     }
-
-    internal DefaultObjectPool<HandlerExecutionContext>? ContextObjectPool { get; set; }
 
     public HandlerExecutionContext Create()
         => new HandlerExecutionContext(_semaphore, _logger, _retryQueue);
