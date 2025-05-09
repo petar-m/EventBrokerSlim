@@ -9,12 +9,12 @@ public class RetryFromHandleUsingDelayDelegateTests
     public async Task Handle_SingleRetry_RetriesOnce_With_GivenDelay(int maxConcurrentHandlers)
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 1, Delay: TimeSpan.FromMilliseconds(300)))
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton(new HandlerSettings(RetryAttempts: 1, Delay: TimeSpan.FromMilliseconds(300)))
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
@@ -40,12 +40,12 @@ public class RetryFromHandleUsingDelayDelegateTests
     public async Task Handle_MultipleRetries_RetriesMultipleTimes_With_GivenDelay(int maxConcurrentHandlers)
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
@@ -73,12 +73,12 @@ public class RetryFromHandleUsingDelayDelegateTests
     public async Task Handle_MultipleRetries_Event_IsTheSameInstance_EveryTime(int maxConcurrentHandlers)
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers)
-                              .AddTransient<TestEvent, TestEventHandler>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(maxConcurrentHandlers))
+            .AddTransientEventHandler<TestEvent, TestEventHandler>()
+            .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(150)))
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
