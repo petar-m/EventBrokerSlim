@@ -6,20 +6,20 @@ public class LoadTests
     public async Task Load_MultipleHandlers_With_Retry()
     {
         // Arrange
-        var services = ServiceProviderHelper.Build(
-            sc => sc.AddEventBroker(
-                        x => x.WithMaxConcurrentHandlers(5)
-                              .AddTransient<Event1, TestEventHandler1<Event1>>()
-                              .AddTransient<Event1, TestEventHandler2<Event1>>()
-                              .AddTransient<Event1, TestEventHandler3<Event1>>()
-                              .AddTransient<Event2, TestEventHandler1<Event2>>()
-                              .AddTransient<Event2, TestEventHandler2<Event2>>()
-                              .AddTransient<Event2, TestEventHandler3<Event2>>()
-                              .AddTransient<Event3, TestEventHandler1<Event3>>()
-                              .AddTransient<Event3, TestEventHandler2<Event3>>()
-                              .AddTransient<Event3, TestEventHandler3<Event3>>())
-                    .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
-                    .AddSingleton<EventsTracker>());
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithMaxConcurrentHandlers(5))
+            .AddTransientEventHandler<Event1, TestEventHandler1<Event1>>()
+            .AddTransientEventHandler<Event1, TestEventHandler2<Event1>>()
+            .AddTransientEventHandler<Event1, TestEventHandler3<Event1>>()
+            .AddTransientEventHandler<Event2, TestEventHandler1<Event2>>()
+            .AddTransientEventHandler<Event2, TestEventHandler2<Event2>>()
+            .AddTransientEventHandler<Event2, TestEventHandler3<Event2>>()
+            .AddTransientEventHandler<Event3, TestEventHandler1<Event3>>()
+            .AddTransientEventHandler<Event3, TestEventHandler2<Event3>>()
+            .AddTransientEventHandler<Event3, TestEventHandler3<Event3>>()
+            .AddSingleton(new HandlerSettings(RetryAttempts: 3, Delay: TimeSpan.FromMilliseconds(100)))
+            .AddSingleton<EventsTracker>()
+            .BuildServiceProvider(true);
 
         using var scope = services.CreateScope();
 
