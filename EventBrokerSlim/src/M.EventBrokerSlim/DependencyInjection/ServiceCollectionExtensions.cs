@@ -51,8 +51,8 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
             });
 
-        serviceCollection.AddSingleton<DynamicEventHandlers>();
-        serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredService<DynamicEventHandlers>());
+        serviceCollection.AddKeyedSingleton<DynamicEventHandlers>(eventBrokerKey);
+        serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
 
         serviceCollection.AddKeyedSingleton(
             eventBrokerKey,
@@ -62,7 +62,7 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredService<PipelineRegistry>(),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
-                x.GetRequiredService<DynamicEventHandlers>(),
+                x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey),
                 new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
 
         serviceCollection.AddSingleton(
@@ -80,6 +80,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <typeparam name="TEvent">The type of the event handled.</typeparam>
     /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
+    /// <param name="key">An optional key for the handler.</param>
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddScopedEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
@@ -90,6 +92,14 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Adds a singleton service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
+    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
+    /// <param name="key">An optional key for the handler.</param>
+    /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddSingletonEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
         services.AddSingleton<IEventHandler<TEvent>, THandler>();
@@ -99,6 +109,14 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Adds a transient service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
+    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
+    /// <param name="key">An optional key for the handler.</param>
+    /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddTransientEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
         services.AddTransient<IEventHandler<TEvent>, THandler>();
@@ -108,7 +126,14 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddEventHandlerPileline<TEvent>(this IServiceCollection services, IPipeline pipeline)
+    /// <summary>
+    /// Adds a pipeline for handling a specific event type to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the pipeline to.</param>
+    /// <param name="pipeline">The pipeline to handle the event.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddEventHandlerPipeline<TEvent>(this IServiceCollection services, IPipeline pipeline)
         => services.AddSingleton(new EventPipeline(typeof(TEvent), pipeline));
 
     private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key) where THandler : class, IEventHandler<TEvent>

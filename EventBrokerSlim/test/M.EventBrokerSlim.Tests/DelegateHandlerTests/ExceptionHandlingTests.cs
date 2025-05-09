@@ -16,7 +16,7 @@ public class ExceptionHandlingTests
         PipelineBuilder.Create()
             .NewPipeline()
             .Execute(([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]string notRegistered) => Task.CompletedTask)
-            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
+            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
 
         using ServiceProvider services = serviceCollection.BuildServiceProvider(true);
         using IServiceScope scope = services.CreateScope();
@@ -46,7 +46,7 @@ public class ExceptionHandlingTests
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
             .Execute(static (Event1 @event) => throw new NotImplementedException())
-            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
+            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
 
         using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -77,7 +77,7 @@ public class ExceptionHandlingTests
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
             .Execute(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken))
-            .Build(x => serviceCollection.AddEventHandlerPileline<Event1>(x));
+            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
 
         using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
