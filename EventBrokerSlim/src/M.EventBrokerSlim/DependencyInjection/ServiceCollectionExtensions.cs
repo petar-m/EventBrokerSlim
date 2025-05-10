@@ -10,6 +10,13 @@ using Microsoft.Extensions.Logging;
 namespace M.EventBrokerSlim.DependencyInjection;
 
 /// <summary>
+/// Represents a pipeline for handling events.
+/// </summary>
+/// <param name="Event">The type of the event.</param>
+/// <param name="Pipeline">The pipeline to process the event.</param>
+public record EventPipeline(Type Event, IPipeline Pipeline);
+
+/// <summary>
 /// Extension methods for setting up event broker in an <see cref="IServiceCollection" />.
 /// </summary>
 public static class ServiceCollectionExtensions
@@ -85,7 +92,6 @@ public static class ServiceCollectionExtensions
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddScopedEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
-        services.AddScoped<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(key);
         services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
@@ -102,7 +108,6 @@ public static class ServiceCollectionExtensions
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddSingletonEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
-        services.AddSingleton<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(key);
         services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
@@ -119,7 +124,6 @@ public static class ServiceCollectionExtensions
     /// <returns>A reference to this instance after the operation has completed.</returns>
     public static IServiceCollection AddTransientEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
-        services.AddTransient<IEventHandler<TEvent>, THandler>();
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(key);
         services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
