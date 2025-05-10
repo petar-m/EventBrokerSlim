@@ -76,6 +76,7 @@ jobs:
       run: dotnet test --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Setup .NET 8 (for Markdown Test Report)
+      if: success() || failure()
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.x' 
