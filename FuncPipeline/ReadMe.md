@@ -1,6 +1,6 @@
 # FuncPipeline
 
-FuncPipeline is a library for building and executing function pipelines leveraging nested function composition. It supports dependency injection, custom parameter resolution, and asynchronous execution.
+FuncPipeline is a library for building and executing function pipelines using nested function composition. Supports dependency injection, custom parameter resolution, and asynchronous execution.
 
 ## Building Pipelines
 

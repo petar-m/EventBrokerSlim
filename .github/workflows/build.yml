@@ -5,8 +5,9 @@ on:
     branches: [ main ]
     paths-ignore:
       - "README.md"
-      - "package-readme.md"
-      - "package-icon.png"
+      - "EventBrokerSlim/ReadMe.md"
+      - "EventBrokerSlim/package-icon.png" 
+      - "FuncPipeline/ReadMe.md"
       - ".gitignore"
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
@@ -14,8 +15,9 @@ on:
     branches: [ main ]
     paths-ignore:
       - "README.md"
-      - "package-readme.md"
-      - "package-icon.png"    
+      - "EventBrokerSlim/ReadMe.md"
+      - "EventBrokerSlim/package-icon.png" 
+      - "FuncPipeline/ReadMe.md"
       - ".gitignore" 
 
 jobs:
@@ -37,29 +39,27 @@ jobs:
       name: Set Version
       run: |
         ref=${{ github.ref }}
-        pattern="^refs/tags/[0-9]+.[0-9]+.[0-9]+(-.+)?$"
+        pattern="^refs/tags/(EventBrokerSlim|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
         
         if [[ $ref =~ $pattern ]]; then
           is_release=true
+          version=${BASH_REMATCH[2]}
+          project=${BASH_REMATCH[1]}
         else
           is_release=false
+          version="0.0.1-build$(date +'%Y%m%d'-'%H%M%S')"
         fi  
         
         echo "IS_RELEASE=$is_release" >> $GITHUB_ENV
-        
-        if $is_release == true; then
-          version=$(echo $ref | cut -c 11-)
-        else
-          version="0.0.1-build$(date +'%Y%m%d'-'%H%M%S')"
-        fi
-
         echo "VERSION=$version" >> $GITHUB_ENV
+        echo "PROJECT=$project" >> $GITHUB_ENV
 
     - id: print-version
       name: Print Version
       run: |
         echo "is release:  ${{ env.IS_RELEASE }}"
         echo "version: ${{ env.VERSION }}"
+        echo "project: ${{ env.PROJECT }}"
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -73,7 +73,7 @@ jobs:
       run: dotnet build EventBrokerSlim.sln --no-restore --configuration Release -p:Version=${{ env.VERSION }}
 
     - name: Run Unit Tests
-      run: dotnet test test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
@@ -105,9 +105,13 @@ jobs:
         summary=$(<"coveragereport/SummaryGithub.md")
         echo "$summary" >> "$GITHUB_STEP_SUMMARY"
 
-    - name: Create NuGet Package
-      if: ${{ success() && env.IS_RELEASE == 'true' }}    
-      run: dotnet pack src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+    - name: Create NuGet Package for EventBrokerSlim
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim' }}    
+      run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+    
+    - name: Create NuGet Package for FuncPipeline
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'FuncPipeline' }}    
+      run: dotnet pack FuncPipeline/src/FuncPipeline/FuncPipeline.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
     
     - name: Publish NuGet Package
       if: ${{ success() && env.IS_RELEASE == 'true' }}    
