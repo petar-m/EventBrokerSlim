@@ -32,7 +32,7 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
                 eventHandlersList = ImmutableList<(DynamicHandlerClaimTicket, IPipeline)>.Empty;
                 _handlers.Add(eventType, eventHandlersList);
             }
-            
+
             _handlers[eventType] = eventHandlersList.Add((claimTicket, pipeline));
             return claimTicket;
         }
@@ -60,7 +60,7 @@ internal sealed class DynamicEventHandlers : IDynamicEventHandlers
             }
 
             _handlers[ticket.EventType] = _handlers[ticket.EventType].RemoveAll(x => x.ticket.Id == ticket.Id);
-            
+
         }
         finally
         {

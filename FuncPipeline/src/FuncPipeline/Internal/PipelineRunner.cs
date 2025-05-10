@@ -32,7 +32,7 @@ internal class PipelineRunner : INext
         }
 
         FunctionObject function = _pipeline.Functions[_current];
-        IServiceScope? scope = _pipeline.Options.ServiceScopePerFunction 
+        IServiceScope? scope = _pipeline.Options.ServiceScopePerFunction
             ? _serviceScopeFactory?.CreateScope()
             : _scope;
         object?[] parameterValues = ArrayPool<object?>.Shared.Rent(function.Parameters.Length);

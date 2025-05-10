@@ -15,7 +15,7 @@ public class ExceptionHandlingTests
 
         PipelineBuilder.Create()
             .NewPipeline()
-            .Execute(([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)]string notRegistered) => Task.CompletedTask)
+            .Execute(([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)] string notRegistered) => Task.CompletedTask)
             .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
 
         using ServiceProvider services = serviceCollection.BuildServiceProvider(true);

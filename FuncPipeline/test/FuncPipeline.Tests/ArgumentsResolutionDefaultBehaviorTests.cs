@@ -70,7 +70,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
 
         IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
-              .Execute(static async(ITestStub x, CancellationToken ct) =>
+              .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
                   await x.ExecuteAsync(message, ct);
@@ -105,7 +105,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
 
         IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
-              .Execute(static async(ITestStub x, CancellationToken ct) =>
+              .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
                   await x.ExecuteAsync(message, ct);
@@ -140,7 +140,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
 
         IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .NewPipeline()
-              .Execute(static async(PipelineRunContext c, CancellationToken ct) =>
+              .Execute(static async (PipelineRunContext c, CancellationToken ct) =>
               {
                   if(!c.TryGet<ITestStub>(out var x))
                   {
