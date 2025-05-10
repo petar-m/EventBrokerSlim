@@ -75,6 +75,11 @@ jobs:
     - name: Run Unit Tests
       run: dotnet test --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
+    - name: Setup .NET 8 (for Markdown Test Report)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.x' 
+
     - name: Install Markdown Test Report Tool
       if: success() || failure()
       run: dotnet tool install --global LiquidTestReports.Cli --version 2.0.0-beta.2
