@@ -66,9 +66,21 @@ var pipelineBuilder = pipelineBuilder.Create()
     .Execute(async (INext next, PipelineRunContext context, CancellationToken ct) =>
     {
         context.Set<int>(123);
-        await next.RunAsync();
+        return next.RunAsync();
     })
-    .Execute(async () => Console.WriteLine("A"))
+    .Execute(static (PipelineRunContext context) =>
+    {
+        if(context.TryGet<int>(out var value))
+        {
+            Console.WriteLine($"Int value from PipelineRunContext: {value}");
+        }
+        else
+        {
+            Console.WriteLine("Int value not found in PipelineRunContext");
+        }
+    
+        return Task.CompletedTask;
+    })
     .Build();
 ```
 
@@ -93,12 +105,13 @@ var pipelineBuilder = pipelineBuilder.Create(serviceScopeFactory)
         IService service /* resolved from IServiceProvider */) 
         =>
         {
-            context.Set<int>(123); 
+            int value = service.GetInteger(); // returns 123
+            context.Set<int>(value); 
             await next.RunAsync();
         })    
     .Execute(async (
         IContextService contextService /* resolved from context */,
-        int integer /* resolved from context */ )  
+        int integer /* resolved from context (123)*/ )  
         => 
         {
             ...
