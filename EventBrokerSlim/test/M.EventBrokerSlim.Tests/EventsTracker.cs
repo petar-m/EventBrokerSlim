@@ -5,7 +5,7 @@ namespace M.EventBrokerSlim.Tests;
 
 public class EventsTracker
 {
-    private readonly Stopwatch _stopwatch = new ();
+    private readonly Stopwatch _stopwatch = new();
     private CancellationTokenSource? _cancellationTokenSource;
 
     public int ExpectedItemsCount { get; set; } = int.MaxValue;

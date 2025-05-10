@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace M.EventBrokerSlim.Tests;
+﻿namespace M.EventBrokerSlim.Tests;
 
 public class RetryFromOnErrorUsingDelayDelegateTests
 {

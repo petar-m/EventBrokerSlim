@@ -9,7 +9,7 @@ internal sealed class HandlerExecutionContextPooledObjectPolicy : IPooledObjectP
     private readonly SemaphoreSlim _semaphore;
     private readonly ILogger _logger;
     private readonly RetryQueue _retryQueue;
-    
+
     internal HandlerExecutionContextPooledObjectPolicy(
         SemaphoreSlim semaphore,
         ILogger logger,

@@ -13,7 +13,7 @@ internal class Pipeline : IPipeline
     }
 
     public IServiceScopeFactory? ServiceScopeFactory { get; set; }
-    
+
     public PipelineRunOptions Options { get; }
 
     internal ImmutableArray<FunctionObject> Functions { get; }
