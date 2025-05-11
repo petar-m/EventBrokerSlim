@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotTestApp", "FuncPipeline\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotTestApp", "EventBrokerSlim\test\AotTestApp\AotTestApp.csproj", "{2438EB2D-1E0A-40B4-BC4C-500A231231BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipelineBenchmarks", "FuncPipeline\test\FuncPipelineBenchmarks\FuncPipelineBenchmarks.csproj", "{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +99,7 @@ Global
 		{8DF61C83-1F5B-4A8B-A84D-2E24F851DECE} = {F527E434-6ECA-4B5D-B4E0-AD333C13C56B}
 		{597A3312-06FF-471A-B613-87269DA70C41} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD} = {1F68FA29-95E5-40B4-AB1C-2839A61F9020}
+		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}
