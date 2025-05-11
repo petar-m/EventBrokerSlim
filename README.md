@@ -8,7 +8,7 @@ An implementation of broadcasting events in a fire-and-forget style.
 
 [EventBrokerSlim documentation](EventBrokerSlim/ReadMe.md)
 
-For breaking changes in version 4 please look at the [release notes]().
+For breaking changes in version 4 please look at the [release notes](https://github.com/petar-m/EventBrokerSlim/releases/tag/EventBrokerSlim_v4.0.0).
 
 # FuncPipeline
 
