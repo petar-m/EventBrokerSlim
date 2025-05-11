@@ -72,18 +72,21 @@ jobs:
     - name: Build
       run: dotnet build EventBrokerSlim.sln --no-restore --configuration Release -p:Version=${{ env.VERSION }}
 
-    - name: Run Unit Tests
-      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+    - name: Run Unit Tests EventBrokerSlim net8.0
+      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+
+    - name: Run Unit Tests EventBrokerSlim net9.0
+      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+
+    - name: Run Unit Tests FuncPipeline net8.0
+      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+
+    - name: Run Unit Tests FuncPipeline net9.0
+      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
       run: dotnet tool install --global LiquidTestReports.Cli --version 2.0.0-beta.6
-
-    # - name: Setup .NET 8 (for Markdown Test Report)
-    #   if: success() || failure()
-    #   uses: actions/setup-dotnet@v4
-    #   with:
-    #     dotnet-version: '8.x' 
 
     - name: Generate Markdown Test Report
       if: success() || failure()
