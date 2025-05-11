@@ -7,6 +7,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
+        <IsAotCompatible>true</IsAotCompatible>
+        <PublishAot>true</PublishAot>
+        <PublishTrimmed>true</PublishTrimmed>
+    </PropertyGroup>
+
+    <PropertyGroup>
         <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
         <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
         <RespositoryType>git</RespositoryType>
@@ -27,6 +33,11 @@
         <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     </PropertyGroup>
 
+    
+    <PropertyGroup>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+    
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>

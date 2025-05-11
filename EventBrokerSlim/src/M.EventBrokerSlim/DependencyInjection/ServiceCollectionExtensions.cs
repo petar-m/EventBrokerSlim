@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Channels;
 using FuncPipeline;
@@ -90,7 +91,7 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
     /// <param name="key">An optional key for the handler.</param>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddScopedEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddScopedEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(key);
@@ -106,7 +107,7 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
     /// <param name="key">An optional key for the handler.</param>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddSingletonEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(key);
@@ -122,7 +123,7 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
     /// <param name="key">An optional key for the handler.</param>
     /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddTransientEventHandler<TEvent, THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddTransientEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
     {
         key ??= Guid.NewGuid().ToString();
         services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(key);
