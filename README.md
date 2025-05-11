@@ -8,10 +8,10 @@ An implementation of broadcasting events in a fire-and-forget style.
 
 [EventBrokerSlim documentation](EventBrokerSlim/ReadMe.md)
 
-For breaking changes in version 4 please look at the release notes.
+For breaking changes in version 4 please look at the [release notes]().
 
 # FuncPipeline
 
-FuncPipeline is a library for building and executing function pipelines using nested function composition. It supports dependency injection, custom parameter resolution, and asynchronous execution.
+FuncPipeline is a library for building and executing function pipelines using nested function composition. Supports dependency injection, custom parameter resolution, and asynchronous execution.
 
 [FuncPipeline documentation](FuncPipeline/ReadMe.md)
