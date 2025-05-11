@@ -77,13 +77,13 @@ jobs:
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
-      run: dotnet tool install --global LiquidTestReports.Cli --version 2.0.0-beta.2
+      run: dotnet tool install --global LiquidTestReports.Cli --version 2.0.0-beta.6
 
-    - name: Setup .NET 8 (for Markdown Test Report)
-      if: success() || failure()
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.x' 
+    # - name: Setup .NET 8 (for Markdown Test Report)
+    #   if: success() || failure()
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: '8.x' 
 
     - name: Generate Markdown Test Report
       if: success() || failure()
