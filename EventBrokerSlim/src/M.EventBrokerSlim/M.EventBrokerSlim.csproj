@@ -31,18 +31,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FuncPipeline" Version="1.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.4" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\..\..\FuncPipeline\src\FuncPipeline\FuncPipeline.csproj" />
-	</ItemGroup>
-
     <ItemGroup>
-        <None Include="../../package-icon.png" Pack="true" PackagePath="\"/>
-        <None Include="../../ReadMe.md" Pack="true" PackagePath="\"/>
+        <None Include="../../package-icon.png" Pack="true" PackagePath="\" />
+        <None Include="../../ReadMe.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

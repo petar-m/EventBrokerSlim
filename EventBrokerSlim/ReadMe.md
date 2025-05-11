@@ -15,7 +15,7 @@ Features:
 - built-in retry option
 - tightly integrated with `Microsoft.Extensions.DependencyInjection`
 - each handler is resolved and executed in a new DI container scope
-- event handlers can be a [pipeline]() of delegates  
+- event handlers can be a [pipeline](https://github.com/petar-m/EventBrokerSlim/blob/main/FuncPipeline/ReadMe.md) of delegates  
 - dynamic adding and removing of delegate event handler pipelines  
 
 # How does it work
