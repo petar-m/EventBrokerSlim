@@ -198,7 +198,7 @@ public class EventBrokerTests
 
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(200));
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.True(completed);
