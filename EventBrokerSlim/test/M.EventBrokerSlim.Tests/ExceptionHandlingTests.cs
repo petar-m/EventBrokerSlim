@@ -85,7 +85,7 @@ public class ExceptionHandlingTests
         Assert.Equal(LogLevel.Error, log.LogLevel);
         Assert.Equal("Unhandled exception executing M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEventHandler1.OnError()", log.Message);
         Assert.IsType<ArgumentException>(log.Exception);
-        Assert.StartsWith("No service for type M.EventBrokerSlim.IEventHandler`1[[M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEvent, M.EventBrokerSlim.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]] has been registered with key ", log.Exception.Message);
+        Assert.Matches("No service for type M\\.EventBrokerSlim\\.IEventHandler`1\\[\\[M\\.EventBrokerSlim\\.Tests\\.ExceptionHandlingTests\\+TestEvent, M\\.EventBrokerSlim\\.Tests, Version=(.*), Culture=neutral, PublicKeyToken=null]] has been registered with key", log.Exception.Message);
     }
 
     [Fact]
