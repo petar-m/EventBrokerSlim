@@ -3,26 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "src\M.EventBrokerSlim\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "EventBrokerSlim\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim.Tests", "test\M.EventBrokerSlim.Tests\M.EventBrokerSlim.Tests.csproj", "{66C57C38-C955-4367-A4D9-86E970B8DCB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim.Tests", "EventBrokerSlim\test\M.EventBrokerSlim.Tests\M.EventBrokerSlim.Tests.csproj", "{66C57C38-C955-4367-A4D9-86E970B8DCB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3F9CF562-DD57-4F53-92FD-575EFCB7838C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{19848670-435F-4970-887E-B643BFB08FD0}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D8DD8B48-A9B7-4EC4-8C09-E8361C3C344A}"
-	ProjectSection(SolutionItems) = preProject
-		LICENSE = LICENSE
-		package-readme.md = package-readme.md
-		README.md = README.md
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{749C73FB-A73E-4794-8019-138CF561888B}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
-		package-icon.png = package-icon.png
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{E871E84E-729F-4F8A-9569-65DA225D64A9}"
@@ -31,6 +21,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline", "FuncPipeline\src\FuncPipeline\FuncPipeline.csproj", "{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline.Tests", "FuncPipeline\test\FuncPipeline.Tests\FuncPipeline.Tests.csproj", "{2640C49C-494F-423F-B0ED-D10D7C27ABA4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBrokerSlim", "EventBrokerSlim", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		EventBrokerSlim\package-icon.png = EventBrokerSlim\package-icon.png
+		EventBrokerSlim\ReadMe.md = EventBrokerSlim\ReadMe.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1F68FA29-95E5-40B4-AB1C-2839A61F9020}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FuncPipeline", "FuncPipeline", "{F527E434-6ECA-4B5D-B4E0-AD333C13C56B}"
+	ProjectSection(SolutionItems) = preProject
+		FuncPipeline\ReadMe.md = FuncPipeline\ReadMe.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{174328D0-4863-4A12-9496-E0CF658EFA3C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,14 +57,28 @@ Global
 		{66C57C38-C955-4367-A4D9-86E970B8DCB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66C57C38-C955-4367-A4D9-86E970B8DCB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66C57C38-C955-4367-A4D9-86E970B8DCB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2640C49C-494F-423F-B0ED-D10D7C27ABA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2640C49C-494F-423F-B0ED-D10D7C27ABA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2640C49C-494F-423F-B0ED-D10D7C27ABA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2640C49C-494F-423F-B0ED-D10D7C27ABA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{414B2794-9946-434A-BB85-CDA461E0442D} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
-		{66C57C38-C955-4367-A4D9-86E970B8DCB1} = {19848670-435F-4970-887E-B643BFB08FD0}
+		{66C57C38-C955-4367-A4D9-86E970B8DCB1} = {1F68FA29-95E5-40B4-AB1C-2839A61F9020}
+		{3F9CF562-DD57-4F53-92FD-575EFCB7838C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2F2939E6-0AEE-45FD-9748-D90C8B990FB0} = {E871E84E-729F-4F8A-9569-65DA225D64A9}
+		{63CB75C0-CD24-4AAA-A2D9-32B91B61B3D5} = {174328D0-4863-4A12-9496-E0CF658EFA3C}
+		{2640C49C-494F-423F-B0ED-D10D7C27ABA4} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
+		{1F68FA29-95E5-40B4-AB1C-2839A61F9020} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{174328D0-4863-4A12-9496-E0CF658EFA3C} = {F527E434-6ECA-4B5D-B4E0-AD333C13C56B}
+		{8DF61C83-1F5B-4A8B-A84D-2E24F851DECE} = {F527E434-6ECA-4B5D-B4E0-AD333C13C56B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}
