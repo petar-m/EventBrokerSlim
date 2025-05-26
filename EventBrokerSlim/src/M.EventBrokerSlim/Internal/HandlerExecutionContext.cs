@@ -1,6 +1,8 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using FuncPipeline;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal;
 
@@ -9,11 +11,17 @@ internal sealed class HandlerExecutionContext
     public HandlerExecutionContext(
         SemaphoreSlim semaphore,
         ILogger logger,
-        RetryQueue retryQueue)
+        RetryQueue retryQueue,
+        DefaultObjectPool<RetryPolicy> retryPolicyObjectPool,
+        DefaultObjectPool<PipelineRunContext> pipelineRunContextObjectPool,
+        DefaultObjectPool<HandlerExecutionContext>? handlerExecutionContextObjectPool)
     {
         Semaphore = semaphore;
         Logger = logger;
         RetryQueue = retryQueue;
+        RetryPolicyObjectPool = retryPolicyObjectPool;
+        PipelineRunContextObjectPool = pipelineRunContextObjectPool;
+        HandlerExecutionContextObjectPool = handlerExecutionContextObjectPool ?? throw new ArgumentNullException(nameof(handlerExecutionContextObjectPool));
     }
 
     public HandlerExecutionContext Initialize(object @event, IPipeline pipeline, RetryDescriptor? retryDescriptor, CancellationToken cancellationToken)
@@ -44,7 +52,11 @@ internal sealed class HandlerExecutionContext
     public CancellationToken CancellationToken { get; private set; }
 
     public RetryPolicy? RetryPolicy { get; private set; }
+
     public SemaphoreSlim Semaphore { get; }
     public ILogger Logger { get; }
     public RetryQueue RetryQueue { get; }
+    public DefaultObjectPool<RetryPolicy> RetryPolicyObjectPool { get; }
+    public DefaultObjectPool<PipelineRunContext> PipelineRunContextObjectPool { get; }
+    public DefaultObjectPool<HandlerExecutionContext> HandlerExecutionContextObjectPool { get; }
 }
