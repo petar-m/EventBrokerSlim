@@ -17,6 +17,7 @@ Features:
 - each handler is resolved and executed in a new DI container scope
 - event handlers can be a [pipeline](https://github.com/petar-m/EventBrokerSlim/blob/main/FuncPipeline/ReadMe.md) of delegates  
 - dynamic adding and removing of delegate event handler pipelines  
+- multiple independent event broker instances in the same process
 
 # How does it work
 
@@ -269,9 +270,11 @@ services.AddEventBroker(x => x.WithMaxConcurrentHandlers(3)
                               .DisableMissingHandlerWarningLog());
 ```  
 
-`WithMaxConcurrentHandlers` defines how many handlers can run at the same time. Default is 2.  
+- `WithMaxConcurrentHandlers` defines how many handlers can run at the same time. Default is 2.  
 
-`DisableMissingHandlerWarningLog` suppresses logging warning when there is no handler found for event.  
+- `DisableMissingHandlerWarningLog` suppresses logging warning when there is no handler found for event.  
+
+`AddKeyedEventBroker` allows registering independent event broker instance. Note that all handlers must be registered with the same key as the event broker.
 
 ### Handlers Implementing `IEventHandler<TEvent>`
 
@@ -295,7 +298,6 @@ The order of calls to `AddEventBroker` and `Add*EventHandler` does not matter.
 > `IEventHandler<TEvent>` registrations are internally converted to `IPipeline`.
 
  
-
 ### Delegate Handlers
 
 Delegate event handlers are registered by `IServiceCollection.AddEventHandlerPipeline<TEvent>()` extension method. It will internally configure `IPipeline.ServiceScopeFactory` for each registered pipeline. A pipeline is always registered as singleton.  
@@ -306,11 +308,11 @@ IPipeline pipeline = PipelineBuilder.Create()...;
 serviceCollection.AddEventHandlerPipeline<TEvent>(pipeline);
 ```  
 > [!NOTE]
-> All registered pipelines, including those created from `IEventHandler<TEvent>` registrations, can be obtained from the DI container by resolving:   
-> `IEnumerable<EventPipeline>` (where `record EventPipeline(Type Event, IPipeline Pipeline)` represents each event and associated pipeline)  
-> or  
-> `PipelineRegistry` (allowing to obtain all pipelines for an event `ImmutableArray<IPipeline> PipelineRegistry.Get(Type eventType)`)
+> All registered pipelines, including those created from `IEventHandler<TEvent>` registrations, can be obtained from the DI container by resolving `PipelineRegistry` (allowing to obtain all pipelines for an event `ImmutableArray<IPipeline> PipelineRegistry.Get(Type eventType)`)
 
+### Keyed Handlers
+
+ `Add*EventHandler<TEvent, THandler>` and `AddEventHandlerPipeline<TEvent>` support optional parameter `eventBrokerKey`. These handlers are used when event is published by event broker instance with the same key.
 
 ## Publishing Events  
 

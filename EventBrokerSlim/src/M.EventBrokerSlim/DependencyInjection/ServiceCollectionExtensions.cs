@@ -22,20 +22,45 @@ public record EventPipeline(Type Event, IPipeline Pipeline);
 /// </summary>
 public static class ServiceCollectionExtensions
 {
+    private static readonly object _defaultEventBrokerKey = Guid.NewGuid();
+
     /// <summary>
-    /// Adds event broker to the specified <see cref="IServiceCollection" />.
+    /// Adds an event broker to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <param name="serviceCollection">The <see cref="IServiceCollection" /> to add services to.</param>
-    /// <param name="eventBrokerConfiguration">The <see cref="EventBrokerBuilder"/> configuration delegate.</param>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <param name="serviceCollection">
+    /// The <see cref="IServiceCollection"/> to add the event broker services to.
+    /// </param>
+    /// <param name="eventBrokerConfiguration">
+    /// An optional delegate to configure the <see cref="EventBrokerBuilder"/> for customizing event broker behavior.
+    /// </param>
+    /// <returns>
+    /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
+    /// </returns>
     public static IServiceCollection AddEventBroker(
         this IServiceCollection serviceCollection,
         Action<EventBrokerBuilder>? eventBrokerConfiguration = null)
     {
+        return serviceCollection.AddKeyedEventBroker(_defaultEventBrokerKey, eventBrokerConfiguration);
+    }
+
+    /// <summary>
+    /// Adds keyed event broker to the specified <see cref="IServiceCollection" />.
+    /// </summary>
+    /// <param name="serviceCollection">The <see cref="IServiceCollection" /> to add services to.</param>
+    /// <param name="eventBrokerKey">
+    /// The key used to uniquely identify the event broker instance within the service collection.
+    /// </param>
+    /// <param name="eventBrokerConfiguration">
+    /// An optional delegate to configure the <see cref="EventBrokerBuilder"/> for customizing event broker behavior.
+    /// </param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddKeyedEventBroker(
+        this IServiceCollection serviceCollection,
+        object eventBrokerKey,
+        Action<EventBrokerBuilder>? eventBrokerConfiguration = null)
+    {
         var eventBrokerBuilder = new EventBrokerBuilder(serviceCollection);
         eventBrokerConfiguration?.Invoke(eventBrokerBuilder);
-
-        var eventBrokerKey = Guid.NewGuid();
 
         CancellationTokenSource eventBrokerCancellationTokenSource = new();
         serviceCollection.AddKeyedSingleton(eventBrokerKey, eventBrokerCancellationTokenSource);
@@ -49,34 +74,58 @@ public static class ServiceCollectionExtensions
                 SingleWriter = false
             }));
 
-        serviceCollection.AddSingleton<IEventBroker>(
-            x =>
-            {
-                var eventHandlerRunner = x.GetRequiredKeyedService<ThreadPoolEventHandlerRunner>(eventBrokerKey);
-                eventHandlerRunner.Run();
-                return new EventBroker(
-                    x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Writer,
-                    x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
-            });
+        if(eventBrokerKey == _defaultEventBrokerKey)
+        {
+            serviceCollection.AddSingleton<IEventBroker>(
+                x =>
+                {
+                    var eventHandlerRunner = x.GetRequiredKeyedService<ThreadPoolEventHandlerRunner>(eventBrokerKey);
+                    eventHandlerRunner.Run();
+                    return new EventBroker(
+                        x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Writer,
+                        x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
+                });
+        }
+        else
+        {
+            serviceCollection.AddKeyedSingleton<IEventBroker>(
+                eventBrokerKey,
+                (x, key) =>
+                {
+                    var eventHandlerRunner = x.GetRequiredKeyedService<ThreadPoolEventHandlerRunner>(key);
+                    eventHandlerRunner.Run();
+                    return new EventBroker(
+                        x.GetRequiredKeyedService<Channel<object>>(key).Writer,
+                        x.GetRequiredKeyedService<CancellationTokenSource>(key));
+                });
+        }
 
         serviceCollection.AddKeyedSingleton<DynamicEventHandlers>(eventBrokerKey);
-        serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
+        if(eventBrokerKey == _defaultEventBrokerKey)
+        {
+            serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
+        }
+        else
+        {
+            serviceCollection.AddKeyedSingleton<IDynamicEventHandlers>(eventBrokerKey, (x, key) => x.GetRequiredKeyedService<DynamicEventHandlers>(key));
+        }
 
         serviceCollection.AddKeyedSingleton(
             eventBrokerKey,
             (x, key) => new ThreadPoolEventHandlerRunner(
                 x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey),
                 x.GetRequiredService<IServiceScopeFactory>(),
-                x.GetRequiredService<PipelineRegistry>(),
+                x.GetRequiredKeyedService<PipelineRegistry>(eventBrokerKey),
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
                 x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey),
                 new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
 
-        serviceCollection.AddSingleton(
-            x =>
+        serviceCollection.AddKeyedSingleton(
+            eventBrokerKey,
+            (x, key) =>
             {
-                var pipelines = x.GetServices<EventPipeline>();
+                var pipelines = x.GetKeyedServices<EventPipeline>(key);
                 return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
             });
 
@@ -84,62 +133,112 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds a scoped service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// Adds a scoped event handler service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
-    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
-    /// <param name="key">An optional key for the handler.</param>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddScopedEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    /// <typeparam name="TEvent">
+    /// The type of event the handler processes.
+    /// </typeparam>
+    /// <typeparam name="THandler">
+    /// The concrete implementation of <see cref="IEventHandler{TEvent}"/> to register.
+    /// </typeparam>
+    /// <param name="services">
+    /// The <see cref="IServiceCollection"/> to add the event handler to.
+    /// </param>
+    /// <param name="eventHandlerKey">
+    /// An optional key to uniquely identify the event handler registration.
+    /// </param>
+    /// <param name="eventBrokerKey">
+    /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
+    /// </param>
+    /// <returns>
+    /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
+    /// </returns>
+    public static IServiceCollection AddScopedEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
     {
-        key ??= Guid.NewGuid().ToString();
-        services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
+        eventHandlerKey ??= Guid.NewGuid().ToString();
+        services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
         return services;
     }
 
     /// <summary>
-    /// Adds a singleton service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// Adds a singleton event handler service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
-    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
-    /// <param name="key">An optional key for the handler.</param>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    /// <typeparam name="TEvent">
+    /// The type of event the handler processes.
+    /// </typeparam>
+    /// <typeparam name="THandler">
+    /// The concrete implementation of <see cref="IEventHandler{TEvent}"/> to register as a singleton.
+    /// </typeparam>
+    /// <param name="services">
+    /// The <see cref="IServiceCollection"/> to add the event handler to.
+    /// </param>
+    /// <param name="eventHandlerKey">
+    /// An optional key to uniquely identify the event handler registration.
+    /// </param>
+    /// <param name="eventBrokerKey">
+    /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
+    /// </param>
+    /// <returns>
+    /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
+    /// </returns>
+    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
     {
-        key ??= Guid.NewGuid().ToString();
-        services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
+        eventHandlerKey ??= Guid.NewGuid().ToString();
+        services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
         return services;
     }
 
     /// <summary>
-    /// Adds a transient service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// Adds a transient event handler service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
-    /// <typeparam name="THandler">The type of the <see cref="IEventHandler{TEvent}"/> implementation.</typeparam>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the handler to.</param>
-    /// <param name="key">An optional key for the handler.</param>
-    /// <returns>A reference to this instance after the operation has completed.</returns>
-    public static IServiceCollection AddTransientEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? key = null) where THandler : class, IEventHandler<TEvent>
+    /// <typeparam name="TEvent">
+    /// The type of event the handler processes.
+    /// </typeparam>
+    /// <typeparam name="THandler">
+    /// The concrete implementation of <see cref="IEventHandler{TEvent}"/> to register as a transient service.
+    /// </typeparam>
+    /// <param name="services">
+    /// The <see cref="IServiceCollection"/> to add the event handler to.
+    /// </param>
+    /// <param name="eventHandlerKey">
+    /// An optional key to uniquely identify the event handler registration.
+    /// </param>
+    /// <param name="eventBrokerKey">
+    /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
+    /// </param>
+    /// <returns>
+    /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
+    /// </returns>
+    public static IServiceCollection AddTransientEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
     {
-        key ??= Guid.NewGuid().ToString();
-        services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(key);
-        services.AddSingleton(CreateEventPipeline<TEvent, THandler>(key));
+        eventHandlerKey ??= Guid.NewGuid().ToString();
+        services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
         return services;
     }
 
     /// <summary>
     /// Adds a pipeline for handling a specific event type to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <typeparam name="TEvent">The type of the event handled.</typeparam>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the pipeline to.</param>
-    /// <param name="pipeline">The pipeline to handle the event.</param>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddEventHandlerPipeline<TEvent>(this IServiceCollection services, IPipeline pipeline)
-        => services.AddSingleton(new EventPipeline(typeof(TEvent), pipeline));
+    /// <typeparam name="TEvent">
+    /// The type of event the pipeline will handle.
+    /// </typeparam>
+    /// <param name="services">
+    /// The <see cref="IServiceCollection"/> to add the pipeline to.
+    /// </param>
+    /// <param name="pipeline">
+    /// The <see cref="IPipeline"/> instance that defines the processing logic for the event type.
+    /// </param>
+    /// <param name="eventBrokerKey">
+    /// An optional key to associate the pipeline with a specific event broker instance. If not provided, the default event broker is used.
+    /// </param>
+    /// <returns>
+    /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
+    /// </returns>
+    public static IServiceCollection AddEventHandlerPipeline<TEvent>(this IServiceCollection services, IPipeline pipeline, object? eventBrokerKey = null)
+        => services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, new EventPipeline(typeof(TEvent), pipeline));
 
     private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key) where THandler : class, IEventHandler<TEvent>
     {
@@ -191,8 +290,7 @@ public static class ServiceCollectionExtensions
                     {
                         PrimarySource = Source.Context,
                         Fallback = false,
-                        PrimaryNotFound = NotFoundBehavior.ThrowException,
-                        Key = key
+                        PrimaryNotFound = NotFoundBehavior.ThrowException
                     }
                 }
             })
