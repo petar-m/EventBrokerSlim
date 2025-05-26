@@ -133,7 +133,6 @@ public class DynamicHandlerExecutionTests
     public async Task Multiple_Dynamic_Handlers_Removed()
     {
         // Arrange
-        // Arrange
         var builder = PipelineBuilder.Create()
             .NewPipeline()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
