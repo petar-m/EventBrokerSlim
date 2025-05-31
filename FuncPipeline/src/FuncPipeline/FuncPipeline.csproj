@@ -10,14 +10,15 @@
         <IsAotCompatible>true</IsAotCompatible>
         <PublishAot>true</PublishAot>
         <PublishTrimmed>true</PublishTrimmed>
+        <IsTrimmable>true</IsTrimmable>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     </PropertyGroup>
 
     <PropertyGroup>
         <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
         <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
-        <RespositoryType>git</RespositoryType>
+        <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <Tags>pipeline;function;function-composition;</Tags>
         <Authors>Petar Marinov</Authors>
         <Description>FuncPipeline is a library for building and executing function pipelines using nested function composition. Supports dependency injection, custom parameter resolution, and asynchronous execution.</Description>
         <Copyright>Copyright Petar Marinov</Copyright>
@@ -29,15 +30,9 @@
         <Deterministic>true</Deterministic>
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     </PropertyGroup>
 
-    
-    <PropertyGroup>
-        <IsAotCompatible>true</IsAotCompatible>
-    </PropertyGroup>
-    
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
