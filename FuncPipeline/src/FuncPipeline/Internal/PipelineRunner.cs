@@ -35,29 +35,9 @@ internal class PipelineRunner : INext
         IServiceScope? scope = _pipeline.Options.ServiceScopePerFunction
             ? _serviceScopeFactory?.CreateScope()
             : _scope;
-        object?[] parameterValues = ArrayPool<object?>.Shared.Rent(function.Parameters.Length);
+        object?[] parameterValues = ResolveParameters(function, scope);
         try
         {
-            for(int i = 0; i < function.Parameters.Length; i++)
-            {
-                if(function.Parameters[i].Type == typeof(INext))
-                {
-                    parameterValues[i] = this;
-                }
-                else if(function.Parameters[i].Type == typeof(CancellationToken))
-                {
-                    parameterValues[i] = _cancellationToken;
-                }
-                else if(function.Parameters[i].Type == typeof(PipelineRunContext))
-                {
-                    parameterValues[i] = Context;
-                }
-                else
-                {
-                    parameterValues[i] = Resolve(function.Parameters[i], scope);
-                }
-            }
-
             await function.ExecuteAsync(parameterValues).ConfigureAwait(false);
         }
         finally
@@ -68,6 +48,22 @@ internal class PipelineRunner : INext
                 scope?.Dispose();
             }
         }
+    }
+
+    private object?[] ResolveParameters(FunctionObject function, IServiceScope? scope)
+    {
+        var parameterValues = ArrayPool<object?>.Shared.Rent(function.Parameters.Length);
+        for (int i = 0; i < function.Parameters.Length; i++)
+        {
+            parameterValues[i] = function.Parameters[i].Type switch
+            {
+                var t when t == typeof(INext) => this,
+                var t when t == typeof(CancellationToken) => _cancellationToken,
+                var t when t == typeof(PipelineRunContext) => Context,
+                _ => Resolve(function.Parameters[i], scope)
+            };
+        }
+        return parameterValues;
     }
 
     private object? Resolve(FunctionObject.Parameter parameter, IServiceScope? scope)
