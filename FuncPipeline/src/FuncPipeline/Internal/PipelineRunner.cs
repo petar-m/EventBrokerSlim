@@ -62,7 +62,7 @@ internal class PipelineRunner : INext
         }
         finally
         {
-            ArrayPool<object?>.Shared.Return(parameterValues);
+            ArrayPool<object?>.Shared.Return(parameterValues, true);
             if(_pipeline.Options.ServiceScopePerFunction)
             {
                 scope?.Dispose();
