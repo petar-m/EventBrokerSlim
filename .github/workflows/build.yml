@@ -78,11 +78,17 @@ jobs:
     - name: Run Unit Tests EventBrokerSlim net9.0
       run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
+    - name: Run Unit Tests EventBrokerSlim net10.0
+      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+
     - name: Run Unit Tests FuncPipeline net8.0
       run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Run Unit Tests FuncPipeline net9.0
       run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+
+    - name: Run Unit Tests FuncPipeline net10.0
+      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
