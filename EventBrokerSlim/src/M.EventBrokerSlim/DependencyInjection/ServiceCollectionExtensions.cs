@@ -74,6 +74,16 @@ public static class ServiceCollectionExtensions
                 SingleWriter = false
             }));
 
+        serviceCollection.AddKeyedSingleton<DynamicEventHandlers>(eventBrokerKey);
+
+        serviceCollection.AddKeyedSingleton(
+            eventBrokerKey,
+            (x, key) =>
+            {
+                var pipelines = x.GetKeyedServices<EventPipeline>(key);
+                return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
+            });
+
         if(eventBrokerKey == _defaultEventBrokerKey)
         {
             serviceCollection.AddSingleton<IEventBroker>(
@@ -85,6 +95,9 @@ public static class ServiceCollectionExtensions
                         x.GetRequiredKeyedService<Channel<object>>(eventBrokerKey).Writer,
                         x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey));
                 });
+
+            serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
+            serviceCollection.AddSingleton(x => x.GetRequiredKeyedService<PipelineRegistry>(_defaultEventBrokerKey));
         }
         else
         {
@@ -98,15 +111,7 @@ public static class ServiceCollectionExtensions
                         x.GetRequiredKeyedService<Channel<object>>(key).Writer,
                         x.GetRequiredKeyedService<CancellationTokenSource>(key));
                 });
-        }
 
-        serviceCollection.AddKeyedSingleton<DynamicEventHandlers>(eventBrokerKey);
-        if(eventBrokerKey == _defaultEventBrokerKey)
-        {
-            serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
-        }
-        else
-        {
             serviceCollection.AddKeyedSingleton<IDynamicEventHandlers>(eventBrokerKey, (x, key) => x.GetRequiredKeyedService<DynamicEventHandlers>(key));
         }
 
@@ -120,14 +125,6 @@ public static class ServiceCollectionExtensions
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
                 x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey),
                 new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
-
-        serviceCollection.AddKeyedSingleton(
-            eventBrokerKey,
-            (x, key) =>
-            {
-                var pipelines = x.GetKeyedServices<EventPipeline>(key);
-                return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
-            });
 
         return serviceCollection;
     }
