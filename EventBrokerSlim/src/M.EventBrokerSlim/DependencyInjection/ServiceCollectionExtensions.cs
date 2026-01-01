@@ -15,7 +15,8 @@ namespace M.EventBrokerSlim.DependencyInjection;
 /// </summary>
 /// <param name="Event">The type of the event.</param>
 /// <param name="Pipeline">The pipeline to process the event.</param>
-public record EventPipeline(Type Event, IPipeline Pipeline);
+/// <param name="HandlerName">A unique name representing the handler. Mandatory for persistent events.</param>
+public record EventPipeline(Type Event, IPipeline Pipeline, string? HandlerName = null);
 
 /// <summary>
 /// Extension methods for setting up event broker in an <see cref="IServiceCollection" />.
@@ -147,14 +148,16 @@ public static class ServiceCollectionExtensions
     /// <param name="eventBrokerKey">
     /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
     /// </param>
+    /// <param name="handlerName">A unique name representing the handler. Mandatory for persistent events.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
     /// </returns>
-    public static IServiceCollection AddScopedEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddScopedEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null, string? handlerName = null)
+        where THandler : class, IEventHandler<TEvent>
     {
         eventHandlerKey ??= Guid.NewGuid().ToString();
         services.AddKeyedScoped<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey, handlerName));
         return services;
     }
 
@@ -176,14 +179,16 @@ public static class ServiceCollectionExtensions
     /// <param name="eventBrokerKey">
     /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
     /// </param>
+    /// <param name="handlerName">A unique name representing the handler. Mandatory for persistent events.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
     /// </returns>
-    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null, string? handlerName = null) 
+        where THandler : class, IEventHandler<TEvent>
     {
         eventHandlerKey ??= Guid.NewGuid().ToString();
         services.AddKeyedSingleton<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey, handlerName));
         return services;
     }
 
@@ -205,14 +210,16 @@ public static class ServiceCollectionExtensions
     /// <param name="eventBrokerKey">
     /// An optional key to associate the handler with a specific event broker instance. If not provided, the default event broker is used.
     /// </param>
+    /// <param name="handlerName">A unique name representing the handler. Mandatory for persistent events.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
     /// </returns>
-    public static IServiceCollection AddTransientEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null) where THandler : class, IEventHandler<TEvent>
+    public static IServiceCollection AddTransientEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null, string? handlerName = null)
+        where THandler : class, IEventHandler<TEvent>
     {
         eventHandlerKey ??= Guid.NewGuid().ToString();
         services.AddKeyedTransient<IEventHandler<TEvent>, THandler>(eventHandlerKey);
-        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey));
+        services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, CreateEventPipeline<TEvent, THandler>(eventHandlerKey, handlerName));
         return services;
     }
 
@@ -231,13 +238,14 @@ public static class ServiceCollectionExtensions
     /// <param name="eventBrokerKey">
     /// An optional key to associate the pipeline with a specific event broker instance. If not provided, the default event broker is used.
     /// </param>
+    /// <param name="handlerName">A unique name representing the handler. Mandatory for persistent events.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
     /// </returns>
-    public static IServiceCollection AddEventHandlerPipeline<TEvent>(this IServiceCollection services, IPipeline pipeline, object? eventBrokerKey = null)
-        => services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, new EventPipeline(typeof(TEvent), pipeline));
+    public static IServiceCollection AddEventHandlerPipeline<TEvent>(this IServiceCollection services, IPipeline pipeline, object? eventBrokerKey = null, string? handlerName = null)
+        => services.AddKeyedSingleton(eventBrokerKey ?? _defaultEventBrokerKey, new EventPipeline(typeof(TEvent), pipeline, handlerName));
 
-    private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key) where THandler : class, IEventHandler<TEvent>
+    private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key, string? handlerName = null) where THandler : class, IEventHandler<TEvent>
     {
         var pipeline = PipelineBuilder.Create()
             .NewPipeline()
@@ -293,6 +301,6 @@ public static class ServiceCollectionExtensions
             })
             .Build();
 
-        return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0]);
+        return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0], handlerName);
     }
 }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31919.166
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "EventBrokerSlim\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
 EndProject
@@ -48,6 +48,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotTestApp", "EventBrokerSlim\test\AotTestApp\AotTestApp.csproj", "{2438EB2D-1E0A-40B4-BC4C-500A231231BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipelineBenchmarks", "FuncPipeline\test\FuncPipelineBenchmarks\FuncPipelineBenchmarks.csproj", "{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PersistentEvents", "PersistentEvents", "{16139C06-C88A-4323-A7A2-6896F7EDB967}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Postgres", "Postgres", "{43728D07-1ED6-46D0-9FAE-E9008DF71A06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -100,6 +104,8 @@ Global
 		{597A3312-06FF-471A-B613-87269DA70C41} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD} = {1F68FA29-95E5-40B4-AB1C-2839A61F9020}
 		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
+		{16139C06-C88A-4323-A7A2-6896F7EDB967} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
+		{43728D07-1ED6-46D0-9FAE-E9008DF71A06} = {16139C06-C88A-4323-A7A2-6896F7EDB967}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}
