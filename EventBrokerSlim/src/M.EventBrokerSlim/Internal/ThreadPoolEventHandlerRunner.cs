@@ -63,7 +63,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                 if(retryDescriptor is null)
                 {
                     Type type = @event.GetType();
-                    ImmutableArray<IPipeline> handlers = _pipelineRegistry.Get(type);
+                    ImmutableArray<EventPipeline> handlers = _pipelineRegistry.Get(type);
                     ImmutableList<(DynamicHandlerClaimTicket ticket, IPipeline pipeline)>? dynamicEventHandlers = _dynamicEventHandlers.GetDelegateHandlerDescriptors(type);
 
                     if(handlers.Length == 0 && (dynamicEventHandlers?.IsEmpty ?? true))
@@ -80,7 +80,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                     {
                         await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                        IPipeline pipeline = handlers[i];
+                        IPipeline pipeline = handlers[i].Pipeline;
 
                         HandlerExecutionContext context = _handlerExecutionContextObjectPool.Get();
                         context.Initialize(@event, pipeline, retryDescriptor, token);

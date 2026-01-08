@@ -13,7 +13,7 @@ public  class HandlerRegistrationTests
     }
 
     [Fact]
-    public void PipelineRegisty_is_registered_in_service_provider()
+    public void PipelineRegistry_is_registered_in_service_provider()
     {
         _serviceCollection.AddEventBroker();
         var pipelineBuilder = PipelineBuilder.Create();
@@ -30,11 +30,11 @@ public  class HandlerRegistrationTests
 
         var pipelineRegistry = scope.ServiceProvider.GetRequiredService<PipelineRegistry>();
 
-        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0]);
+        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
     }
 
     [Fact]
-    public void Keyed_PipelineRegisty_is_registered_in_service_provider()
+    public void Keyed_PipelineRegistry_is_registered_in_service_provider()
     {
         var key = "key";
         _serviceCollection.AddKeyedEventBroker("key");
@@ -51,7 +51,7 @@ public  class HandlerRegistrationTests
         using var scope = services.CreateScope();
 
         var pipelineRegistry = scope.ServiceProvider.GetRequiredKeyedService<PipelineRegistry>(key);
-        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0]);
+        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
         Assert.Null(scope.ServiceProvider.GetService<PipelineRegistry>());
     }
 }
