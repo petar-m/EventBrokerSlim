@@ -7,19 +7,19 @@ using M.EventBrokerSlim.DependencyInjection;
 
 namespace M.EventBrokerSlim.PersistentEvents.Serialization;
 
-public class CloudEventSerializer
+public class CloudEventsSerializer
 {
     private static readonly JsonEventFormatter _jsonEventFormatter = new JsonEventFormatter();
     private readonly EventNameRegistry _eventNameRegistry;
     private readonly PipelineRegistry _pipelineRegistry;
 
-    public CloudEventSerializer(EventNameRegistry eventNameRegistry, PipelineRegistry pipelineRegistry)
+    public CloudEventsSerializer(EventNameRegistry eventNameRegistry, PipelineRegistry pipelineRegistry)
     {
         _eventNameRegistry = eventNameRegistry;
         _pipelineRegistry = pipelineRegistry;
     }
 
-    public string[] Serialize<TEvent>(TEvent @event, int retry)
+    public string[] Serialize<TEvent>(TEvent @event, int retry = 0, TimeSpan lastRetryDelay = default)
     {
         string? eventName = _eventNameRegistry.GetEventName<TEvent>();
         if(eventName is null)
@@ -36,7 +36,7 @@ public class CloudEventSerializer
         var serializedEvents = new string[handlers.Length];
         for(int i = 0; i < handlers.Length; i++)
         {
-            var cloudEvent = new CloudEvent(CloudEventExtensionAttributes.All)
+            var cloudEvent = new CloudEvent(CloudEventsExtensionAttributes.All)
             {
 #if NET9_0_OR_GREATER
                 Id = Guid.CreateVersion7().ToString(),
@@ -50,8 +50,9 @@ public class CloudEventSerializer
                 Time = DateTimeOffset.UtcNow,
             };
 
-            cloudEvent["retry"] = 0;
-            cloudEvent["handler"] = handlers[i].HandlerName;
+            cloudEvent.SetHandler(handlers[i].HandlerName);
+            cloudEvent.SetRetryAttempt(retry);
+            cloudEvent.SetLastRetryDelay(lastRetryDelay);
 
             serializedEvents[i] = _jsonEventFormatter.ConvertToJsonElement(cloudEvent).ToString();
         }
@@ -63,7 +64,7 @@ public class CloudEventSerializer
     {
         return _jsonEventFormatter.ConvertFromJsonElement(
             JsonDocument.Parse(serializedCloudEvent).RootElement,
-            CloudEventExtensionAttributes.All);
+            CloudEventsExtensionAttributes.All);
     }
 
     public object DeserializeData(CloudEvent cloudEvent, Type dataType)
