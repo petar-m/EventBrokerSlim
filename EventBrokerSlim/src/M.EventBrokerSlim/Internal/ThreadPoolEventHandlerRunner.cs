@@ -41,6 +41,8 @@ internal sealed class ThreadPoolEventHandlerRunner
         _settings = settings;
         _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);
         
+        RetryPolicy.ConfigureObjectPool(_settings.MaxConcurrentHandlers);
+
         var retryQueue = new RetryQueue(channel.Writer, _cancellationTokenSource.Token);
         var policy = new HandlerExecutionContextPooledObjectPolicy(_semaphore, _logger, retryQueue, _settings.MaxConcurrentHandlers);
         _handlerExecutionContextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(policy, _settings.MaxConcurrentHandlers);
@@ -126,7 +128,7 @@ internal sealed class ThreadPoolEventHandlerRunner
             return;
         }
 
-        RetryPolicy retryPolicy = context.RetryDescriptor?.RetryPolicy ?? context.RetryPolicyObjectPool.Get();
+        RetryPolicy retryPolicy = context.RetryDescriptor?.RetryPolicy ?? RetryPolicy.ObjectPool.Get();
 
         PipelineRunContext pipelineRunContext = context.PipelineRunContextObjectPool.Get();
         pipelineRunContext
@@ -151,7 +153,7 @@ internal sealed class ThreadPoolEventHandlerRunner
             }
             else
             {
-                context.RetryPolicyObjectPool.Return(retryPolicy);
+                RetryPolicy.ObjectPool.Return(retryPolicy);
             }
 
             context.PipelineRunContextObjectPool.Return(pipelineRunContext);

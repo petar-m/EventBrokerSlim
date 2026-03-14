@@ -12,14 +12,12 @@ internal sealed class HandlerExecutionContext
         SemaphoreSlim semaphore,
         ILogger logger,
         RetryQueue retryQueue,
-        DefaultObjectPool<RetryPolicy> retryPolicyObjectPool,
         DefaultObjectPool<PipelineRunContext> pipelineRunContextObjectPool,
         DefaultObjectPool<HandlerExecutionContext>? handlerExecutionContextObjectPool)
     {
         Semaphore = semaphore;
         Logger = logger;
         RetryQueue = retryQueue;
-        RetryPolicyObjectPool = retryPolicyObjectPool;
         PipelineRunContextObjectPool = pipelineRunContextObjectPool;
         HandlerExecutionContextObjectPool = handlerExecutionContextObjectPool ?? throw new ArgumentNullException(nameof(handlerExecutionContextObjectPool));
     }
@@ -56,7 +54,6 @@ internal sealed class HandlerExecutionContext
     public SemaphoreSlim Semaphore { get; }
     public ILogger Logger { get; }
     public RetryQueue RetryQueue { get; }
-    public DefaultObjectPool<RetryPolicy> RetryPolicyObjectPool { get; }
     public DefaultObjectPool<PipelineRunContext> PipelineRunContextObjectPool { get; }
     public DefaultObjectPool<HandlerExecutionContext> HandlerExecutionContextObjectPool { get; }
 }

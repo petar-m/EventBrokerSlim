@@ -1,30 +1,28 @@
 ﻿using System;
+using M.EventBrokerSlim;
+using Microsoft.Extensions.ObjectPool;
 
-namespace M.EventBrokerSlim.Internal;
-
-internal class RetryPolicy : IRetryPolicy
+internal class RetryPolicy : IRetryPolicy, IResettable
 {
-    private TimeSpan _delay;
-
     internal RetryPolicy()
     {
     }
 
     public void RetryAfter(TimeSpan delay)
     {
-        _delay = delay;
+        LastDelay = delay;
         RetryRequested = true;
     }
 
     public void RetryAfter(Func<uint, TimeSpan, TimeSpan> delay)
     {
-        _delay = delay(Attempt, _delay);
+        LastDelay = delay(Attempt, LastDelay);
         RetryRequested = true;
     }
 
-    public uint Attempt { get; private set; }
+    public uint Attempt { get; internal set; }
 
-    public TimeSpan LastDelay => _delay;
+    public TimeSpan LastDelay { get; internal set; }
 
     public bool RetryRequested { get; private set; }
 
@@ -34,10 +32,34 @@ internal class RetryPolicy : IRetryPolicy
         RetryRequested = false;
     }
 
-    internal void Clear()
+    public bool TryReset()
     {
         Attempt = 0;
-        _delay = TimeSpan.Zero;
+        LastDelay = TimeSpan.Zero;
         RetryRequested = false;
+        return true;
     }
+
+    public class ObjectPoolPolicy : PooledObjectPolicy<RetryPolicy>
+    {
+        public override RetryPolicy Create()
+        {
+            return new RetryPolicy();
+        }
+
+        public override bool Return(RetryPolicy obj)
+        {
+            obj.TryReset();
+            return true;
+        }
+    }
+
+    private static Lazy<DefaultObjectPool<RetryPolicy>>? _objectPoolLazy;
+
+    public static void ConfigureObjectPool(int maxRetained)
+    {
+        _objectPoolLazy = new Lazy<DefaultObjectPool<RetryPolicy>>(() => new DefaultObjectPool<RetryPolicy>(new ObjectPoolPolicy(), maxRetained));
+    }
+
+    public static DefaultObjectPool<RetryPolicy> ObjectPool => _objectPoolLazy!.Value;
 }
