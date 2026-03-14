@@ -42,9 +42,10 @@ internal sealed class ThreadPoolEventHandlerRunner
         _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);
         
         RetryPolicy.ConfigureObjectPool(_settings.MaxConcurrentHandlers);
+        HandlerExecutionContext.Logger = _logger;
 
         var retryQueue = new RetryQueue(channel.Writer, _cancellationTokenSource.Token);
-        var policy = new HandlerExecutionContextPooledObjectPolicy(_semaphore, _logger, retryQueue, _settings.MaxConcurrentHandlers);
+        var policy = new HandlerExecutionContextPooledObjectPolicy(_semaphore, retryQueue, _settings.MaxConcurrentHandlers);
         _handlerExecutionContextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(policy, _settings.MaxConcurrentHandlers);
         policy.HandlerExecutionContextObjectPool = _handlerExecutionContextObjectPool;
     }
@@ -140,7 +141,7 @@ internal sealed class ThreadPoolEventHandlerRunner
             var result = await pipeline.RunAsync(pipelineRunContext, context.CancellationToken).ConfigureAwait(false);
             if(result.Exception is not null)
             {
-                context.Logger?.LogDelegateEventHandlerError(@event.GetType(), result.Exception);
+                HandlerExecutionContext.Logger?.LogDelegateEventHandlerError(@event.GetType(), result.Exception);
             }
         }
         finally
