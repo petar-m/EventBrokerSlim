@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal sealed class EventBroker : IEventBroker
 {

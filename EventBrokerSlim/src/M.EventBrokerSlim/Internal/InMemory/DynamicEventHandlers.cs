@@ -6,7 +6,7 @@ using System.Threading;
 using FuncPipeline;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal sealed class DynamicEventHandlers : IDynamicEventHandlers
 {

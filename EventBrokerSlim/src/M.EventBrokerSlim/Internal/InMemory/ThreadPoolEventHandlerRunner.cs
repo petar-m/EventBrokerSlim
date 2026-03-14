@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal sealed class ThreadPoolEventHandlerRunner
 {

@@ -5,7 +5,7 @@ using M.EventBrokerSlim.Internal.ObjectPools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal sealed class HandlerExecutionContext : IResettable
 {

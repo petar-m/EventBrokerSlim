@@ -1,6 +1,6 @@
 ﻿using FuncPipeline;
 
-namespace M.EventBrokerSlim.Internal;
+namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal class RetryDescriptor
 {

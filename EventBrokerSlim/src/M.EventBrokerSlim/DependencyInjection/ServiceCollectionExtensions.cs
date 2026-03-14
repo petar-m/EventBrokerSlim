@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using FuncPipeline;
 using M.EventBrokerSlim.Internal;
+using M.EventBrokerSlim.Internal.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
