@@ -39,27 +39,4 @@ internal class RetryPolicy : IRetryPolicy, IResettable
         RetryRequested = false;
         return true;
     }
-
-    public class ObjectPoolPolicy : PooledObjectPolicy<RetryPolicy>
-    {
-        public override RetryPolicy Create()
-        {
-            return new RetryPolicy();
-        }
-
-        public override bool Return(RetryPolicy obj)
-        {
-            obj.TryReset();
-            return true;
-        }
-    }
-
-    private static Lazy<DefaultObjectPool<RetryPolicy>>? _objectPoolLazy;
-
-    public static void ConfigureObjectPool(int maxRetained)
-    {
-        _objectPoolLazy = new Lazy<DefaultObjectPool<RetryPolicy>>(() => new DefaultObjectPool<RetryPolicy>(new ObjectPoolPolicy(), maxRetained));
-    }
-
-    public static DefaultObjectPool<RetryPolicy> ObjectPool => _objectPoolLazy!.Value;
 }

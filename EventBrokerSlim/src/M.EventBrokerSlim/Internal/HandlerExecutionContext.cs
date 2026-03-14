@@ -44,17 +44,19 @@ internal sealed class HandlerExecutionContext : IResettable
     public static RetryQueue? RetryQueue;
     
     public static DefaultObjectPool<PipelineRunContext> PipelineRunContextObjectPool => _lazyPipelineRunContextObjectPool!.Value;
-
+    public static DefaultObjectPool<RetryPolicy> RetryPolicyObjectPool => _lazyRetryPolicyObjectPool!.Value;
     public static DefaultObjectPool<HandlerExecutionContext> ObjectPool => _lazyObjectPool!.Value;
 
     public static void ConfigureObjectPools(int maxRetained)
     {
         _lazyObjectPool = new Lazy<DefaultObjectPool<HandlerExecutionContext>>(() => new DefaultObjectPool<HandlerExecutionContext>(new ObjectPoolPolicy(), maxRetained));
         _lazyPipelineRunContextObjectPool = new Lazy<DefaultObjectPool<PipelineRunContext>>(() => new DefaultObjectPool<PipelineRunContext>(new PipelineRunContextPooledObjectPolicy(), maxRetained));
+        _lazyRetryPolicyObjectPool = new Lazy<DefaultObjectPool<RetryPolicy>>(() => new DefaultObjectPool<RetryPolicy>(new RetryPolicyPooledObjectPolicy(), maxRetained));
     }
 
     private static Lazy<DefaultObjectPool<HandlerExecutionContext>>? _lazyObjectPool;
     private static Lazy<DefaultObjectPool<PipelineRunContext>>? _lazyPipelineRunContextObjectPool;
+    private static Lazy<DefaultObjectPool<RetryPolicy>>? _lazyRetryPolicyObjectPool;
 
     private class ObjectPoolPolicy : IPooledObjectPolicy<HandlerExecutionContext>
     {
