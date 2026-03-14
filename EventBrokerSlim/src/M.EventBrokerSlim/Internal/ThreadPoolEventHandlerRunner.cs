@@ -5,11 +5,9 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
-using M.EventBrokerSlim.Internal.ObjectPools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal;
 
@@ -22,7 +20,6 @@ internal sealed class ThreadPoolEventHandlerRunner
     private readonly DynamicEventHandlers _dynamicEventHandlers;
     private readonly EventBrokerSettings _settings;
     private readonly SemaphoreSlim _semaphore;
-    private DefaultObjectPool<HandlerExecutionContext> _handlerExecutionContextObjectPool;
 
     internal ThreadPoolEventHandlerRunner(
         Channel<object> channel,
@@ -40,14 +37,12 @@ internal sealed class ThreadPoolEventHandlerRunner
         _dynamicEventHandlers = dynamicEventHandlers;
         _settings = settings;
         _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);
-        
+
         RetryPolicy.ConfigureObjectPool(_settings.MaxConcurrentHandlers);
         HandlerExecutionContext.Logger = _logger;
-
-        var retryQueue = new RetryQueue(channel.Writer, _cancellationTokenSource.Token);
-        var policy = new HandlerExecutionContextPooledObjectPolicy(_semaphore, retryQueue, _settings.MaxConcurrentHandlers);
-        _handlerExecutionContextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(policy, _settings.MaxConcurrentHandlers);
-        policy.HandlerExecutionContextObjectPool = _handlerExecutionContextObjectPool;
+        HandlerExecutionContext.Semaphore = _semaphore;
+        HandlerExecutionContext.RetryQueue = new RetryQueue(channel.Writer, _cancellationTokenSource.Token);
+        HandlerExecutionContext.ConfigureObjectPools(_settings.MaxConcurrentHandlers);
     }
 
     public void Run()
@@ -85,7 +80,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                         IPipeline pipeline = handlers[i].Pipeline;
 
-                        HandlerExecutionContext context = _handlerExecutionContextObjectPool.Get();
+                        HandlerExecutionContext context = HandlerExecutionContext.ObjectPool.Get();
                         context.Initialize(@event, pipeline, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                     }
@@ -101,7 +96,7 @@ internal sealed class ThreadPoolEventHandlerRunner
 
                         IPipeline pipeline = dynamicEventHandlers[i].pipeline;
 
-                        HandlerExecutionContext context = _handlerExecutionContextObjectPool.Get();
+                        HandlerExecutionContext context = HandlerExecutionContext.ObjectPool.Get();
                         context.Initialize(@event, pipeline, retryDescriptor, token);
                         _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                     }
@@ -110,7 +105,7 @@ internal sealed class ThreadPoolEventHandlerRunner
                 {
                     await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-                    HandlerExecutionContext context = _handlerExecutionContextObjectPool.Get();
+                    HandlerExecutionContext context = HandlerExecutionContext.ObjectPool.Get();
                     context.Initialize(retryDescriptor.Event, retryDescriptor.Pipeline, retryDescriptor, token);
                     _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
                 }
@@ -130,8 +125,7 @@ internal sealed class ThreadPoolEventHandlerRunner
         }
 
         RetryPolicy retryPolicy = context.RetryDescriptor?.RetryPolicy ?? RetryPolicy.ObjectPool.Get();
-
-        PipelineRunContext pipelineRunContext = context.PipelineRunContextObjectPool.Get();
+        PipelineRunContext pipelineRunContext = HandlerExecutionContext.PipelineRunContextObjectPool.Get();
         pipelineRunContext
             .Set(@event.GetType(), @event)
             .Set<IRetryPolicy>(retryPolicy)
@@ -150,16 +144,16 @@ internal sealed class ThreadPoolEventHandlerRunner
             {
                 retryPolicy.NextAttempt();
                 var retryDescriptor = context.RetryDescriptor ?? new RetryDescriptor(@event, retryPolicy, pipeline);
-                await context.RetryQueue.Enqueue(retryDescriptor).ConfigureAwait(false);
+                await HandlerExecutionContext.RetryQueue!.Enqueue(retryDescriptor).ConfigureAwait(false);
             }
             else
             {
                 RetryPolicy.ObjectPool.Return(retryPolicy);
             }
 
-            context.PipelineRunContextObjectPool.Return(pipelineRunContext);
-            context.HandlerExecutionContextObjectPool.Return(context);
-            context.Semaphore.Release();
+            HandlerExecutionContext.PipelineRunContextObjectPool.Return(pipelineRunContext);
+            HandlerExecutionContext.ObjectPool.Return(context);
+            HandlerExecutionContext.Semaphore!.Release();
         }
     }
 }
