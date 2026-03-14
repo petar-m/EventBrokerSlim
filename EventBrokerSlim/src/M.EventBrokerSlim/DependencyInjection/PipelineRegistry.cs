@@ -14,7 +14,7 @@ public class PipelineRegistry
 {
     private readonly FrozenDictionary<Type, ImmutableArray<EventPipeline>> _pipelines;
     private readonly FrozenDictionary<string, EventPipeline> _namedHandlers;
-
+    private readonly FrozenDictionary<Type, ImmutableArray<string>> _handlerNamesByEventType;
     /// <summary>
     /// Initializes a new instance of the <see cref="PipelineRegistry"/> class.
     /// </summary>
@@ -32,6 +32,13 @@ public class PipelineRegistry
             .ToFrozenDictionary(
                 x => x.Key,
                 x => x.ToImmutableArray());
+
+        _handlerNamesByEventType = pipelines
+             .Where(x => !string.IsNullOrEmpty(x.HandlerName))
+             .GroupBy(x => x.Event)
+             .ToFrozenDictionary(
+                x => x.Key,
+                x => x.Select(x => x.HandlerName!).ToImmutableArray());
 
         _namedHandlers = pipelines
              .Where(x => !string.IsNullOrEmpty(x.HandlerName))
@@ -66,5 +73,20 @@ public class PipelineRegistry
         ArgumentException.ThrowIfNullOrEmpty(name);
         _ = _namedHandlers.TryGetValue(name, out var pipeline);
         return pipeline;
+    }
+
+    /// <summary>
+    /// Retrieves the names of the handlers associated with the specified event type.
+    /// </summary>
+    /// <remarks>This method uses the event type to look up the corresponding handler names. If no handlers
+    /// are found, an empty array is returned.</remarks>
+    /// <typeparam name="TEvent">The type of the event for which handler names are being retrieved.</typeparam>
+    /// <returns>An immutable array of strings containing the names of the handlers for the specified event type. The array will
+    /// be empty if no handlers are registered for the event type.</returns>
+    public ImmutableArray<string> GetHandlerNames<TEvent>()
+    {
+        return _handlerNamesByEventType.TryGetValue(typeof(TEvent), out var handlerNames) 
+            ? handlerNames 
+            : ImmutableArray<string>.Empty;
     }
 }
