@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.1.11312.151 d18.0
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M.EventBrokerSlim", "EventBrokerSlim\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj", "{414B2794-9946-434A-BB85-CDA461E0442D}"
 EndProject
@@ -49,7 +49,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotTestApp", "EventBrokerSl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipelineBenchmarks", "FuncPipeline\test\FuncPipelineBenchmarks\FuncPipelineBenchmarks.csproj", "{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M.EventBrokerSlim.PersistentEvents", "EventBrokerSlim\src\M.EventBrokerSlim.PersistentEvents\M.EventBrokerSlim.PersistentEvents.csproj", "{380CEAA5-FFA5-4F4D-8E52-4BD58756506B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M.EventBrokerSlim.PersistentEvents.PostgreSql", "EventBrokerSlim\src\M.EventBrokerSlim.PersistentEvents.PostgreSql\M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj", "{D903FEB9-98BE-89A7-BD6C-119030F07EC9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PersistentEvents", "PersistentEvents", "{FA92F56C-04C2-48F8-8159-1B4CF8BAC157}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PostgreSql", "PostgreSql", "{A815C3FE-2EF2-4549-845D-69FE4C0CC800}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "EventBrokerSlim\src\ConsoleApp1\ConsoleApp1.csproj", "{AC1CD839-428A-A31F-FAF6-E99AD33B37F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,10 +91,14 @@ Global
 		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{380CEAA5-FFA5-4F4D-8E52-4BD58756506B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{380CEAA5-FFA5-4F4D-8E52-4BD58756506B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{380CEAA5-FFA5-4F4D-8E52-4BD58756506B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{380CEAA5-FFA5-4F4D-8E52-4BD58756506B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D903FEB9-98BE-89A7-BD6C-119030F07EC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D903FEB9-98BE-89A7-BD6C-119030F07EC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D903FEB9-98BE-89A7-BD6C-119030F07EC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D903FEB9-98BE-89A7-BD6C-119030F07EC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC1CD839-428A-A31F-FAF6-E99AD33B37F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC1CD839-428A-A31F-FAF6-E99AD33B37F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC1CD839-428A-A31F-FAF6-E99AD33B37F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC1CD839-428A-A31F-FAF6-E99AD33B37F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -106,7 +116,10 @@ Global
 		{597A3312-06FF-471A-B613-87269DA70C41} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
 		{2438EB2D-1E0A-40B4-BC4C-500A231231BD} = {1F68FA29-95E5-40B4-AB1C-2839A61F9020}
 		{25DF8012-BF0C-4FF8-856B-1FA9D35DB67D} = {8DF61C83-1F5B-4A8B-A84D-2E24F851DECE}
-		{380CEAA5-FFA5-4F4D-8E52-4BD58756506B} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
+		{D903FEB9-98BE-89A7-BD6C-119030F07EC9} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
+		{FA92F56C-04C2-48F8-8159-1B4CF8BAC157} = {1F68FA29-95E5-40B4-AB1C-2839A61F9020}
+		{A815C3FE-2EF2-4549-845D-69FE4C0CC800} = {FA92F56C-04C2-48F8-8159-1B4CF8BAC157}
+		{AC1CD839-428A-A31F-FAF6-E99AD33B37F5} = {3F9CF562-DD57-4F53-92FD-575EFCB7838C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}
