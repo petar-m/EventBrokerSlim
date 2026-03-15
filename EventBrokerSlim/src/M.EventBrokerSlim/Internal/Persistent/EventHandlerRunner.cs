@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ internal sealed class EventHandlerRunner
 {
     private readonly ChannelReader<EventRecord> _channelReader;
     private readonly PipelineRegistry _pipelineRegistry;
-    private readonly EventNameRegistry _eventNameRegistry;
+    private readonly EventRegistry _eventNameRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
     private readonly EventBrokerSettings _settings;
@@ -27,7 +26,7 @@ internal sealed class EventHandlerRunner
         ChannelReader<EventRecord> channelReader,
         IServiceScopeFactory serviceScopeFactory,
         PipelineRegistry pipelineRegistry,
-        EventNameRegistry eventNameRegistry,
+        EventRegistry eventNameRegistry,
         CancellationTokenSource cancellationTokenSource,
         ILogger? logger,
         EventBrokerSettings settings,
@@ -108,27 +107,8 @@ internal sealed class EventHandlerRunner
             retryPolicy.Attempt = (uint)eventRecord.RetryAttemptCount;
             retryPolicy.LastDelay = eventRecord.RetryLastDelay;
 
-            object? @event = null;
-            try
-            {
-                @event = JsonSerializer.Deserialize(eventRecord.Payload, eventType);
-            }
-            catch(Exception ex)
-            {
-                logger.LogError(ex, "Failed to deserialize event record with id {EventRecordId} and event name {EventName}", eventRecord.Id, eventRecord.EventName);
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Deserialization failed", logger, context.CancellationToken).ConfigureAwait(false);
-                return;
-            }
-            
-            if(@event is null)
-            {
-                logger.LogError("Deserialized event is null for event record with id {EventRecordId} and event name {EventName}", eventRecord.Id, eventRecord.EventName);
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Deserialized event is null", logger, context.CancellationToken).ConfigureAwait(false);
-                return;
-            }
-
             pipelineRunContext
-                .Set(eventType, @event)
+                .Set(eventType, eventRecord.DeserializedEvent)
                 .Set<IRetryPolicy>(retryPolicy)
                 .Set<CancellationToken>(context.CancellationToken)
                 .Set<EventRecord>(eventRecord);

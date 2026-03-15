@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace M.EventBrokerSlim.DependencyInjection;
+namespace M.EventBrokerSlim.Persistent;
 
 /// <summary>
 /// Maintains a bidirectional registry between string event names and event types.
@@ -12,15 +12,15 @@ namespace M.EventBrokerSlim.DependencyInjection;
 /// The registry enforces uniqueness of names and of event types: a name can point to only one
 /// event type and a type can be registered under only one name.
 /// </remarks>
-public class EventNameRegistry
+public class EventRegistry
 {
     private readonly Dictionary<string, Type> _eventNameTypeMap;
     private readonly Dictionary<Type, string> _eventTypeNameMap;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EventNameRegistry"/> class.
+    /// Initializes a new instance of the <see cref="EventRegistry"/> class.
     /// </summary>
-    public EventNameRegistry()
+    public EventRegistry()
     {
         _eventNameTypeMap = new Dictionary<string, Type>();
         _eventTypeNameMap = new Dictionary<Type, string>();
@@ -31,9 +31,9 @@ public class EventNameRegistry
     /// </summary>
     /// <typeparam name="TEvent">The event CLR type to associate with <paramref name="name"/>.</typeparam>
     /// <param name="name">The unique string name for the event. Cannot be null or empty.</param>
-    /// <returns>The current <see cref="EventNameRegistry"/> instance to allow method chaining.</returns>
+    /// <returns>The current <see cref="EventRegistry"/> instance to allow method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty, when the name is already registered for a different type, or when the type is already registered under a different name.</exception>
-    public EventNameRegistry Add<TEvent>(string name)
+    public EventRegistry Add<TEvent>(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         Type eventType = typeof(TEvent);

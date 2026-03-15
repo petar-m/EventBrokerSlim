@@ -45,10 +45,11 @@ public interface IEventStorage
     /// or equal to the current time. The actual batch size may be limited by backend configuration. No filtering is
     /// applied based on handler name.</remarks>
     /// <param name="batchSize">The maximum number of scheduled event records to fetch in a single operation. Must be a positive integer.</param>
+    /// <param name="eventRegistry">The registry containing event type information.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains event records that are
     /// scheduled for processing and are due at the time of the call.</returns>
-    Task<IEnumerable<EventRecord>> FetchScheduledAsync(int batchSize, CancellationToken cancellationToken = default);
+    Task<IEnumerable<EventRecord>> FetchScheduledAsync(int batchSize, EventRegistry eventRegistry, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Attempts to claim a candidate record identified by the specified ID using optimistic concurrency. The claim is

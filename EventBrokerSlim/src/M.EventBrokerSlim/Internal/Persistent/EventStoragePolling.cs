@@ -17,16 +17,19 @@ internal class EventStoragePolling
     private readonly PollRequiredSignal _pollRequiredSignal;
     private readonly ILogger _logger;
     private readonly IEventStorage _eventStorage;
+    private readonly EventRegistry _eventRegistry;
 
     public EventStoragePolling(
         PersistentEventBrokerSettings settings,
         IEventStorage eventStorage,
+        EventRegistry eventRegistry,
         Channel<EventRecord> handlerRunnerChannel,
         CancellationTokenSource cancellationTokenSource,
         ILogger logger)
     {
         _settings = settings;
         _eventStorage = eventStorage;
+        _eventRegistry = eventRegistry;
         _handlerRunnerChannel = handlerRunnerChannel;
         _cancellationTokenSource = cancellationTokenSource;
         _pollRequiredSignal = new PollRequiredSignal();
@@ -47,7 +50,7 @@ internal class EventStoragePolling
             {
                 _pollRequiredSignal.Reset();
                 IEnumerable<EventRecord> eventRecords =
-                    await _eventStorage.TryFetchScheduledAsync(_settings.ScheduledBatchSize, _logger, cancellationToken).ConfigureAwait(false);
+                    await _eventStorage.TryFetchScheduledAsync(_settings.ScheduledBatchSize, _eventRegistry, _logger, cancellationToken).ConfigureAwait(false);
                 if(eventRecords.Any())
                 {
                     foreach(EventRecord eventRecord in eventRecords)

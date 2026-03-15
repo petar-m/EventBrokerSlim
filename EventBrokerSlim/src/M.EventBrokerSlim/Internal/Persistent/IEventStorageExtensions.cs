@@ -7,11 +7,15 @@ using Microsoft.Extensions.Logging;
 
 internal static class IEventStorageExtensions
 {
-    public static async Task<IEnumerable<EventRecord>> TryFetchScheduledAsync(this IEventStorage eventStorage, int batchSize, ILogger logger, CancellationToken cancellationToken)
+    public static async Task<IEnumerable<EventRecord>> TryFetchScheduledAsync(this IEventStorage eventStorage,
+        int batchSize,
+        EventRegistry eventRegistry,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await eventStorage.FetchScheduledAsync(batchSize, cancellationToken).ConfigureAwait(false);
+            return await eventStorage.FetchScheduledAsync(batchSize, eventRegistry, cancellationToken).ConfigureAwait(false);
         }
         catch(Exception ex)
         {

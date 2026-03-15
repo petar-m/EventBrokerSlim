@@ -10,11 +10,11 @@ namespace M.EventBrokerSlim.Internal.Persistent;
 internal class PersistentEventBroker : IEventBroker
 {
     private readonly IEventStorage _storage;
-    private readonly EventNameRegistry _eventNameRegistry;
+    private readonly EventRegistry _eventNameRegistry;
     private readonly PipelineRegistry _pipelineRegistry;
     private readonly PollRequiredSignal _pollRequiredSignal;
 
-    internal PersistentEventBroker(IEventStorage storage, EventNameRegistry eventNameRegistry, PipelineRegistry pipelineRegistry, PollRequiredSignal pollRequiredSignal)
+    internal PersistentEventBroker(IEventStorage storage, EventRegistry eventNameRegistry, PipelineRegistry pipelineRegistry, PollRequiredSignal pollRequiredSignal)
     {
         _storage = storage;
         _eventNameRegistry = eventNameRegistry;
