@@ -1,8 +1,10 @@
+using M.EventBrokerSlim.Persistent;
+
 namespace M.EventBrokerSlim.Tests;
 
 public class EventNameRegistryTests
 {
-    private readonly EventNameRegistry _eventNameRegistry = new();
+    private readonly EventRegistry _eventNameRegistry = new();
 
     [Fact]
     public void Add_allows_chaining()
