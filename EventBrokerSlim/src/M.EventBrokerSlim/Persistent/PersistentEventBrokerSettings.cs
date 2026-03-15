@@ -48,7 +48,7 @@ public class PersistentEventBrokerSettings
     /// reliability of operations that depend on timely execution. Adjusting this value may be necessary based on the
     /// specific requirements of the application or the expected performance characteristics of the
     /// environment.</remarks>
-    public int MaxProcessingTimeouts {  get; set; } = 10;
+    public int MaxProcessingTimeouts { get; set; } = 10;
 
     /// <summary>
     /// The maximum number of scheduled event records to fetch in a single batch.
