@@ -99,6 +99,12 @@ internal sealed class EventHandlerRunner
             return;
         }
 
+        var claimed = await eventStorage.TryClaimAsync(eventRecord.Id, logger, context.CancellationToken).ConfigureAwait(false);
+        if(!claimed)
+        {
+            return;
+        }
+
         RetryPolicy retryPolicy = HandlerExecutionContext.RetryPolicyObjectPool.Get();
         PipelineRunContext pipelineRunContext = HandlerExecutionContext.PipelineRunContextObjectPool.Get();
         PipelineRunResult? result = null;
