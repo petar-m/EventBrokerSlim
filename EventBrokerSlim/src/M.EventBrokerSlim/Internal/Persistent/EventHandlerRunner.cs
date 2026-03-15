@@ -125,6 +125,10 @@ internal sealed class EventHandlerRunner
             {
                 await eventStorage.TryRetryAsync(eventRecord.Id, (int)retryPolicy.Attempt + 1, retryPolicy.LastDelay, logger, context.CancellationToken).ConfigureAwait(false);
             }
+            else if(retryPolicy.Abandoned)
+            {
+                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Abandoned by retry policy", logger, context.CancellationToken).ConfigureAwait(false);
+            }
             else
             {
                 await eventStorage.TryCompleteAsync(eventRecord.Id, logger, context.CancellationToken).ConfigureAwait(false);

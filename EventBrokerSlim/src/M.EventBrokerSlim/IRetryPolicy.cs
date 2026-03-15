@@ -23,6 +23,11 @@ public interface IRetryPolicy
     bool RetryRequested { get; }
 
     /// <summary>
+    /// Indicates whether the handler has requested to abandon further processing of the event.
+    /// </summary>
+    bool Abandoned { get; }
+
+    /// <summary>
     /// Requests invoking of the same handler with the same event after given time interval.
     /// </summary>
     /// <param name="delay">A func taking the attempt number for the same handler and event and the last retry interval and returning the new wait interval before re-processing.</param>
@@ -33,4 +38,9 @@ public interface IRetryPolicy
     /// </summary>
     /// <param name="delay">The time interval to wait before re-processing.</param>
     void RetryAfter(TimeSpan delay);
+
+    /// <summary>
+    /// Requests to abandon further processing of the event by the handler. The event will be considered handled and no more retries will be attempted. 
+    /// </summary>
+    void Abandon();
 }

@@ -53,5 +53,4 @@ internal static class EventSerializer
     {
         return JsonSerializer.Serialize(@event, _jsonSerializerOptions);
     }
-
 }
