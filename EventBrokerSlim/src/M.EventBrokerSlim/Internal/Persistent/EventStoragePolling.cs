@@ -24,6 +24,7 @@ internal class EventStoragePolling
         IEventStorage eventStorage,
         EventRegistry eventRegistry,
         Channel<EventRecord> handlerRunnerChannel,
+        PollRequiredSignal pollRequiredSignal,
         CancellationTokenSource cancellationTokenSource,
         ILogger logger)
     {
@@ -32,7 +33,7 @@ internal class EventStoragePolling
         _eventRegistry = eventRegistry;
         _handlerRunnerChannel = handlerRunnerChannel;
         _cancellationTokenSource = cancellationTokenSource;
-        _pollRequiredSignal = new PollRequiredSignal();
+        _pollRequiredSignal = pollRequiredSignal;
         _logger = logger;
     }
 
