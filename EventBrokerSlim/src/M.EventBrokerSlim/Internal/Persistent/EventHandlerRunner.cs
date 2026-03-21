@@ -4,10 +4,11 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
+using M.EventBrokerSlim.Internal.ObjectPools;
 using M.EventBrokerSlim.Persistent;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal.Persistent;
 
@@ -21,10 +22,12 @@ internal sealed class EventHandlerRunner
     private readonly EventBrokerSettings _settings;
     private readonly IEventStorage _eventStorage;
     private readonly SemaphoreSlim _semaphore;
+    private DefaultObjectPool<HandlerExecutionContext> _executionContextObjectPool;
+    private DefaultObjectPool<PipelineRunContext> _pipelineRunContextObjectPool;
+    private DefaultObjectPool<RetryPolicy> _retryPolicyObjectPool;
 
     internal EventHandlerRunner(
         ChannelReader<EventRecord> channelReader,
-        IServiceScopeFactory serviceScopeFactory,
         PipelineRegistry pipelineRegistry,
         EventRegistry eventNameRegistry,
         CancellationTokenSource cancellationTokenSource,
@@ -40,11 +43,9 @@ internal sealed class EventHandlerRunner
         _settings = settings;
         _eventStorage = eventStorage;
         _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);
-
-        HandlerExecutionContext.Semaphore = _semaphore;
-        HandlerExecutionContext.Logger = _logger;
-        HandlerExecutionContext.EventStorage = _eventStorage;
-        HandlerExecutionContext.ConfigureObjectPools(_settings.MaxConcurrentHandlers);
+        _executionContextObjectPool = new DefaultObjectPool<HandlerExecutionContext>(new HandlerExecutionContext.ObjectPoolPolicy(), _settings.MaxConcurrentHandlers);
+        _pipelineRunContextObjectPool = new DefaultObjectPool<PipelineRunContext>(new PipelineRunContextPooledObjectPolicy(), _settings.MaxConcurrentHandlers);
+        _retryPolicyObjectPool = new DefaultObjectPool<RetryPolicy>(new RetryPolicyPooledObjectPolicy(), _settings.MaxConcurrentHandlers);
     }
 
     public void Run()
@@ -78,8 +79,18 @@ internal sealed class EventHandlerRunner
 
                 await _semaphore.WaitAsync(token).ConfigureAwait(false);
                 IPipeline pipeline = handler.Pipeline;
-                HandlerExecutionContext context = HandlerExecutionContext.ObjectPool.Get();
-                context.Initialize(eventRecord, pipeline, eventType, token);
+                HandlerExecutionContext context = _executionContextObjectPool.Get();
+                context.Initialize(
+                    eventRecord,
+                    pipeline,
+                    eventType,
+                    token,
+                    _executionContextObjectPool,
+                    _pipelineRunContextObjectPool,
+                    _retryPolicyObjectPool,
+                    _logger,
+                    _semaphore,
+                    _eventStorage);
                 _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
             }
         }
@@ -88,65 +99,69 @@ internal sealed class EventHandlerRunner
     private static async Task HandleEventWithDelegate(object state)
     {
         var context = (HandlerExecutionContext)state;
-        var eventRecord = context.EventRecord!;
-        var eventType = context.EventType!;
-        var pipeline = context.Pipeline!;
-        var eventStorage = HandlerExecutionContext.EventStorage!;
-        var logger = HandlerExecutionContext.Logger!;
+        EventRecord eventRecord = context.EventRecord;
+        Type eventType = context.EventType;
+        IPipeline pipeline = context.Pipeline;
+        IEventStorage eventStorage = context.EventStorage;
+        ILogger logger = context.Logger;
+        DefaultObjectPool<RetryPolicy> retryPolicyObjectPool = context.RetryPolicyObjectPool;
+        DefaultObjectPool<PipelineRunContext> pipelineRunContextObjectPool = context.PipelineRunContextObjectPool;
+        CancellationToken cancellationToken = context.CancellationToken;
+        DefaultObjectPool<HandlerExecutionContext> contextObjectPool = context.ObjectPool;
+        SemaphoreSlim semaphore = context.Semaphore;
 
-        if(context.CancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        var claimed = await eventStorage.TryClaimAsync(eventRecord.Id, logger, context.CancellationToken).ConfigureAwait(false);
-        if(!claimed)
-        {
-            return;
-        }
-
-        RetryPolicy retryPolicy = HandlerExecutionContext.RetryPolicyObjectPool.Get();
-        PipelineRunContext pipelineRunContext = HandlerExecutionContext.PipelineRunContextObjectPool.Get();
+        RetryPolicy retryPolicy = retryPolicyObjectPool.Get();
+        PipelineRunContext pipelineRunContext = pipelineRunContextObjectPool.Get();
         PipelineRunResult? result = null;
         try
         {
+            if(cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            var claimed = await eventStorage.TryClaimAsync(eventRecord.Id, logger, cancellationToken).ConfigureAwait(false);
+            if(!claimed)
+            {
+                return;
+            }
+
             retryPolicy.Attempt = (uint)eventRecord.RetryAttemptCount;
             retryPolicy.LastDelay = eventRecord.RetryLastDelay;
 
             pipelineRunContext
                 .Set(eventType, eventRecord.DeserializedEvent)
                 .Set<IRetryPolicy>(retryPolicy)
-                .Set<CancellationToken>(context.CancellationToken)
+                .Set<CancellationToken>(cancellationToken)
                 .Set<EventRecord>(eventRecord);
 
-            result = await pipeline.RunAsync(pipelineRunContext, context.CancellationToken).ConfigureAwait(false);
+            result = await pipeline.RunAsync(pipelineRunContext, cancellationToken).ConfigureAwait(false);
             if(result.Exception is not null)
             {
                 logger.LogError(result.Exception, "An error occurred while processing event record with id {EventRecordId} and event name {EventName}", eventRecord.Id, eventRecord.EventName);
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Processing failed", logger, context.CancellationToken).ConfigureAwait(false);
+                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Processing failed", logger, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             if(retryPolicy.RetryRequested)
             {
-                await eventStorage.TryRetryAsync(eventRecord.Id, (int)retryPolicy.Attempt + 1, retryPolicy.LastDelay, logger, context.CancellationToken).ConfigureAwait(false);
+                await eventStorage.TryRetryAsync(eventRecord.Id, (int)retryPolicy.Attempt + 1, retryPolicy.LastDelay, logger, cancellationToken).ConfigureAwait(false);
             }
             else if(retryPolicy.Abandoned)
             {
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Abandoned by retry policy", logger, context.CancellationToken).ConfigureAwait(false);
+                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Abandoned by retry policy", logger, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await eventStorage.TryCompleteAsync(eventRecord.Id, logger, context.CancellationToken).ConfigureAwait(false);
+                await eventStorage.TryCompleteAsync(eventRecord.Id, logger, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
         {
-            HandlerExecutionContext.RetryPolicyObjectPool.Return(retryPolicy);
-            HandlerExecutionContext.PipelineRunContextObjectPool.Return(pipelineRunContext);
-            HandlerExecutionContext.ObjectPool.Return(context);
-
-            HandlerExecutionContext.Semaphore!.Release();
+            retryPolicyObjectPool.Return(retryPolicy);
+            pipelineRunContextObjectPool.Return(pipelineRunContext);
+            contextObjectPool.Return(context);
+            semaphore.Release();
         }
     }
 }

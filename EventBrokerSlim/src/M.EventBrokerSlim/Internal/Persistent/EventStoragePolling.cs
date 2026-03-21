@@ -45,29 +45,34 @@ internal class EventStoragePolling
     private async Task PollEventStorageAsync()
     {
         var cancellationToken = _cancellationTokenSource.Token;
-        try
+        while(!cancellationToken.IsCancellationRequested)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            try
             {
                 _pollRequiredSignal.Reset();
                 IEnumerable<EventRecord> eventRecords =
                     await _eventStorage.TryFetchScheduledAsync(_settings.ScheduledBatchSize, _eventRegistry, _logger, cancellationToken).ConfigureAwait(false);
-                if(eventRecords.Any())
+                // TODO: Make channel capacity match MaxConcurrentHandlers and use bounded channel with wait when full
+                foreach(EventRecord eventRecord in eventRecords)
                 {
-                    foreach(EventRecord eventRecord in eventRecords)
-                    {
-                        await _handlerRunnerChannel.Writer.WriteAsync(eventRecord, cancellationToken).ConfigureAwait(false);
-                    }
+                    await _handlerRunnerChannel.Writer.WriteAsync(eventRecord, cancellationToken).ConfigureAwait(false);
                 }
-                else
+
+                // If we fetched less than the batch size, it's likely there are no more ready events, so wait for a signal or timeout before polling again
+                if(eventRecords.Count() != _settings.ScheduledBatchSize)
                 {
                     await _pollRequiredSignal.WaitForSignalAsync(_settings.PollingInterval, cancellationToken).ConfigureAwait(false);
                 }
             }
-        }
-        catch(Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while polling event storage.");
+            catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while polling event storage.");
+                await Task.Delay(_settings.PollingInterval, cancellationToken);
+            }
         }
     }
 }
