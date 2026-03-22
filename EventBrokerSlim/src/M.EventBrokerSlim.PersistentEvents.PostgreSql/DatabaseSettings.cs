@@ -10,7 +10,7 @@ public class DatabaseSettings
     /// <summary>
     /// Gets or sets the connection string used to establish a connection to the database.
     /// </summary>
-    public required string ConnectionString { get; set; }
+    public string? ConnectionString { get; set; }
 
     /// <summary>
     /// Gets or sets the schema name used for database operations.

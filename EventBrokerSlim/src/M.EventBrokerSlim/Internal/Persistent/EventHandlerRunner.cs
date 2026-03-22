@@ -31,7 +31,7 @@ internal sealed class EventHandlerRunner
         PipelineRegistry pipelineRegistry,
         EventRegistry eventNameRegistry,
         CancellationTokenSource cancellationTokenSource,
-        ILogger? logger,
+        ILogger logger,
         EventBrokerSettings settings,
         IEventStorage eventStorage)
     {
@@ -39,7 +39,7 @@ internal sealed class EventHandlerRunner
         _pipelineRegistry = pipelineRegistry;
         _eventNameRegistry = eventNameRegistry;
         _cancellationTokenSource = cancellationTokenSource;
-        _logger = logger ?? new NullLogger<EventHandlerRunner>();
+        _logger = logger;
         _settings = settings;
         _eventStorage = eventStorage;
         _semaphore = new SemaphoreSlim(_settings.MaxConcurrentHandlers, _settings.MaxConcurrentHandlers);

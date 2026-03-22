@@ -40,16 +40,15 @@ internal sealed class PollRequiredSignal
     /// </summary>
     public async Task WaitForSignalAsync(TimeSpan timeout, CancellationToken cancellationToken)
     {
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(timeout);
-        try
+        var waitToReadTask = _channel.Reader.WaitToReadAsync(cancellationToken).AsTask();
+        var timeoutTask = Task.Delay(timeout, cancellationToken);
+
+        var completed = await Task.WhenAny(waitToReadTask, timeoutTask).ConfigureAwait(false);
+
+        if(completed == waitToReadTask && !waitToReadTask.IsFaulted && waitToReadTask.Result)
         {
-            await _channel.Reader.WaitToReadAsync(timeoutCts.Token).ConfigureAwait(false);
-            _channel.Reader.TryRead(out _); // consume
+            _ = _channel.Reader.TryRead(out _); // consume
         }
-        catch(OperationCanceledException) when(!cancellationToken.IsCancellationRequested)
-        {
-            // timeout occurred
-        }
+        // timeout, cancellation, or shutdown — all return normally
     }
 }

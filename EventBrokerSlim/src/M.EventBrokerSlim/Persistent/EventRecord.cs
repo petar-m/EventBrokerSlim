@@ -20,6 +20,7 @@ namespace M.EventBrokerSlim.Persistent;
 /// <param name="LastUpdatedAt">The date and time when the event record was last updated.</param>
 /// <param name="DeserializedEvent">The deserialized event object, or null if it has not been deserialized.</param>
 /// <param name="LastError">The error message from the most recent failed processing attempt, or null if no error has occurred.</param>
+/// <param name="ProcessingTimeoutsCount">The number of times the event processing has timed out.</param>
 public record EventRecord(
     string Id,
     string EventId,
@@ -34,4 +35,5 @@ public record EventRecord(
     DateTime CreatedAt,
     DateTime LastUpdatedAt,
     object DeserializedEvent,
-    string? LastError);
+    string? LastError,
+    int ProcessingTimeoutsCount = 0);

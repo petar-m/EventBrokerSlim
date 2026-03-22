@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.Logging;
 
-namespace M.EventBrokerSlim.PersistentEvents.PostgreSql;
+namespace M.EventBrokerSlim.PersistentEvents.PostgreSql.Internal;
 
 internal static class EventSerializer
 {

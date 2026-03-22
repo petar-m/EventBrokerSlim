@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using FuncPipeline;
 using M.EventBrokerSlim.Internal;
 using M.EventBrokerSlim.Internal.InMemory;
+using M.EventBrokerSlim.Internal.Persistent;
+using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
@@ -61,12 +65,46 @@ public static class ServiceCollectionExtensions
         object eventBrokerKey,
         Action<EventBrokerBuilder>? eventBrokerConfiguration = null)
     {
-        var eventBrokerBuilder = new EventBrokerBuilder(serviceCollection);
+        var eventBrokerBuilder = new EventBrokerBuilder(serviceCollection, eventBrokerKey);
         eventBrokerConfiguration?.Invoke(eventBrokerBuilder);
 
-        CancellationTokenSource eventBrokerCancellationTokenSource = new();
-        serviceCollection.AddKeyedSingleton(eventBrokerKey, eventBrokerCancellationTokenSource);
+        serviceCollection
+            .AddKeyedSingleton(
+                eventBrokerKey,
+                new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog))
+            .AddKeyedSingleton(eventBrokerKey, new CancellationTokenSource());
 
+        serviceCollection.AddKeyedSingleton(
+            eventBrokerKey,
+            (x, key) =>
+            {
+                var pipelines = x.GetKeyedServices<EventPipeline>(key);
+                return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
+            });
+
+        if(eventBrokerKey == _defaultEventBrokerKey)
+        {
+            serviceCollection.AddSingleton(x => x.GetRequiredKeyedService<PipelineRegistry>(_defaultEventBrokerKey));
+        }
+
+        bool isPersistenceConfigured = serviceCollection.Any(
+            service => service.ServiceType == typeof(IEventStorage) &&
+                       service.IsKeyedService &&
+                       service.ServiceKey == eventBrokerKey);
+        if(isPersistenceConfigured)
+        {
+            ConfigurePersistentEventBroker(serviceCollection, eventBrokerKey);
+        }
+        else
+        {
+            ConfigureInMemoryEventBroker(serviceCollection, eventBrokerKey);
+        }
+
+        return serviceCollection;
+    }
+
+    private static void ConfigureInMemoryEventBroker(IServiceCollection serviceCollection, object eventBrokerKey)
+    {
         serviceCollection.AddKeyedSingleton(
             eventBrokerKey,
             (_, _) => Channel.CreateUnbounded<object>(new UnboundedChannelOptions
@@ -77,14 +115,6 @@ public static class ServiceCollectionExtensions
             }));
 
         serviceCollection.AddKeyedSingleton<DynamicEventHandlers>(eventBrokerKey);
-
-        serviceCollection.AddKeyedSingleton(
-            eventBrokerKey,
-            (x, key) =>
-            {
-                var pipelines = x.GetKeyedServices<EventPipeline>(key);
-                return new PipelineRegistry(pipelines, x.GetRequiredService<IServiceScopeFactory>());
-            });
 
         if(eventBrokerKey == _defaultEventBrokerKey)
         {
@@ -99,7 +129,6 @@ public static class ServiceCollectionExtensions
                 });
 
             serviceCollection.AddSingleton<IDynamicEventHandlers>(x => x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey));
-            serviceCollection.AddSingleton(x => x.GetRequiredKeyedService<PipelineRegistry>(_defaultEventBrokerKey));
         }
         else
         {
@@ -126,9 +155,74 @@ public static class ServiceCollectionExtensions
                 x.GetRequiredKeyedService<CancellationTokenSource>(eventBrokerKey),
                 x.GetService<ILogger<ThreadPoolEventHandlerRunner>>(),
                 x.GetRequiredKeyedService<DynamicEventHandlers>(eventBrokerKey),
-                new EventBrokerSettings(eventBrokerBuilder._maxConcurrentHandlers, eventBrokerBuilder._disableMissingHandlerWarningLog)));
+                x.GetRequiredKeyedService<EventBrokerSettings>(eventBrokerKey)));
+    }
+
+    private static IServiceCollection ConfigurePersistentEventBroker(IServiceCollection serviceCollection, object eventBrokerKey)
+    {
+        serviceCollection
+            .AddKeyedSingleton(
+                eventBrokerKey,
+                (x, key) =>
+                {
+                    var eventBrokerSettings = x.GetRequiredKeyedService<EventBrokerSettings>(key);
+                    return Channel.CreateBounded<EventRecord>(new BoundedChannelOptions(capacity: eventBrokerSettings.MaxConcurrentHandlers)
+                    {
+                        AllowSynchronousContinuations = false,
+                        SingleReader = true,
+                        SingleWriter = false,
+                        FullMode = BoundedChannelFullMode.Wait
+                    });
+                })
+            .AddKeyedSingleton<PollRequiredSignal>(eventBrokerKey)
+            .AddKeyedSingleton(
+                eventBrokerKey,
+                (x, key) => new EventStoragePolling(
+                    x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key),
+                    x.GetRequiredKeyedService<IEventStorage>(key),
+                    x.GetRequiredService<EventRegistry>(),
+                    x.GetRequiredKeyedService<Channel<EventRecord>>(key),
+                    x.GetRequiredKeyedService<PollRequiredSignal>(key),
+                    x.GetRequiredKeyedService<CancellationTokenSource>(key),
+                    x.GetService<ILogger<EventStoragePolling>>() ?? NullLogger<EventStoragePolling>.Instance))
+            .AddKeyedSingleton<IEventBroker>(
+                eventBrokerKey,
+                (x, key) => new PersistentEventBroker(
+                    x.GetRequiredKeyedService<IEventStorage>(key),
+                    x.GetRequiredService<EventRegistry>(),
+                    x.GetRequiredKeyedService<PipelineRegistry>(key),
+                    x.GetRequiredKeyedService<PollRequiredSignal>(key)))
+            .AddKeyedSingleton(
+                eventBrokerKey,
+                (x, key) => new EventHandlerRunner(
+                    x.GetRequiredKeyedService<Channel<EventRecord>>(key),
+                    x.GetRequiredKeyedService<PipelineRegistry>(key),
+                    x.GetRequiredService<EventRegistry>(),
+                    x.GetRequiredKeyedService<CancellationTokenSource>(key),
+                    x.GetService<ILogger<EventHandlerRunner>>() ?? NullLogger<EventHandlerRunner>.Instance,
+                    x.GetRequiredKeyedService<EventBrokerSettings>(key),
+                    x.GetRequiredKeyedService<IEventStorage>(key)));
+
+        if(eventBrokerKey == _defaultEventBrokerKey)
+        {
+            serviceCollection.AddSingleton<IEventBroker>(x => x.GetRequiredKeyedService<IEventBroker>(eventBrokerKey));
+        }
 
         return serviceCollection;
+    }
+
+    /// <summary>
+    /// Starts the event storage polling for the persistent event broker with the specified key.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider to resolve services from.</param>
+    /// <param name="key">The key identifying the event broker instance.</param>
+    /// <returns>The service provider.</returns>
+    public static IServiceProvider UsePersistentEventBroker(this IServiceProvider serviceProvider, object? key = null)
+    {
+        key ??= _defaultEventBrokerKey;
+        serviceProvider.GetKeyedService<EventHandlerRunner>(key)?.Run();
+        serviceProvider.GetKeyedService<EventStoragePolling>(key)?.Run();
+        return serviceProvider;
     }
 
     /// <summary>
@@ -184,7 +278,7 @@ public static class ServiceCollectionExtensions
     /// <returns>
     /// The <see cref="IServiceCollection"/> so that additional calls can be chained.
     /// </returns>
-    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null, string? handlerName = null) 
+    public static IServiceCollection AddSingletonEventHandler<TEvent, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, string? eventHandlerKey = null, object? eventBrokerKey = null, string? handlerName = null)
         where THandler : class, IEventHandler<TEvent>
     {
         eventHandlerKey ??= Guid.NewGuid().ToString();

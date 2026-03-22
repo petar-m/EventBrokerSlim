@@ -90,4 +90,28 @@ public interface IEventStorage
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation if needed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task DeadLetterAsync(string id, string? error = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resets the status of claimed records that have exceeded the processing timeout back to 'Scheduled',
+    /// making them available for claiming by other instances. 
+    /// <remarks>This method is typically called by a background maintenance task to handle records that may be stuck due to failures or long processing times.
+    /// The method should also increment the processing timeout count for each affected record and optionally log or handle records that exceed a maximum number of processing timeouts, as defined in the settings.</remarks>
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation if needed.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task RescheduleClaimedExceedingProcessingTimeoutAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dead-letters unclaimed records that have exceeded the unclaimed TTL, making them available for inspection and manual handling.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation if needed.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task DeadLetterUnclaimedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes completed and dead-lettered records that have exceeded their TTL, freeing up storage and maintaining database hygiene.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation if needed.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task DeleteCompletedAndDeadLetteredExceedingTtlAsync(CancellationToken cancellationToken = default);
 }
