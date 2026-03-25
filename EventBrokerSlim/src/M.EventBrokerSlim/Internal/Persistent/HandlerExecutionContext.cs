@@ -53,13 +53,13 @@ internal sealed class HandlerExecutionContext : IResettable
     [NotNull] public EventRecord? EventRecord { get; private set; }
     [NotNull] public IPipeline? Pipeline { get; private set; }
     [NotNull] public Type? EventType { get; private set; }
-    [NotNull] public CancellationToken CancellationToken { get; private set; }
     [NotNull] public DefaultObjectPool<HandlerExecutionContext>? ObjectPool { get; private set; }
     [NotNull] public DefaultObjectPool<PipelineRunContext>? PipelineRunContextObjectPool { get; private set; }
     [NotNull] public DefaultObjectPool<RetryPolicy>? RetryPolicyObjectPool { get; private set; }
     [NotNull] public SemaphoreSlim? Semaphore { get; private set; }
     [NotNull] public ILogger? Logger { get; private set; }
-    [NotNull] public IEventStorage? EventStorage { get; internal set; }
+    [NotNull] public IEventStorage? EventStorage { get; private set; }
+    public CancellationToken CancellationToken { get; private set; }
 
     internal class ObjectPoolPolicy : IPooledObjectPolicy<HandlerExecutionContext>
     {

@@ -40,7 +40,8 @@ public interface IRetryPolicy
     void RetryAfter(TimeSpan delay);
 
     /// <summary>
-    /// Requests to abandon further processing of the event by the handler. The event will be considered handled and no more retries will be attempted. 
+    /// Requests to abandon further processing of the event by the handler.
+    /// The event will be moved to dead-letter and no further retry attempts will be made.
     /// </summary>
     void Abandon();
 }

@@ -13,13 +13,20 @@ internal class PersistentEventBroker : IEventBroker
     private readonly EventRegistry _eventNameRegistry;
     private readonly PipelineRegistry _pipelineRegistry;
     private readonly PollRequiredSignal _pollRequiredSignal;
+    private readonly CancellationTokenSource _cancellationTokenSource;
 
-    internal PersistentEventBroker(IEventStorage storage, EventRegistry eventNameRegistry, PipelineRegistry pipelineRegistry, PollRequiredSignal pollRequiredSignal)
+    internal PersistentEventBroker(
+        IEventStorage storage, 
+        EventRegistry eventNameRegistry, 
+        PipelineRegistry pipelineRegistry, 
+        PollRequiredSignal pollRequiredSignal,
+        CancellationTokenSource cancellationTokenSource)
     {
         _storage = storage;
         _eventNameRegistry = eventNameRegistry;
         _pipelineRegistry = pipelineRegistry;
         _pollRequiredSignal = pollRequiredSignal;
+        _cancellationTokenSource = cancellationTokenSource;
     }
 
     public async Task Publish<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : notnull
@@ -39,11 +46,12 @@ internal class PersistentEventBroker : IEventBroker
         ImmutableArray<string> handlerNames = _pipelineRegistry.GetHandlerNames<TEvent>();
         if(!handlerNames.IsEmpty)
         {
-            await _storage.ScheduleDeferredAsync(@event, deferDuration, eventName, handlerNames, default);
+            await _storage.ScheduleDeferredAsync(@event, deferDuration, eventName, handlerNames, _cancellationTokenSource.Token);
         }
     }
 
     public void Shutdown()
     {
+        _cancellationTokenSource.Cancel();
     }
 }
