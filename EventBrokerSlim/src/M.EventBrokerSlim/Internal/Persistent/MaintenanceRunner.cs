@@ -1,0 +1,107 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using M.EventBrokerSlim.Persistent;
+using Microsoft.Extensions.Logging;
+
+namespace M.EventBrokerSlim.Internal.Persistent;
+
+internal class MaintenanceRunner
+{
+    private readonly IEventStorage _eventStorage;
+    private readonly PersistentEventBrokerSettings _settings;
+    private readonly ILogger<MaintenanceRunner> _logger;
+    private readonly CancellationTokenSource _cancellationTokenSource;
+
+    public MaintenanceRunner(
+        IEventStorage eventStorage,
+        PersistentEventBrokerSettings settings,
+        ILogger<MaintenanceRunner> logger,
+        CancellationTokenSource cancellationTokenSource)
+    {
+        _eventStorage = eventStorage;
+        _settings = settings;
+        _logger = logger;
+        _cancellationTokenSource = cancellationTokenSource;
+    }
+
+    public void Run()
+    {
+        var cancellationToken = _cancellationTokenSource.Token;
+        _ = Task.Run(
+            async () =>
+            {
+                int jitter = Random.Shared.Next(1, 5);
+                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                do
+                {
+                    try
+                    {
+                        await _eventStorage.DeadLetterUnclaimedAsync(cancellationToken).ConfigureAwait(false);
+                        jitter = Random.Shared.Next(-10, 10);
+                        await Task.Delay(TimeSpan.FromMinutes(60 + jitter), cancellationToken).ConfigureAwait(false);
+                    }
+                    catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError(ex, "Error dead-lettering unclaimed events exceeding TTL.");
+                    }
+                } while(!cancellationToken.IsCancellationRequested);
+            },
+            cancellationToken);
+
+        _ = Task.Run(
+            async () =>
+            {
+                int jitter = Random.Shared.Next(1, 5);
+                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                do
+                {
+                    try
+                    {
+                        await _eventStorage.DeleteCompletedAndDeadLetteredExceedingTtlAsync(cancellationToken).ConfigureAwait(false);
+                        jitter = Random.Shared.Next(-10, 10);
+                        await Task.Delay(TimeSpan.FromMinutes(60 + jitter), cancellationToken).ConfigureAwait(false);
+                    }
+                    catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError(ex, "Error deleting completed and dead-lettered events exceeding TTL.");
+                    }
+                } while(!cancellationToken.IsCancellationRequested);
+            },
+            cancellationToken);
+
+        var processingTimeoutMinutes = Math.Max(2, (int)_settings.ProcessingTimeout.TotalMinutes);
+        _ = Task.Run(
+            async () =>
+            {
+                int jitter = Random.Shared.Next(1, 5);
+                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                do
+                {
+                    try
+                    {
+                        await _eventStorage.RescheduleClaimedExceedingProcessingTimeoutAsync(cancellationToken).ConfigureAwait(false);
+                        jitter = Random.Shared.Next(1, processingTimeoutMinutes);
+                        await Task.Delay(TimeSpan.FromMinutes(processingTimeoutMinutes + jitter), cancellationToken).ConfigureAwait(false);
+                    }
+                    catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError(ex, "Error rescheduling claimed events exceeding processing timeout.");
+                    }
+                } while(!cancellationToken.IsCancellationRequested);
+            },
+            cancellationToken);
+    }
+}
