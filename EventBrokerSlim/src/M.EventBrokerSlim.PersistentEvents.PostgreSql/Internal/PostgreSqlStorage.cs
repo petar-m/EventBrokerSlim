@@ -29,7 +29,7 @@ internal class PostgreSqlStorage : IEventStorage
     private readonly PersistentEventBrokerSettings _eventBrokerSettings;
     private readonly ILogger<PostgreSqlStorage> _logger;
 
-    public PostgreSqlStorage(DatabaseSettings databaseSettings, PersistentEventBrokerSettings eventBrokerSettings, ILogger<PostgreSqlStorage>? logger = null)
+    public PostgreSqlStorage(DatabaseSettings databaseSettings, PersistentEventBrokerSettings eventBrokerSettings, ILogger<PostgreSqlStorage> logger)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseSettings.ConnectionString);
         _dataSource = NpgsqlDataSource.Create(databaseSettings.ConnectionString);
@@ -159,7 +159,6 @@ internal class PostgreSqlStorage : IEventStorage
         selectCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
         selectCommand.Parameters.Add(new NpgsqlParameter("@now", NpgsqlDbType.TimestampTz) { Value = DateTimeOffset.UtcNow });
         selectCommand.Parameters.Add(new NpgsqlParameter("@batch_size", NpgsqlDbType.Integer) { Value = batchSize });
-        await selectCommand.PrepareAsync(cancellationToken).ConfigureAwait(false);
         using NpgsqlDataReader reader = await selectCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         List<EventRecord> events = new List<EventRecord>(capacity: batchSize);
         while(await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -311,8 +310,8 @@ internal class PostgreSqlStorage : IEventStorage
         DateTimeOffset now = DateTimeOffset.UtcNow;
         var scheduledBefore = now - _eventBrokerSettings.UnclaimedTtl;
 
-        var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        var command = connection.CreateCommand();
+        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        using var command = connection.CreateCommand();
         command.CommandText = _deadLetterUnclaimedSqlUpdate;
         command.Parameters.Add(new NpgsqlParameter("@dead_lettered", NpgsqlDbType.Integer) { Value = (int)EventStatus.DeadLettered });
         command.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = now });
@@ -336,8 +335,8 @@ internal class PostgreSqlStorage : IEventStorage
         var deadLetteredBefore = now - _eventBrokerSettings.DeadLetteredRecordTtl;
         var completedBefore = now - _eventBrokerSettings.CompletedRecordTtl;
 
-        var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        var command = connection.CreateCommand();
+        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        using var command = connection.CreateCommand();
         command.CommandText = _deleteDeadLetteredAndCompletedExceededTtlSql;
         command.Parameters.Add(new NpgsqlParameter("@completed", NpgsqlDbType.Integer) { Value = (int)EventStatus.Completed });
         command.Parameters.Add(new NpgsqlParameter("@dead_lettered", NpgsqlDbType.Integer) { Value = (int)EventStatus.DeadLettered });
@@ -388,8 +387,8 @@ internal class PostgreSqlStorage : IEventStorage
         string eventId = Guid.NewGuid().ToString();
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        await using var insertCommand = connection.CreateCommand();
+        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        using var insertCommand = connection.CreateCommand();
         insertCommand.CommandText = command;
         insertCommand.Parameters.Add(new NpgsqlParameter("@event_id", NpgsqlDbType.Text) { Value = eventId });
         insertCommand.Parameters.Add(new NpgsqlParameter("@event_name", NpgsqlDbType.Text) { Value = eventName });

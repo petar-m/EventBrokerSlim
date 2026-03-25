@@ -3,6 +3,8 @@ using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using M.EventBrokerSlim.PersistentEvents.PostgreSql.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace M.EventBrokerSlim.PersistentEvents.PostgreSql;
 
@@ -36,7 +38,8 @@ public static class ServiceCollectionExtensions
                 builder.EventBrokerKey,
                 (x, key) => new PostgreSqlStorage(
                     x.GetRequiredKeyedService<DatabaseSettings>(key),
-                    x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key)));
+                    x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key),
+                    x.GetService<ILogger<PostgreSqlStorage>>() ?? NullLogger<PostgreSqlStorage>.Instance));
 
         return builder;
     }

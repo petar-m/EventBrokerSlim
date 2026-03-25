@@ -68,6 +68,18 @@ public static class ServiceCollectionExtensions
         var eventBrokerBuilder = new EventBrokerBuilder(serviceCollection, eventBrokerKey);
         eventBrokerConfiguration?.Invoke(eventBrokerBuilder);
 
+        bool keyAlreadyRegistered = serviceCollection.Any(
+            service => service.ServiceType == typeof(EventBrokerSettings) &&
+            service.IsKeyedService &&
+            service.ServiceKey == eventBrokerKey);
+
+        if(keyAlreadyRegistered)
+        {
+            var key = eventBrokerKey == _defaultEventBrokerKey ? "default" : eventBrokerKey.ToString();
+            throw new InvalidOperationException(
+                $"An event broker with key '{key}' is already registered. Each event broker instance must use a unique key.");
+        }
+
         serviceCollection
             .AddKeyedSingleton(
                 eventBrokerKey,
@@ -170,7 +182,7 @@ public static class ServiceCollectionExtensions
                     {
                         AllowSynchronousContinuations = false,
                         SingleReader = true,
-                        SingleWriter = false,
+                        SingleWriter = true,
                         FullMode = BoundedChannelFullMode.Wait
                     });
                 })
@@ -191,7 +203,8 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<IEventStorage>(key),
                     x.GetRequiredService<EventRegistry>(),
                     x.GetRequiredKeyedService<PipelineRegistry>(key),
-                    x.GetRequiredKeyedService<PollRequiredSignal>(key)))
+                    x.GetRequiredKeyedService<PollRequiredSignal>(key),
+                    x.GetRequiredKeyedService<CancellationTokenSource>(key)))
             .AddKeyedSingleton(
                 eventBrokerKey,
                 (x, key) => new EventHandlerRunner(
@@ -201,7 +214,14 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<CancellationTokenSource>(key),
                     x.GetService<ILogger<EventHandlerRunner>>() ?? NullLogger<EventHandlerRunner>.Instance,
                     x.GetRequiredKeyedService<EventBrokerSettings>(key),
-                    x.GetRequiredKeyedService<IEventStorage>(key)));
+                    x.GetRequiredKeyedService<IEventStorage>(key)))
+            .AddKeyedSingleton(
+                eventBrokerKey,
+                (x, key) => new MaintenanceRunner(
+                    x.GetRequiredKeyedService<IEventStorage>(key),
+                    x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key),
+                    x.GetService<ILogger<MaintenanceRunner>>() ?? NullLogger<MaintenanceRunner>.Instance,
+                    x.GetRequiredKeyedService<CancellationTokenSource>(key)));
 
         if(eventBrokerKey == _defaultEventBrokerKey)
         {
@@ -220,8 +240,9 @@ public static class ServiceCollectionExtensions
     public static IServiceProvider UsePersistentEventBroker(this IServiceProvider serviceProvider, object? key = null)
     {
         key ??= _defaultEventBrokerKey;
-        serviceProvider.GetKeyedService<EventHandlerRunner>(key)?.Run();
-        serviceProvider.GetKeyedService<EventStoragePolling>(key)?.Run();
+        serviceProvider.GetRequiredKeyedService<EventHandlerRunner>(key).Run();
+        serviceProvider.GetRequiredKeyedService<EventStoragePolling>(key).Run();
+        serviceProvider.GetRequiredKeyedService<MaintenanceRunner>(key).Run();
         return serviceProvider;
     }
 
