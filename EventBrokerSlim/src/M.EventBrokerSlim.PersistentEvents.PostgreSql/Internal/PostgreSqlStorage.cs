@@ -46,7 +46,7 @@ internal class PostgreSqlStorage : IEventStorage
             WHERE id = @id;
             """;
         _fetchScheduledSqlQuery = $"""
-            SELECT id, event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, claimed_at, created_at, last_updated_at, last_error, processing_timeouts_count
+            SELECT id, last_updated_at, event_name, handler_name
             FROM {databaseSettings.Schema}.events
             WHERE status = @scheduled AND scheduled_at <= @now
             ORDER BY scheduled_at ASC
@@ -60,7 +60,8 @@ internal class PostgreSqlStorage : IEventStorage
         _tryClaimSingleSqlUpdate = $"""
             UPDATE {databaseSettings.Schema}.events
             SET status = @in_progress, claimed_at = @claimed_at, last_updated_at = @last_updated_at
-            WHERE id = @id AND status = @scheduled;
+            WHERE id = @candidate_id AND status = @scheduled AND last_updated_at = @candidate_last_updated_at
+            RETURNING id, event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, claimed_at, created_at, last_updated_at, last_error, processing_timeouts_count;
             """;
         _scheduleSqlInsert = $$"""
             INSERT INTO {{databaseSettings.Schema}}.events (event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, created_at, last_updated_at, processing_timeouts_count)
@@ -109,11 +110,6 @@ internal class PostgreSqlStorage : IEventStorage
 
     public async Task CompleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        //_deadLetterSqlUpdate = $"""
-        //    UPDATE {_schema}.events
-        //    SET status = @dead_lettered, last_updated_at = @last_updated_at, last_error = @error
-        //    WHERE id = @id;
-        //    """;
         using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         using var updateCommand = connection.CreateCommand();
         updateCommand.CommandText = _completeSingleSqlUpdate;
@@ -127,11 +123,6 @@ internal class PostgreSqlStorage : IEventStorage
 
     public async Task DeadLetterAsync(string id, string? error = null, CancellationToken cancellationToken = default)
     {
-        //const string deadLetterSqlUpdate = """
-        //    UPDATE ebs_0.events
-        //    SET status = @dead_lettered, last_updated_at = @last_updated_at, last_error = @error
-        //    WHERE id = @id;
-        //    """;
         using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         using var updateCommand = connection.CreateCommand();
         updateCommand.CommandText = _deadLetterSingleSqlUpdate;
@@ -144,15 +135,8 @@ internal class PostgreSqlStorage : IEventStorage
         _ = await updateCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<EventRecord>> FetchScheduledAsync(int batchSize, EventRegistry eventRegistry, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ScheduledEventRecord>> FetchScheduledAsync(int batchSize, CancellationToken cancellationToken = default)
     {
-        //_fetchScheduledSqlQuery = $"""
-        //    SELECT id, event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, claimed_at, created_at, last_updated_at, last_error, processing_timeouts_count
-        //    FROM {_schema}.events
-        //    WHERE status = @scheduled AND scheduled_at <= @now
-        //    ORDER BY scheduled_at ASC
-        //    LIMIT @batch_size;
-        //    """;
         using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         using NpgsqlCommand selectCommand = connection.CreateCommand();
         selectCommand.CommandText = _fetchScheduledSqlQuery;
@@ -160,8 +144,54 @@ internal class PostgreSqlStorage : IEventStorage
         selectCommand.Parameters.Add(new NpgsqlParameter("@now", NpgsqlDbType.TimestampTz) { Value = DateTimeOffset.UtcNow });
         selectCommand.Parameters.Add(new NpgsqlParameter("@batch_size", NpgsqlDbType.Integer) { Value = batchSize });
         using NpgsqlDataReader reader = await selectCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        List<EventRecord> events = new List<EventRecord>(capacity: batchSize);
+        var events = new List<ScheduledEventRecord>(capacity: batchSize);
         while(await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            string eventRecordId = reader.GetInt64(0).ToString();
+            DateTime lastUpdatedAt = reader.GetDateTime(1);
+            string eventName = reader.GetString(2);
+            string handlerName = reader.GetString(3);
+            var eventRecord = new ScheduledEventRecord(eventRecordId, lastUpdatedAt, eventName, handlerName);
+            events.Add(eventRecord);
+        }
+
+        return events;
+    }
+
+    public async Task RetryAsync(string id, int attemptCount, TimeSpan delay, string? error = null, CancellationToken cancellationToken = default)
+    {
+        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        using var updateCommand = connection.CreateCommand();
+        updateCommand.CommandText = _retrySingleSqlUpdate;
+        var now = DateTimeOffset.UtcNow;
+        var scheduledAt = now.Add(delay);
+        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled_at", NpgsqlDbType.TimestampTz) { Value = scheduledAt });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@attempt_count", NpgsqlDbType.Integer) { Value = attemptCount });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@retry_last_delay", NpgsqlDbType.Interval) { Value = delay });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = now });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@error", NpgsqlDbType.Text) { Value = error is null ? DBNull.Value : error });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@id", NpgsqlDbType.Bigint) { Value = long.Parse(id) });
+
+        _ = await updateCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<EventRecord> TryClaimAsync(ScheduledEventRecord scheduledEventRecord, EventRegistry eventRegistry, CancellationToken cancellationToken = default)
+    {
+        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        using var updateCommand = connection.CreateCommand();
+        updateCommand.CommandText = _tryClaimSingleSqlUpdate;
+        updateCommand.Parameters.Add(new NpgsqlParameter("@in_progress", NpgsqlDbType.Integer) { Value = (int)EventStatus.InProgress });
+        var now = DateTimeOffset.UtcNow;
+        updateCommand.Parameters.Add(new NpgsqlParameter("@claimed_at", NpgsqlDbType.TimestampTz) { Value = now });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = now });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@candidate_id", NpgsqlDbType.Bigint) { Value = long.Parse(scheduledEventRecord.Id) });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@candidate_last_updated_at", NpgsqlDbType.TimestampTz) { Value = scheduledEventRecord.LastUpdatedAt });
+        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
+
+        NpgsqlDataReader reader = await updateCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+        if(await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             string eventRecordId = reader.GetInt64(0).ToString();
             string eventId = reader.GetString(1);
@@ -181,10 +211,10 @@ internal class PostgreSqlStorage : IEventStorage
             object? deserializedEvent = EventSerializer.DeserializePayload(eventRecordId, stringPayload, eventName, eventRegistry, _logger);
             if(deserializedEvent is null)
             {
-                continue;
+                return EventRecord.Empty;
             }
 
-            var eventRecord = new EventRecord(
+            return new EventRecord(
                 eventRecordId,
                 eventId,
                 eventName,
@@ -200,85 +230,13 @@ internal class PostgreSqlStorage : IEventStorage
                 deserializedEvent,
                 lastError,
                 processingTimeoutsCount);
-            events.Add(eventRecord);
         }
 
-        return events;
-    }
-
-    public async Task RetryAsync(string id, int attemptCount, TimeSpan delay, string? error = null, CancellationToken cancellationToken = default)
-    {
-        //_retrySqlUpdate = $"""
-        //    UPDATE {_schema}.events
-        //    SET status = @scheduled, scheduled_at = @scheduled_at, retry_attempt_count = @attempt_count, retry_last_delay = @retry_last_delay, last_updated_at = @last_updated_at, last_error = @error
-        //    WHERE id = @id;
-        //    """;
-        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        using var updateCommand = connection.CreateCommand();
-        updateCommand.CommandText = _retrySingleSqlUpdate;
-        var now = DateTimeOffset.UtcNow;
-        var scheduledAt = now.Add(delay);
-        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled_at", NpgsqlDbType.TimestampTz) { Value = scheduledAt });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@attempt_count", NpgsqlDbType.Integer) { Value = attemptCount });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@retry_last_delay", NpgsqlDbType.Interval) { Value = delay });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = now });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@error", NpgsqlDbType.Text) { Value = error is null ? DBNull.Value : error });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@id", NpgsqlDbType.Bigint) { Value = long.Parse(id) });
-
-        _ = await updateCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<bool> TryClaimAsync(string id, CancellationToken cancellationToken = default)
-    {
-        //_tryClaimSqlUpdate = $"""
-        //    UPDATE {_schema}.events
-        //    SET status = @in_progress, claimed_at = @claimed_at, last_updated_at = @last_updated_at
-        //    WHERE id = @id AND status = @scheduled;
-        //    """;
-        using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        using var updateCommand = connection.CreateCommand();
-        updateCommand.CommandText = _tryClaimSingleSqlUpdate;
-        updateCommand.Parameters.Add(new NpgsqlParameter("@in_progress", NpgsqlDbType.Integer) { Value = (int)EventStatus.InProgress });
-        var now = DateTimeOffset.UtcNow;
-        updateCommand.Parameters.Add(new NpgsqlParameter("@claimed_at", NpgsqlDbType.TimestampTz) { Value = now });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = now });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@id", NpgsqlDbType.Bigint) { Value = long.Parse(id) });
-        updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
-
-        int rowsAffected = await updateCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        return rowsAffected > 0;
+        return EventRecord.Empty;
     }
 
     public async Task RescheduleClaimedExceedingProcessingTimeoutAsync(CancellationToken cancellationToken = default)
     {
-        // _rescheduleClaimedExceedingProcessingTimeoutUpdateSql = $"""
-        //   UPDATE events
-        //   SET
-        //       status = CASE
-        //           WHEN processing_timeouts_count >= @max_processing_timeouts THEN @dead_lettered
-        //           ELSE @scheduled
-        //       END,
-        //       scheduled_at = CASE
-        //           WHEN processing_timeouts_count < @max_processing_timeouts THEN @scheduled_at
-        //           ELSE scheduled_at
-        //       END,
-        //       last_updated_at = @last_updated_at,
-        //       last_error = CASE
-        //           WHEN processing_timeouts_count >= @max_processing_timeouts THEN @error
-        //           ELSE last_error
-        //       END,
-        //       processing_timeouts_count = CASE
-        //           WHEN processing_timeouts_count < @max_processing_timeouts THEN processing_timeouts_count + 1
-        //           ELSE processing_timeouts_count
-        //       END,
-        //       claimed_at = CASE
-        //           WHEN processing_timeouts_count < @max_processing_timeouts THEN NULL
-        //           ELSE claimed_at
-        //       END
-        //   WHERE status = @in_progress AND claimed_at <= @claimed_before
-        //   """;
-
         var now = DateTimeOffset.UtcNow;
         var claimedBefore = now.Subtract(_eventBrokerSettings.ProcessingTimeout);
 
@@ -299,14 +257,6 @@ internal class PostgreSqlStorage : IEventStorage
 
     public async Task DeadLetterUnclaimedAsync(CancellationToken cancellationToken = default)
     {
-        //var c = """
-        //    UPDATE events SET
-        //        status = @dead_lettered,
-        //        last_updated_at = @last_updated_at,
-        //        last_error = @error
-        //    WHERE status = @scheduled AND scheduled_at <= @scheduled_before;
-        //    """;
-
         DateTimeOffset now = DateTimeOffset.UtcNow;
         var scheduledBefore = now - _eventBrokerSettings.UnclaimedTtl;
 
@@ -324,13 +274,6 @@ internal class PostgreSqlStorage : IEventStorage
 
     public async Task DeleteCompletedAndDeadLetteredExceedingTtlAsync(CancellationToken cancellationToken = default)
     {
-        //var commandSql = $"""
-        //    DELETE FROM events
-        //    WHERE 
-        //    (status = @completed AND last_updated_at <= @completed_before) OR 
-        //    (status = @dead_lettered AND last_updated_at <= @dead_lettered_before);
-        //    """;
-
         var now = DateTimeOffset.UtcNow;
         var deadLetteredBefore = now - _eventBrokerSettings.DeadLetteredRecordTtl;
         var completedBefore = now - _eventBrokerSettings.CompletedRecordTtl;
@@ -359,10 +302,6 @@ internal class PostgreSqlStorage : IEventStorage
 
     private async Task WriteAsync<TEvent>(TEvent publishedEvent, string eventName, ImmutableArray<string> handlerNames, DateTimeOffset scheduledAt, CancellationToken cancellationToken)
     {
-        //_scheduleSqlinsert = $"""
-        //    INSERT INTO {_schema}.events (event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, created_at, last_updated_at, processing_timeouts_count)
-        //    VALUES {0};
-        //    """;
         var command = _insertSqlCache.GetOrAdd(
             handlerNames.Length,
             length =>

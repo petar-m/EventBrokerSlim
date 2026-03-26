@@ -7,14 +7,13 @@ using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Internal.ObjectPools;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
 
 namespace M.EventBrokerSlim.Internal.Persistent;
 
 internal sealed class EventHandlerRunner
 {
-    private readonly ChannelReader<EventRecord> _channelReader;
+    private readonly ChannelReader<ScheduledEventRecord> _channelReader;
     private readonly PipelineRegistry _pipelineRegistry;
     private readonly EventRegistry _eventNameRegistry;
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -27,7 +26,7 @@ internal sealed class EventHandlerRunner
     private DefaultObjectPool<RetryPolicy> _retryPolicyObjectPool;
 
     internal EventHandlerRunner(
-        ChannelReader<EventRecord> channelReader,
+        ChannelReader<ScheduledEventRecord> channelReader,
         PipelineRegistry pipelineRegistry,
         EventRegistry eventNameRegistry,
         CancellationTokenSource cancellationTokenSource,
@@ -58,20 +57,20 @@ internal sealed class EventHandlerRunner
         CancellationToken token = _cancellationTokenSource.Token;
         while(await _channelReader.WaitToReadAsync(token).ConfigureAwait(false))
         {
-            while(_channelReader.TryRead(out EventRecord? eventRecord))
+            while(_channelReader.TryRead(out ScheduledEventRecord? scheduledEventRecord))
             {
-                if(eventRecord is null)
+                if(scheduledEventRecord is null)
                 {
                     continue;
                 }
 
-                Type? eventType = _eventNameRegistry.GetEventType(eventRecord.EventName);
+                Type? eventType = _eventNameRegistry.GetEventType(scheduledEventRecord.EventName);
                 if(eventType is null)
                 {
                     continue;
                 }
 
-                EventPipeline? handler = _pipelineRegistry.Get(eventRecord.HandlerName);
+                EventPipeline? handler = _pipelineRegistry.Get(scheduledEventRecord.HandlerName);
                 if(handler is null)
                 {
                     continue;
@@ -81,7 +80,7 @@ internal sealed class EventHandlerRunner
                 IPipeline pipeline = handler.Pipeline;
                 HandlerExecutionContext context = _executionContextObjectPool.Get();
                 context.Initialize(
-                    eventRecord,
+                    scheduledEventRecord,
                     pipeline,
                     eventType,
                     token,
@@ -90,7 +89,8 @@ internal sealed class EventHandlerRunner
                     _retryPolicyObjectPool,
                     _logger,
                     _semaphore,
-                    _eventStorage);
+                    _eventStorage,
+                    _eventNameRegistry);
                 _ = Task.Factory.StartNew(static async x => await HandleEventWithDelegate(x!).ConfigureAwait(false), context);
             }
         }
@@ -99,7 +99,7 @@ internal sealed class EventHandlerRunner
     private static async Task HandleEventWithDelegate(object state)
     {
         var context = (HandlerExecutionContext)state;
-        EventRecord eventRecord = context.EventRecord;
+        ScheduledEventRecord scheduledEventRecord = context.ScheduledEventRecord;
         Type eventType = context.EventType;
         IPipeline pipeline = context.Pipeline;
         IEventStorage eventStorage = context.EventStorage;
@@ -109,6 +109,7 @@ internal sealed class EventHandlerRunner
         CancellationToken cancellationToken = context.CancellationToken;
         DefaultObjectPool<HandlerExecutionContext> contextObjectPool = context.ObjectPool;
         SemaphoreSlim semaphore = context.Semaphore;
+        EventRegistry eventRegistry = context.EventRegistry;
 
         RetryPolicy retryPolicy = retryPolicyObjectPool.Get();
         PipelineRunContext pipelineRunContext = pipelineRunContextObjectPool.Get();
@@ -120,8 +121,8 @@ internal sealed class EventHandlerRunner
                 return;
             }
 
-            var claimed = await eventStorage.TryClaimAsync(eventRecord.Id, logger, cancellationToken).ConfigureAwait(false);
-            if(!claimed)
+            var eventRecord = await eventStorage.TryClaimAsync(scheduledEventRecord, eventRegistry ,logger, cancellationToken).ConfigureAwait(false);
+            if(eventRecord == EventRecord.Empty)
             {
                 return;
             }
@@ -138,22 +139,22 @@ internal sealed class EventHandlerRunner
             result = await pipeline.RunAsync(pipelineRunContext, cancellationToken).ConfigureAwait(false);
             if(result.Exception is not null)
             {
-                logger.LogError(result.Exception, "An error occurred while processing event record with id {EventRecordId} and event name {EventName}", eventRecord.Id, eventRecord.EventName);
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Processing failed", logger, cancellationToken).ConfigureAwait(false);
+                logger.LogError(result.Exception, "An error occurred while processing event record with id {EventRecordId} and event name {EventName}", scheduledEventRecord.Id, scheduledEventRecord.EventName);
+                await eventStorage.TryDeadLetterAsync(scheduledEventRecord.Id, "Processing failed", logger, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             if(retryPolicy.RetryRequested)
             {
-                await eventStorage.TryRetryAsync(eventRecord.Id, (int)retryPolicy.Attempt + 1, retryPolicy.LastDelay, logger, cancellationToken).ConfigureAwait(false);
+                await eventStorage.TryRetryAsync(scheduledEventRecord.Id, (int)retryPolicy.Attempt + 1, retryPolicy.LastDelay, logger, cancellationToken).ConfigureAwait(false);
             }
             else if(retryPolicy.Abandoned)
             {
-                await eventStorage.TryDeadLetterAsync(eventRecord.Id, "Abandoned by retry policy", logger, cancellationToken).ConfigureAwait(false);
+                await eventStorage.TryDeadLetterAsync(scheduledEventRecord.Id, "Abandoned by retry policy", logger, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await eventStorage.TryCompleteAsync(eventRecord.Id, logger, cancellationToken).ConfigureAwait(false);
+                await eventStorage.TryCompleteAsync(scheduledEventRecord.Id, logger, cancellationToken).ConfigureAwait(false);
             }
         }
         finally

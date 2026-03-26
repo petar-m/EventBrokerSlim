@@ -45,11 +45,10 @@ public interface IEventStorage
     /// or equal to the current time. The actual batch size may be limited by backend configuration. No filtering is
     /// applied based on handler name.</remarks>
     /// <param name="batchSize">The maximum number of scheduled event records to fetch in a single operation. Must be a positive integer.</param>
-    /// <param name="eventRegistry">The registry containing event type information.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains event records that are
     /// scheduled for processing and are due at the time of the call.</returns>
-    Task<IEnumerable<EventRecord>> FetchScheduledAsync(int batchSize, EventRegistry eventRegistry, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ScheduledEventRecord>> FetchScheduledAsync(int batchSize, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Attempts to claim a candidate record identified by the specified ID using optimistic concurrency. The claim is
@@ -57,11 +56,11 @@ public interface IEventStorage
     /// </summary>
     /// <remarks>This method is typically called by a background poller and sets the candidate's status to
     /// 'InProgress' and the claimed timestamp to the current time only if the status remains 'Scheduled'.</remarks>
-    /// <param name="id">The unique identifier of the candidate record to be claimed.</param>
+    /// <param name="scheduledEventRecord">A scheduled event record that is a candidate for claiming.</param>
+    /// <param name="eventRegistry">The registry containing event type information.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation if needed.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the claim was
-    /// successful; otherwise, <see langword="false"/> if another instance claimed the candidate first.</returns>
-    Task<bool> TryClaimAsync(string id, CancellationToken cancellationToken = default);
+    /// <returns>A task that represents the asynchronous operation. The task result contains the claimed event record if the claim is successful, or ScheduledEventRecord.Empty if the claim fails (e.g., due to a concurrency conflict or if the record is no longer scheduled).</returns>
+    Task<EventRecord> TryClaimAsync(ScheduledEventRecord scheduledEventRecord, EventRegistry eventRegistry, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets the status of the candidate record identified by the specified ID to 'Completed' after successful execution of the event handler.

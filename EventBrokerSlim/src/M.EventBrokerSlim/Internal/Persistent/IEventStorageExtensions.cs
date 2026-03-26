@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 internal static class IEventStorageExtensions
 {
-    public static async Task<IEnumerable<EventRecord>> TryFetchScheduledAsync(this IEventStorage eventStorage,
+    public static async Task<IEnumerable<ScheduledEventRecord>> TryFetchScheduledAsync(this IEventStorage eventStorage,
         int batchSize,
         EventRegistry eventRegistry,
         ILogger logger,
@@ -15,26 +15,26 @@ internal static class IEventStorageExtensions
     {
         try
         {
-            return await eventStorage.FetchScheduledAsync(batchSize, eventRegistry, cancellationToken).ConfigureAwait(false);
+            return await eventStorage.FetchScheduledAsync(batchSize, cancellationToken).ConfigureAwait(false);
         }
         catch(Exception ex)
         {
             // TODO: Consider more specific exception types for better error handling.
             logger.LogError(ex, "Error fetching scheduled events.");
-            return Array.Empty<EventRecord>();
+            return Array.Empty<ScheduledEventRecord>();
         }
     }
 
-    public static async Task<bool> TryClaimAsync(this IEventStorage eventStorage, string id, ILogger logger, CancellationToken cancellationToken)
+    public static async Task<EventRecord> TryClaimAsync(this IEventStorage eventStorage, ScheduledEventRecord scheduledEventRecord, EventRegistry eventRegistry, ILogger logger, CancellationToken cancellationToken)
     {
         try
         {
-            return await eventStorage.TryClaimAsync(id, cancellationToken).ConfigureAwait(false);
+            return await eventStorage.TryClaimAsync(scheduledEventRecord, eventRegistry, cancellationToken).ConfigureAwait(false);
         }
         catch(Exception ex)
         {
-            logger.LogError(ex, "Error claiming event with ID {EventId}.", id);
-            return false;
+            logger.LogError(ex, "Error claiming event with ID {EventId}.", scheduledEventRecord.Id);
+            return EventRecord.Empty;
         }
     }
 

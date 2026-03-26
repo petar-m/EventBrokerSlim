@@ -178,7 +178,7 @@ public static class ServiceCollectionExtensions
                 (x, key) =>
                 {
                     var eventBrokerSettings = x.GetRequiredKeyedService<EventBrokerSettings>(key);
-                    return Channel.CreateBounded<EventRecord>(new BoundedChannelOptions(capacity: eventBrokerSettings.MaxConcurrentHandlers)
+                    return Channel.CreateBounded<ScheduledEventRecord>(new BoundedChannelOptions(capacity: eventBrokerSettings.MaxConcurrentHandlers)
                     {
                         AllowSynchronousContinuations = false,
                         SingleReader = true,
@@ -193,7 +193,7 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key),
                     x.GetRequiredKeyedService<IEventStorage>(key),
                     x.GetRequiredService<EventRegistry>(),
-                    x.GetRequiredKeyedService<Channel<EventRecord>>(key),
+                    x.GetRequiredKeyedService<Channel<ScheduledEventRecord>>(key),
                     x.GetRequiredKeyedService<PollRequiredSignal>(key),
                     x.GetRequiredKeyedService<CancellationTokenSource>(key),
                     x.GetService<ILogger<EventStoragePolling>>() ?? NullLogger<EventStoragePolling>.Instance))
@@ -208,7 +208,7 @@ public static class ServiceCollectionExtensions
             .AddKeyedSingleton(
                 eventBrokerKey,
                 (x, key) => new EventHandlerRunner(
-                    x.GetRequiredKeyedService<Channel<EventRecord>>(key),
+                    x.GetRequiredKeyedService<Channel<ScheduledEventRecord>>(key),
                     x.GetRequiredKeyedService<PipelineRegistry>(key),
                     x.GetRequiredService<EventRegistry>(),
                     x.GetRequiredKeyedService<CancellationTokenSource>(key),

@@ -12,7 +12,7 @@ namespace M.EventBrokerSlim.Internal.Persistent;
 internal class EventStoragePolling
 {
     private readonly PersistentEventBrokerSettings _settings;
-    private readonly Channel<EventRecord> _handlerRunnerChannel;
+    private readonly Channel<ScheduledEventRecord> _handlerRunnerChannel;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly PollRequiredSignal _pollRequiredSignal;
     private readonly ILogger _logger;
@@ -23,7 +23,7 @@ internal class EventStoragePolling
         PersistentEventBrokerSettings settings,
         IEventStorage eventStorage,
         EventRegistry eventRegistry,
-        Channel<EventRecord> handlerRunnerChannel,
+        Channel<ScheduledEventRecord> handlerRunnerChannel,
         PollRequiredSignal pollRequiredSignal,
         CancellationTokenSource cancellationTokenSource,
         ILogger logger)
@@ -50,10 +50,9 @@ internal class EventStoragePolling
             try
             {
                 _pollRequiredSignal.Reset();
-                IEnumerable<EventRecord> eventRecords =
+                IEnumerable<ScheduledEventRecord> eventRecords =
                     await _eventStorage.TryFetchScheduledAsync(_settings.ScheduledBatchSize, _eventRegistry, _logger, cancellationToken).ConfigureAwait(false);
-                // TODO: Make channel capacity match MaxConcurrentHandlers and use bounded channel with wait when full
-                foreach(EventRecord eventRecord in eventRecords)
+                foreach(ScheduledEventRecord eventRecord in eventRecords)
                 {
                     await _handlerRunnerChannel.Writer.WriteAsync(eventRecord, cancellationToken).ConfigureAwait(false);
                 }

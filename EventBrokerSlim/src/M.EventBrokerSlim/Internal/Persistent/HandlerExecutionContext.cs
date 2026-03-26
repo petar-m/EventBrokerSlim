@@ -11,7 +11,7 @@ namespace M.EventBrokerSlim.Internal.Persistent;
 internal sealed class HandlerExecutionContext : IResettable
 {
     public HandlerExecutionContext Initialize(
-        EventRecord eventRecord,
+        ScheduledEventRecord scheduledEventRecord,
         IPipeline pipeline,
         Type eventType,
         CancellationToken cancellationToken,
@@ -20,9 +20,10 @@ internal sealed class HandlerExecutionContext : IResettable
         DefaultObjectPool<RetryPolicy> retryPolicyObjectPool,
         ILogger logger,
         SemaphoreSlim semaphore,
-        IEventStorage eventStorage)
+        IEventStorage eventStorage,
+        EventRegistry eventNameRegistry)
     {
-        EventRecord = eventRecord;
+        ScheduledEventRecord = scheduledEventRecord;
         Pipeline = pipeline;
         EventType = eventType;
         CancellationToken = cancellationToken;
@@ -32,12 +33,13 @@ internal sealed class HandlerExecutionContext : IResettable
         Logger = logger;
         Semaphore = semaphore;
         EventStorage = eventStorage;
+        EventRegistry = eventNameRegistry;
         return this;
     }
 
     public bool TryReset()
     {
-        EventRecord = null;
+        ScheduledEventRecord = null;
         Pipeline = null;
         EventType = null;
         CancellationToken = default;
@@ -47,10 +49,11 @@ internal sealed class HandlerExecutionContext : IResettable
         Logger = null;
         Semaphore = null;
         EventStorage = null;
+        EventRegistry = null;
         return true;
     }
 
-    [NotNull] public EventRecord? EventRecord { get; private set; }
+    [NotNull] public ScheduledEventRecord? ScheduledEventRecord { get; private set; }
     [NotNull] public IPipeline? Pipeline { get; private set; }
     [NotNull] public Type? EventType { get; private set; }
     [NotNull] public DefaultObjectPool<HandlerExecutionContext>? ObjectPool { get; private set; }
@@ -59,6 +62,7 @@ internal sealed class HandlerExecutionContext : IResettable
     [NotNull] public SemaphoreSlim? Semaphore { get; private set; }
     [NotNull] public ILogger? Logger { get; private set; }
     [NotNull] public IEventStorage? EventStorage { get; private set; }
+    [NotNull] public EventRegistry? EventRegistry { get; private set; }
     public CancellationToken CancellationToken { get; private set; }
 
     internal class ObjectPoolPolicy : IPooledObjectPolicy<HandlerExecutionContext>
