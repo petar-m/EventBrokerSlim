@@ -192,7 +192,6 @@ public static class ServiceCollectionExtensions
                 (x, key) => new EventStoragePolling(
                     x.GetRequiredKeyedService<PersistentEventBrokerSettings>(key),
                     x.GetRequiredKeyedService<IEventStorage>(key),
-                    x.GetRequiredService<EventRegistry>(),
                     x.GetRequiredKeyedService<Channel<ScheduledEventRecord>>(key),
                     x.GetRequiredKeyedService<PollRequiredSignal>(key),
                     x.GetRequiredKeyedService<CancellationTokenSource>(key),

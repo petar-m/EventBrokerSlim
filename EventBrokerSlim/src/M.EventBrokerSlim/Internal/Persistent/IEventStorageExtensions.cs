@@ -9,7 +9,6 @@ internal static class IEventStorageExtensions
 {
     public static async Task<IEnumerable<ScheduledEventRecord>> TryFetchScheduledAsync(this IEventStorage eventStorage,
         int batchSize,
-        EventRegistry eventRegistry,
         ILogger logger,
         CancellationToken cancellationToken)
     {
