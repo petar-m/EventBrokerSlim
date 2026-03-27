@@ -189,7 +189,7 @@ internal class PostgreSqlStorage : IEventStorage
         updateCommand.Parameters.Add(new NpgsqlParameter("@candidate_last_updated_at", NpgsqlDbType.TimestampTz) { Value = scheduledEventRecord.LastUpdatedAt });
         updateCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
 
-        NpgsqlDataReader reader = await updateCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        using NpgsqlDataReader reader = await updateCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
         if(await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -241,7 +241,7 @@ internal class PostgreSqlStorage : IEventStorage
         var claimedBefore = now.Subtract(_eventBrokerSettings.ProcessingTimeout);
 
         using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        var rescheduleCommand = connection.CreateCommand();
+        using var rescheduleCommand = connection.CreateCommand();
         rescheduleCommand.CommandText = _rescheduleClaimedExceedingProcessingTimeoutUpdateSql;
         rescheduleCommand.Parameters.Add(new NpgsqlParameter("@scheduled", NpgsqlDbType.Integer) { Value = (int)EventStatus.Scheduled });
         rescheduleCommand.Parameters.Add(new NpgsqlParameter("@in_progress", NpgsqlDbType.Integer) { Value = (int)EventStatus.InProgress });
