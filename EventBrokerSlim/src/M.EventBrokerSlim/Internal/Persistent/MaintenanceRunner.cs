@@ -31,15 +31,13 @@ internal class MaintenanceRunner
         _ = Task.Run(
             async () =>
             {
-                int jitter = Random.Shared.Next(1, 5);
-                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
                 do
                 {
                     try
                     {
+                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
                         await _eventStorage.DeadLetterUnclaimedAsync(cancellationToken).ConfigureAwait(false);
-                        jitter = Random.Shared.Next(-10, 10);
-                        await Task.Delay(TimeSpan.FromMinutes(60 + jitter), cancellationToken).ConfigureAwait(false);
                     }
                     catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
                     {
@@ -49,6 +47,8 @@ internal class MaintenanceRunner
                     {
                         _logger.LogError(ex, "Error dead-lettering unclaimed events exceeding TTL.");
                     }
+
+                    jitter = TimeSpan.FromMinutes(60 + Random.Shared.Next(-10, 10));
                 } while(!cancellationToken.IsCancellationRequested);
             },
             cancellationToken);
@@ -56,15 +56,13 @@ internal class MaintenanceRunner
         _ = Task.Run(
             async () =>
             {
-                int jitter = Random.Shared.Next(1, 5);
-                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
                 do
                 {
                     try
                     {
+                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
                         await _eventStorage.DeleteCompletedAndDeadLetteredExceedingTtlAsync(cancellationToken).ConfigureAwait(false);
-                        jitter = Random.Shared.Next(-10, 10);
-                        await Task.Delay(TimeSpan.FromMinutes(60 + jitter), cancellationToken).ConfigureAwait(false);
                     }
                     catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
                     {
@@ -74,6 +72,8 @@ internal class MaintenanceRunner
                     {
                         _logger.LogError(ex, "Error deleting completed and dead-lettered events exceeding TTL.");
                     }
+
+                    jitter = TimeSpan.FromMinutes(60 + Random.Shared.Next(-10, 10));
                 } while(!cancellationToken.IsCancellationRequested);
             },
             cancellationToken);
@@ -82,15 +82,13 @@ internal class MaintenanceRunner
         _ = Task.Run(
             async () =>
             {
-                int jitter = Random.Shared.Next(1, 5);
-                await Task.Delay(TimeSpan.FromMinutes(jitter), cancellationToken).ConfigureAwait(false);
+                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
                 do
                 {
                     try
                     {
+                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
                         await _eventStorage.RescheduleClaimedExceedingProcessingTimeoutAsync(cancellationToken).ConfigureAwait(false);
-                        jitter = Random.Shared.Next(1, processingTimeoutMinutes);
-                        await Task.Delay(TimeSpan.FromMinutes(processingTimeoutMinutes + jitter), cancellationToken).ConfigureAwait(false);
                     }
                     catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
                     {
@@ -100,6 +98,8 @@ internal class MaintenanceRunner
                     {
                         _logger.LogError(ex, "Error rescheduling claimed events exceeding processing timeout.");
                     }
+
+                    jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, processingTimeoutMinutes));
                 } while(!cancellationToken.IsCancellationRequested);
             },
             cancellationToken);
