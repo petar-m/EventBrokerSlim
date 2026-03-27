@@ -102,9 +102,9 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 **Handler names are explicit and stable.** Each handler participating in persistence must be registered with an explicit `handlerName`. This name is used as the handler identifier in the store. It is not derived from the type name — this is essential for delegate/pipeline handlers, where there is no distinguishable type to derive a name from. The name must be stable across deployments; changing it is a breaking change requiring a migration.
 
-**Event names are explicit and stable.** Each event type participating in persistence must be registered in `EventNameRegistry` with a stable string name. The store uses this name rather than the C# type name, so namespace and class renames are non-breaking. Property-level changes (renamed, removed, or retyped properties) remain breaking because deserialization depends on the payload structure.
+**Event names are explicit and stable.** Each event type participating in persistence must be registered in `EventRegistry` with a stable string name. The store uses this name rather than the C# type name, so namespace and class renames are non-breaking. Property-level changes (renamed, removed, or retyped properties) remain breaking because deserialization depends on the payload structure.
 
-**Event names are globally unique across broker instances.** `EventNameRegistry` is a global singleton shared across all keyed broker instances in the same process. The same event type maps to exactly one name, and the same name maps to exactly one event type, regardless of which broker instance publishes or handles it. Event identity is unambiguous across the entire process — reasoning about events, their handlers, and store records is consistent whether working with a single broker or multiple. Applications with multiple broker instances share the same registry.
+**Event names are globally unique across broker instances.** `EventRegistry` is a global singleton shared across all keyed broker instances in the same process. The same event type maps to exactly one name, and the same name maps to exactly one event type, regardless of which broker instance publishes or handles it. Event identity is unambiguous across the entire process — reasoning about events, their handlers, and store records is consistent whether working with a single broker or multiple. Applications with multiple broker instances share the same registry.
 
 **The event store is external infrastructure.** The caller is responsible for provisioning and operating the backing database. The library provides schema scripts and client configuration, but operational concerns (backups, monitoring, scaling) are outside its scope.
 
@@ -114,7 +114,7 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 ### AD-1: Fan-out at write time
 
-When `PublishAsync` is called, the persistence layer resolves all handler names registered for that event type from the local DI container and writes one independent record per handler name to the store. The event is identified in the store by its name from `EventNameRegistry`, not its C# type name.
+When `PublishAsync` is called, the persistence layer resolves all handler names registered for that event type from the local DI container and writes one independent record per handler name to the store. The event is identified in the store by its name from `EventRegistry`, not its C# type name.
 
 **Why:** This mirrors exactly what the in-memory broker already does — every registered handler receives every event. Writing one record per handler at publish time means the store contains the full set of work the publishing instance knows about. Any instance with a matching handler registered will claim and process its records independently. Instances without a matching handler ignore those records. Records that no instance ever claims are eventually cleaned up by TTL and retention policies.
 
@@ -162,12 +162,12 @@ All records — regardless of event type or handler — live in a single table. 
 
 ### AD-5: Event and handler names decouple the store from C# type names
 
-Event types are registered in `EventNameRegistry` with explicit stable string names. Handler registrations supply an explicit `handlerName`. These names — not C# type names — are stored in the event store as the identifiers for event types and handlers respectively.
+Event types are registered in `EventRegistry` with explicit stable string names. Handler registrations supply an explicit `handlerName`. These names — not C# type names — are stored in the event store as the identifiers for event types and handlers respectively.
 
-`EventNameRegistry` is defined once by the application and registered in DI as a singleton:
+`EventRegistry` is defined once by the application and registered in DI as a singleton:
 
 ```csharp
-var registry = new EventNameRegistry()
+var registry = new EventRegistry()
     .Add<OrderPlaced>("order-placed")
     .Add<OrderCancelled>("order-cancelled");
 
@@ -184,12 +184,12 @@ Handler names are supplied at registration time via the optional `handlerName` p
 
 When persistence is enabled, the application performs eager validation on startup before accepting any traffic:
 
-- Every handler registered with a `handlerName` must have its event type present in `EventNameRegistry`
-- Every event type in `EventNameRegistry` should have at least one handler with a `handlerName` registered — events of that type will be written to the store but never claimed
+- Every handler registered with a `handlerName` must have its event type present in `EventRegistry`
+- Every event type in `EventRegistry` should have at least one handler with a `handlerName` registered — events of that type will be written to the store but never claimed
 
 By default, both rules emit warnings via the configured logger. Applications that want stricter enforcement can opt in to throwing on validation errors by passing `throwOnValidationErrors: true` to `UsePersistentEventBroker`.
 
-Publishing an event whose type is not in `EventNameRegistry` is handled the same way as the in-memory broker handles events with no registered handlers: a warning is logged and the event is silently skipped. This matches the in-memory broker's behavior, preserving the seamless switch between in-memory and persistent modes. The warning respects the `DisableMissingHandlerWarningLog` setting.
+Publishing an event whose type is not in `EventRegistry` is handled the same way as the in-memory broker handles events with no registered handlers: a warning is logged and the event is silently skipped. This matches the in-memory broker's behavior, preserving the seamless switch between in-memory and persistent modes. The warning respects the `DisableMissingHandlerWarningLog` setting.
 
 **Why:** Surfacing misconfiguration at startup rather than at first publish means problems are discovered immediately and deterministically, not buried in a rarely-exercised code path. Defaulting to warnings keeps the library non-breaking for development and gradual migration scenarios, while the opt-in throw gives production deployments a strict fail-fast guarantee. The publish-time behavior mirrors the in-memory broker to maintain consistent fire-and-forget semantics regardless of the persistence mode — code that works with the in-memory broker must not break when switching to persistence.
 
@@ -205,7 +205,7 @@ If an exception escapes the pipeline without being handled, the event record is 
 
 ### AD-8: Serialization is the responsibility of IEventStorage implementations
 
-The core library does not provide a shared serializer. Each `IEventStorage` implementation is responsible for serializing and deserializing event payloads in whatever format suits the backend. `EventRegistry` is passed to `FetchScheduledAsync` so the backend can resolve CLR types from event names during deserialization.
+The core library does not provide a shared serializer. Each `IEventStorage` implementation is responsible for serializing and deserializing event payloads in whatever format suits the backend. `EventRegistry` is passed to `TryClaimAsync` so the backend can resolve CLR types from event names during deserialization.
 
 **Why:** `EventBrokerSlim` is AOT-compatible. A shared JSON serializer based on reflection would break AOT-compatible deployments. Beyond AOT, serialization format is legitimately a backend concern — a Redis backend may prefer MessagePack, a PostgreSQL backend may prefer JSON, a custom backend may use Protobuf or stream large payloads differently. Offloading serialization to the backend keeps the core library free of serialization dependencies and allows each backend to make the choice that best fits its constraints, including AOT compatibility.
 
@@ -261,4 +261,4 @@ Adding persistence introduces real operational overhead that does not exist with
 
 **Handler name stability.** The `handlerName` supplied at registration is stored in the event store as the handler identifier. Changing it is a breaking change — in-flight records under the old name will never be claimed. Treat handler name changes as migrations.
 
-**Event name stability.** The name registered in `EventNameRegistry` is stored as the event type identifier. Changing it is a breaking change — existing records under the old name cannot be deserialized or claimed correctly. C# type renames and namespace changes are safe as long as the registered name does not change. Property-level changes (renamed, removed, or retyped fields) are breaking regardless, as deserialization depends on the payload structure.
+**Event name stability.** The name registered in `EventRegistry` is stored as the event type identifier. Changing it is a breaking change — existing records under the old name cannot be deserialized or claimed correctly. C# type renames and namespace changes are safe as long as the registered name does not change. Property-level changes (renamed, removed, or retyped fields) are breaking regardless, as deserialization depends on the payload structure.
