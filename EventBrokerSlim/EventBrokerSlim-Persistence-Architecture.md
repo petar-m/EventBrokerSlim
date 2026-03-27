@@ -185,13 +185,13 @@ Handler names are supplied at registration time via the optional `handlerName` p
 When persistence is enabled, the application performs eager validation on startup before accepting any traffic:
 
 - Every handler registered with a `handlerName` must have its event type present in `EventNameRegistry`
-- Every event type in `EventNameRegistry` should have at least one handler with a `handlerName` registered — a warning is emitted if not, as events of that type will be written to the store and never claimed
-- Attempting to publish an event persistently whose type is not in `EventNameRegistry` throws at publish time
-- Attempting to publish an event persistently when any of its registered handlers is missing a `handlerName` throws at publish time
+- Every event type in `EventNameRegistry` should have at least one handler with a `handlerName` registered — events of that type will be written to the store but never claimed
 
-Attempting to publish an event persistently without a valid event name or with a handler missing a name will throw from `PublishAsync` as a last-resort defensive check. This should never be reached in a correctly configured application — startup validation is the primary safeguard. The throw exists to prevent silent data loss in cases where startup validation was bypassed or misconfigured.
+By default, both rules emit warnings via the configured logger. Applications that want stricter enforcement can opt in to throwing on validation errors by passing `throwOnValidationErrors: true` to `UsePersistentEventBroker`.
 
-**Why:** Surfacing misconfiguration at startup rather than at first publish means problems are discovered immediately and deterministically, not buried in a rarely-exercised code path. The runtime throw is a defensive backstop, not the expected error handling mechanism.
+Publishing an event whose type is not in `EventNameRegistry` is handled the same way as the in-memory broker handles events with no registered handlers: a warning is logged and the event is silently skipped. This matches the in-memory broker's behavior, preserving the seamless switch between in-memory and persistent modes. The warning respects the `DisableMissingHandlerWarningLog` setting.
+
+**Why:** Surfacing misconfiguration at startup rather than at first publish means problems are discovered immediately and deterministically, not buried in a rarely-exercised code path. Defaulting to warnings keeps the library non-breaking for development and gradual migration scenarios, while the opt-in throw gives production deployments a strict fail-fast guarantee. The publish-time behavior mirrors the in-memory broker to maintain consistent fire-and-forget semantics regardless of the persistence mode — code that works with the in-memory broker must not break when switching to persistence.
 
 ---
 

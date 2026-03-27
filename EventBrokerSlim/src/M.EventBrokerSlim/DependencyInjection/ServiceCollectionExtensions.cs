@@ -203,7 +203,9 @@ public static class ServiceCollectionExtensions
                     x.GetRequiredService<EventRegistry>(),
                     x.GetRequiredKeyedService<PipelineRegistry>(key),
                     x.GetRequiredKeyedService<PollRequiredSignal>(key),
-                    x.GetRequiredKeyedService<CancellationTokenSource>(key)))
+                    x.GetRequiredKeyedService<CancellationTokenSource>(key),
+                    x.GetRequiredKeyedService<EventBrokerSettings>(key),
+                    x.GetService<ILogger<PersistentEventBroker>>() ?? NullLogger<PersistentEventBroker>.Instance))
             .AddKeyedSingleton(
                 eventBrokerKey,
                 (x, key) => new EventHandlerRunner(
@@ -235,10 +237,18 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="serviceProvider">The service provider to resolve services from.</param>
     /// <param name="key">The key identifying the event broker instance.</param>
+    /// <param name="throwOnValidationErrors">When <see langword="true"/>, startup validation errors throw an <see cref="InvalidOperationException"/> instead of logging a warning. Default is <see langword="false"/>.</param>
     /// <returns>The service provider.</returns>
-    public static IServiceProvider UsePersistentEventBroker(this IServiceProvider serviceProvider, object? key = null)
+    public static IServiceProvider UsePersistentEventBroker(this IServiceProvider serviceProvider, object? key = null, bool throwOnValidationErrors = false)
     {
         key ??= _defaultEventBrokerKey;
+
+        var pipelineRegistry = serviceProvider.GetRequiredKeyedService<PipelineRegistry>(key);
+        var eventRegistry = serviceProvider.GetRequiredService<EventRegistry>();
+        var logger = serviceProvider.GetService<ILogger<PersistentEventBroker>>();
+
+        pipelineRegistry.Validate(eventRegistry, logger, throwOnValidationErrors);
+
         serviceProvider.GetRequiredKeyedService<EventHandlerRunner>(key).Run();
         serviceProvider.GetRequiredKeyedService<EventStoragePolling>(key).Run();
         serviceProvider.GetRequiredKeyedService<MaintenanceRunner>(key).Run();
@@ -246,7 +256,7 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds a scoped event handler service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// Adds a scoped event handler serviceimplementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <typeparam name="TEvent">
     /// The type of event the handler processes.

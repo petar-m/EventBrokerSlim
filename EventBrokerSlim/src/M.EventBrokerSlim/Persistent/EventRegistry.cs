@@ -82,4 +82,14 @@ public class EventRegistry
         _ = _eventTypeNameMap.TryGetValue(eventType, out string? eventName);
         return eventName;
     }
+
+    /// <summary>
+    /// Checks whether the specified event type is registered in the registry.
+    /// </summary>
+    internal bool HasEventType(Type eventType) => _eventTypeNameMap.ContainsKey(eventType);
+
+    /// <summary>
+    /// Gets all event types registered in the registry.
+    /// </summary>
+    internal IEnumerable<Type> GetRegisteredEventTypes() => _eventTypeNameMap.Keys;
 }

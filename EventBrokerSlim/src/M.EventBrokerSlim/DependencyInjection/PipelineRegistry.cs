@@ -3,7 +3,9 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace M.EventBrokerSlim.DependencyInjection;
 
@@ -88,5 +90,47 @@ public class PipelineRegistry
         return _handlerNamesByEventType.TryGetValue(typeof(TEvent), out var handlerNames) 
             ? handlerNames 
             : ImmutableArray<string>.Empty;
+    }
+
+    /// <summary>
+    /// Validates the persistent event configuration against the specified event registry.
+    /// </summary>
+    /// <param name="eventRegistry">The event registry to validate against.</param>
+    /// <param name="logger">Optional logger for emitting warnings.</param>
+    /// <param name="throwOnErrors">When <see langword="true"/>, throws <see cref="InvalidOperationException"/> on validation errors instead of logging warnings.</param>
+    internal void Validate(EventRegistry eventRegistry, ILogger? logger, bool throwOnErrors)
+    {
+        // Rule 1: every handler with a handlerName must have its event type in EventRegistry
+        foreach(var kvp in _handlerNamesByEventType)
+        {
+            Type eventType = kvp.Key;
+            if(!eventRegistry.HasEventType(eventType))
+            {
+                string message = $"Handler(s) [{string.Join(", ", kvp.Value)}] for event type '{eventType.FullName}' have a handlerName but the event type is not registered in EventRegistry. " +
+                    "Register it with EventRegistry.Add<TEvent>(name) to enable persistence.";
+                if(throwOnErrors)
+                {
+                    throw new InvalidOperationException(message);
+                }
+
+                logger?.LogWarning(message);
+            }
+        }
+
+        // Rule 2: every event type in EventRegistry should have at least one handler with a handlerName — warn if not
+        foreach(Type eventType in eventRegistry.GetRegisteredEventTypes())
+        {
+            if(!_handlerNamesByEventType.ContainsKey(eventType))
+            {
+                string message = $"Event type '{eventType.FullName}' is registered in EventRegistry but no handler with a handlerName is registered for it. " +
+                    "Events of this type will be written to the store but never claimed.";
+                if(throwOnErrors)
+                {
+                    throw new InvalidOperationException(message);
+                }
+
+                logger?.LogWarning(message);
+            }
+        }
     }
 }
