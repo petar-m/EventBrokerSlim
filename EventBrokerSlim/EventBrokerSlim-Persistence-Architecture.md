@@ -70,7 +70,7 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 ## Goals
 
-**Durability.** Events published via `IEventBroker.PublishAsync` must not be lost if the process crashes before all handlers have completed. Every handler must eventually process every event it is registered for, even across process restarts.
+**Durability.** Events published via `IEventBroker.Publish` must not be lost if the process crashes before all handlers have completed. Every handler must eventually process every event it is registered for, even across process restarts.
 
 **Durable retries.** Handler retry policies must survive process restarts. An event that failed and is awaiting a retry must remain in that state after a crash and be retried correctly when the process comes back up.
 
@@ -94,7 +94,7 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 ## Assumptions
 
-**A record is only processed if a matching handler is registered.** When `PublishAsync` is called, records are written for the handler names known to the publishing instance. Any instance with a matching handler registered will eventually claim and process the record. An instance without that handler simply never claims it — it does not interfere and does not cause an error. If no running instance has the handler registered, the record remains pending until a TTL or retention policy cleans it up.
+**A record is only processed if a matching handler is registered.** When `Publish` is called, records are written for the handler names known to the publishing instance. Any instance with a matching handler registered will eventually claim and process the record. An instance without that handler simply never claims it — it does not interfere and does not cause an error. If no running instance has the handler registered, the record remains pending until a TTL or retention policy cleans it up.
 
 **At-least-once delivery is acceptable.** In failure scenarios (process crash after claim, before ack), an event may be dispatched to a handler more than once. Handlers should be idempotent. This is a standard and documented constraint, not a deficiency.
 
@@ -114,7 +114,7 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 ### AD-1: Fan-out at write time
 
-When `PublishAsync` is called, the persistence layer resolves all handler names registered for that event type from the local DI container and writes one independent record per handler name to the store. The event is identified in the store by its name from `EventRegistry`, not its C# type name.
+When `Publish` is called, the persistence layer resolves all handler names registered for that event type from the local DI container and writes one independent record per handler name to the store. The event is identified in the store by its name from `EventRegistry`, not its C# type name.
 
 **Why:** This mirrors exactly what the in-memory broker already does — every registered handler receives every event. Writing one record per handler at publish time means the store contains the full set of work the publishing instance knows about. Any instance with a matching handler registered will claim and process its records independently. Instances without a matching handler ignore those records. Records that no instance ever claims are eventually cleaned up by TTL and retention policies.
 
@@ -136,7 +136,7 @@ To reduce latency, the persistent broker signals the polling loop after a write 
 
 ### AD-3: Claiming is atomic and timestamp-based; a periodic process handles recovery
 
-The polling service fetches a batch of candidate records using a broad query — `status = 'Scheduled' AND scheduled_at <= now` — with no handler name filter. Candidates with no matching local handler are discarded in memory. The polling service then attempts to claim candidates one by one using optimistic concurrency: a conditional update that sets `status = InProgress` and `claimed_at = now` only if `status` is still `Scheduled` at update time. If another instance claimed the record first, the condition fails and the next candidate is tried. The mechanism varies by backend — a conditional `UPDATE` with row count check for SQL, `findOneAndUpdate` for MongoDB, an atomic Lua script for Redis, a conditional patch with ETag for CosmosDB — but the outcome is identical across all backends: at most one instance claims any given record.
+The polling service fetches a batch of candidate records using a broad query — `status = 'Scheduled' AND scheduled_at <= now` — with no handler name filter and passes them to the handler runner via an internal channel. The handler runner discards candidates with no matching local handler. When a concurrency slot is available, the handler runner attempts to claim a candidate using optimistic concurrency: a conditional update that sets `status = InProgress` and `claimed_at = now` only if `status` is still `Scheduled` at update time. If another instance claimed the record first, the condition fails and the handler moves on. The claim attempt happens immediately before processing, not during polling. The mechanism varies by backend — a conditional `UPDATE` with row count check for SQL, `findOneAndUpdate` for MongoDB, an atomic Lua script for Redis, a conditional patch with ETag for CosmosDB — but the outcome is identical across all backends: at most one instance claims any given record.
 
 No instance identifier is stored — with horizontal scaling there is no reliable stable identifier per instance, and none is needed.
 
@@ -247,7 +247,7 @@ The persistent events feature targets a single application scaled horizontally. 
 
 Adding persistence introduces real operational overhead that does not exist with the in-memory-only broker. Adopters should be aware of:
 
-**Database dependency.** The application now depends on an external store being available. Store unavailability will cause `PublishAsync` to fail.
+**Database dependency.** The application now depends on an external store being available. Store unavailability will cause `Publish` to fail.
 
 **Schema management.** Each backend package provides migration scripts. Schema changes across library versions must be applied as part of deployment.
 
