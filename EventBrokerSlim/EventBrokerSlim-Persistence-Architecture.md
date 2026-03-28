@@ -211,6 +211,20 @@ The core library does not provide a shared serializer. Each `IEventStorage` impl
 
 ---
 
+### AD-9: `IEventStorage` remains a single interface
+
+A proposal was evaluated to split `IEventStorage` into four role-specific interfaces — `IEventScheduler`, `IEventPoller`, `IEventProcessor`, `IEventMaintenance` — to address an Interface Segregation Principle (ISP) violation. Each internal consumer (`PersistentEventBroker`, `EventStoragePolling`, `EventHandlerRunner`, `MaintenanceRunner`) uses a distinct subset of the interface's 10 methods.
+
+The proposal was rejected.
+
+**Why:** The ISP violation is entirely internal. All consumers of `IEventStorage` are non-public classes within the core library — external users interact with `IEventBroker`, never with `IEventStorage` directly. The violation is contained and does not leak to adopters.
+
+For implementors — the actual audience of the public `IEventStorage` contract — a single interface is the better design. A storage provider must implement all operations; there is no valid partial implementation. A single interface signals this clearly, provides compile-time completeness via "Implement Interface" in the IDE, and avoids the discoverability problem of requiring implementors to discover and implement four separate interfaces that are all mandatory. Splitting would misleadingly suggest the interfaces can be implemented independently.
+
+Keeping the composite interface (`IEventStorage : IEventScheduler, ...`) was also considered, but it reintroduces the same coupling the segregation aims to eliminate — consumers could depend on the composite type. Removing the composite and relying on runtime DI validation to enforce completeness trades compile-time safety for runtime checks, which is a step backward.
+
+---
+
 ## Out of Scope
 
 ### Queue backends (RabbitMQ, Azure Storage Queues, Azure Service Bus)
