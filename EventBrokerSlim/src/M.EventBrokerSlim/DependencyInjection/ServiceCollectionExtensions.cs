@@ -71,13 +71,14 @@ public static class ServiceCollectionExtensions
         bool keyAlreadyRegistered = serviceCollection.Any(
             service => service.ServiceType == typeof(EventBrokerSettings) &&
             service.IsKeyedService &&
-            service.ServiceKey == eventBrokerKey);
+            Equals(service.ServiceKey, eventBrokerKey));
 
         if(keyAlreadyRegistered)
         {
-            var key = eventBrokerKey == _defaultEventBrokerKey ? "default" : eventBrokerKey.ToString();
-            throw new InvalidOperationException(
-                $"An event broker with key '{key}' is already registered. Each event broker instance must use a unique key.");
+            var message = Equals(eventBrokerKey, _defaultEventBrokerKey) 
+                ? "An EventBroker is already registered. Only a single default (non-keyed) instance is allowed. Each non default EventBroker instance must use a unique key."
+                : $"An EventBroker with key '{eventBrokerKey}' is already registered. Each event broker instance must use a unique key.";
+            throw new InvalidOperationException(message);
         }
 
         serviceCollection

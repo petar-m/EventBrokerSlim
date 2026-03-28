@@ -39,6 +39,46 @@ public class HandlerRegistrationTests
     }
 
     [Fact]
+    public void AddEventBroker_CalledTwice_Throws()
+    {
+        var serviceCollection = new ServiceCollection()
+            .AddEventBroker();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => serviceCollection.AddEventBroker());
+
+        Assert.Equal(
+            "An EventBroker is already registered. Only a single default (non-keyed) instance is allowed. Each non default EventBroker instance must use a unique key.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddKeyedEventBroker_SameKey_Throws()
+    {
+        var serviceCollection = new ServiceCollection()
+            .AddKeyedEventBroker("broker1");
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => serviceCollection.AddKeyedEventBroker("broker1"));
+
+        Assert.Equal(
+            "An EventBroker with key 'broker1' is already registered. Each event broker instance must use a unique key.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddKeyedEventBroker_DifferentKeys_DoesNotThrow()
+    {
+        var exception = Record.Exception(() =>
+            new ServiceCollection()
+                .AddEventBroker()
+                .AddKeyedEventBroker("broker1")
+                .AddKeyedEventBroker("broker2"));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
     public void MaxConcurrentHandlers_SetTo_Zero_Throws()
     {
         var serviceCollection = new ServiceCollection();
