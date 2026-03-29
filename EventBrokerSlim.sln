@@ -28,8 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline.Tests", "FuncP
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBrokerSlim", "EventBrokerSlim", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
+		EventBrokerSlim\EventBrokerSlim-Persistence-Architecture.md = EventBrokerSlim\EventBrokerSlim-Persistence-Architecture.md
 		EventBrokerSlim\package-icon.png = EventBrokerSlim\package-icon.png
-		EventBrokerSlim\Architecture-Events-Persistence.md = EventBrokerSlim\Architecture-Events-Persistence.md
 		EventBrokerSlim\ReadMe.md = EventBrokerSlim\ReadMe.md
 	EndProjectSection
 EndProject
