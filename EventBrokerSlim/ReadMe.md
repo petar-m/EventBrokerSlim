@@ -10,7 +10,7 @@ Features:
 - in-memory, in-process
 - publishing is *Fire and Forget* style  
 - events don't have to implement specific interface  
-- event handlers are executed on a `ThreadPool` threads  
+- event handlers are executed on `ThreadPool` threads  
 - the number of concurrent handlers running can be limited  
 - built-in retry option
 - tightly integrated with `Microsoft.Extensions.DependencyInjection`
@@ -18,6 +18,7 @@ Features:
 - event handlers can be a [pipeline](https://github.com/petar-m/EventBrokerSlim/blob/main/FuncPipeline/ReadMe.md) of delegates  
 - dynamic adding and removing of delegate event handler pipelines  
 - multiple independent event broker instances in the same process
+- optional [persistent events](#persistent-events) with pluggable storage backends
 
 # How does it work
 
@@ -139,7 +140,7 @@ end
 
 ## Events
 
-Events can be of any type. A good practice for event is to be immutable - may be processed by multiple handlers in different threads.  
+Events can be of any type. A good practice for an event is to be immutable - it may be processed by multiple handlers in different threads.  
 
 ## Event Handlers
 
@@ -170,7 +171,7 @@ An exception thrown from `OnError` is handled and swallowed and potentially logg
 
 ### Delegate Event Handlers
 
-EventBroker uses the [FuncPipeline]() library for creating and executing a pipeline of delegates for given event.
+EventBroker uses the [FuncPipeline](https://github.com/petar-m/EventBrokerSlim/blob/main/FuncPipeline/ReadMe.md) library for creating and executing a pipeline of delegates for a given event.
 
 ```csharp
 IPipeline pipeline = PipelineBuilder.Create()
@@ -203,7 +204,7 @@ There are optional parameters available out-of-the-box:
 - `CancellationToken` - the `EventBroker` cancellation token. 
 - `INext` - used to call the next delegate in the pipeline.
 
-Delegate handlers do not provide special exception handling. Exception caused by resolving services or  unhandled exception during execution will be handled and swallowed and potentially logged (see [Logging](#logging) section).  
+Delegate handlers do not provide special exception handling. Exception caused by resolving services or unhandled exception during execution will be handled and swallowed and potentially logged (see [Logging](#logging) section).  
 
 ### Dynamic Delegate Event Handlers 
 
@@ -308,17 +309,19 @@ IPipeline pipeline = PipelineBuilder.Create()...;
 serviceCollection.AddEventHandlerPipeline<TEvent>(pipeline);
 ```  
 > [!NOTE]
-> All registered pipelines, including those created from `IEventHandler<TEvent>` registrations, can be obtained from the DI container by resolving `PipelineRegistry` (allowing to obtain all pipelines for an event `ImmutableArray<IPipeline> PipelineRegistry.Get(Type eventType)`)
+> All registered pipelines, including those created from `IEventHandler<TEvent>` registrations, can be obtained from the DI container by resolving `PipelineRegistry` (allowing to obtain all pipelines for an event `ImmutableArray<EventPipeline> PipelineRegistry.Get(Type eventType)`). Additionally, `PipelineRegistry.Get(string name)` returns a pipeline by its handler name, and `PipelineRegistry.GetHandlerNames<TEvent>()` returns all handler names registered for an event type.
 
 ### Keyed Handlers
 
- `Add*EventHandler<TEvent, THandler>` and `AddEventHandlerPipeline<TEvent>` support optional parameter `eventBrokerKey`. These handlers are used when event is published by event broker instance with the same key.
+ `Add*EventHandler<TEvent, THandler>` and `AddEventHandlerPipeline<TEvent>` support optional parameter `eventBrokerKey`. These handlers are used when event is published by event broker instance with the same key. The optional `handlerName` parameter is used to identify handlers in [persistent event processing](#handler-names).
 
 ## Publishing Events  
 
 Events are published by `IEventBroker.Publish` method.
 
 Events can be published after given time interval with `IEventBroker.PublishDeferred` method.
+
+`IEventBroker.Shutdown()` can be called to stop the event broker from processing events. It signals the cancellation token passed to handlers and stops the internal consumer loop.
 
 > [!WARNING] 
 > `PublishDeferred` may not be accurate and may perform badly if large amount of deferred messages are scheduled. It runs a new task that in turn uses `Task.Delay` and then publishes the event.  
@@ -338,18 +341,109 @@ If there is no logger configured, these exceptions will be handled and swallowed
 
 Retrying within event handler can become a bottleneck. Imagine `EventBroker` is restricted to one concurrent handler. An exception is caught in `Handle` and retry is attempted after given time interval. Since `Handle` is not completed, there is no available "slot" to run other handlers while `Handle` is waiting.  
 
-Another option will be to use `IEventBroker.PublishDeferred`. This will eliminate the bottleneck but will introduce different problems. The same event will be handled again by all handlers, meaning special care should be taken to make all handlers idempotent. Any additional information (e.g. number of retries) needs to be known, it should be carried with the event, introducing accidental complexity.  
+Another option will be to use `IEventBroker.PublishDeferred`. This will eliminate the bottleneck but will introduce different problems. The same event will be handled again by all handlers, meaning special care should be taken to make all handlers idempotent. If any additional information (e.g. number of retries) needs to be known, it must be carried with the event, introducing accidental complexity.  
 
 To avoid these problems, both `IEventHandler` methods `Handle` and `OnError` have `IRetryPolicy` parameter. It is also available for delegate handlers. 
 
- `IRetryPolicy.RetryAfter()` will schedule a retry only for the handler it is called from, without blocking. After the given time interval an instance of the handler or the pipeline will be resolved from the DI container (from a new scope) and executed with the same event instance.
+ `IRetryPolicy.RetryAfter(TimeSpan)` will schedule a retry only for the handler it is called from, without blocking. After the given time interval an instance of the handler or the pipeline will be resolved from the DI container (from a new scope) and executed with the same event instance.
+
+`IRetryPolicy.RetryAfter(Func<uint, TimeSpan, TimeSpan>)` is an overload accepting a function that receives the current attempt number and the last delay, and returns the delay for the next retry. This is useful for implementing patterns like exponential backoff.
 
 `IRetryPolicy.Attempt` is the current retry attempt for a given handler and event.  
 `IRetryPolicy.LastDelay` is the time interval before the retry.  
 
 `IRetryPolicy.RetryRequested` is used to coordinate retry request between `Handle` and `OnError`. `IRetryPolicy` is passed to both methods to enable error handling and retry request entirely in `Handle` method. `OnError` can check `IRetryPolicy.RetryRequested` to know whether `Handle` had called `IRetryPolicy.RetryAfter()`.  
 
-If added as a parameter, the `IRetryPolicy` will be passed to delegate. It has the same behavior, allowing pipelines to be retired too.
+`IRetryPolicy.Abandon()` explicitly abandons processing of the event for the handler. `IRetryPolicy.Abandoned` indicates whether `Abandon()` has been called.
+
+If added as a parameter, the `IRetryPolicy` will be passed to the delegate. It has the same behavior, allowing pipelines to be retried too.
+
+> [!NOTE]
+> When [persistent events](#persistent-events) are enabled, retries are durable and survive process restarts. The retry state is stored alongside the event record.
 
 > [!WARNING] 
 > Retry will not be exactly after the specified time interval in `IRetryPolicy.RetryAfter()`. Take into account a tolerance of around 50 milliseconds. Additionally, retry executions respect maximum concurrent handlers setting, meaning a high load can cause additional delay.
+
+# Persistent Events
+
+EventBrokerSlim supports optional event persistence providing durable, at-least-once event delivery that survives process restarts. Persistence is opt-in — the in-memory broker works without any storage backend. For detailed design rationale, see the [architecture document](EventBrokerSlim-Persistence-Architecture.md) and [ADRs](ADRs/).
+
+## How It Works
+
+When persistence is enabled, `IEventBroker.Publish` writes one record per registered handler to the storage backend and returns — no in-memory dispatch occurs. A background polling loop fetches scheduled records, claims them using optimistic concurrency, and dispatches them to the corresponding handler pipeline. After execution, each record is marked as completed, scheduled for retry, or dead-lettered.
+
+## Configuration
+
+### Event Registry
+
+`EventRegistry` maps event types to stable string names used as identifiers in storage. Each persistent event type must be registered. Register the `EventRegistry` as a singleton in the DI container:
+
+```csharp
+var eventRegistry = new EventRegistry()
+    .Add<SomeEvent>("SomeEvent")
+    .Add<AnotherEvent>("AnotherEvent");
+
+serviceCollection.AddSingleton(eventRegistry);
+```
+
+### Handler Names
+
+The `handlerName` parameter on `Add*EventHandler` and `AddEventHandlerPipeline` links a handler to its storage records. Only handlers with a `handlerName` participate in persistent event processing:
+
+```csharp
+serviceCollection
+    .AddTransientEventHandler<SomeEvent, SomeEventHandler>(handlerName: "SomeEventHandler")
+    .AddEventHandlerPipeline<SomeEvent>(pipeline, handlerName: "SomeEventPipeline");
+```
+
+### Storage Backend
+
+Register a storage backend using the builder extensions. For example, with PostgreSQL:
+
+```csharp
+serviceCollection.AddEventBroker(x => x
+    .WithMaxConcurrentHandlers(3)
+    .WithPostgreSqlPersistence((db, settings) =>
+    {
+        db.ConnectionString = "...";
+        db.Schema = "ebs_0";
+        settings.PollingInterval = TimeSpan.FromSeconds(10);
+        settings.ProcessingTimeout = TimeSpan.FromMinutes(5);
+        settings.UnclaimedTtl = TimeSpan.FromDays(7);
+        settings.CompletedRecordTtl = TimeSpan.FromDays(7);
+        settings.DeadLetteredRecordTtl = TimeSpan.FromDays(30);
+    }));
+```
+
+`PersistentEventBrokerSettings` options:
+
+| Setting | Default | Description |
+|---|---|---|
+| `PollingInterval` | 10 seconds | How often the poller checks for scheduled records |
+| `ProcessingTimeout` | 5 minutes | In-progress records exceeding this are rescheduled |
+| `MaxProcessingTimeouts` | 10 | Max timeouts before a record is dead-lettered |
+| `ScheduledBatchSize` | 10 | Number of records fetched per poll |
+| `UnclaimedTtl` | 7 days | Unclaimed scheduled records are dead-lettered after this |
+| `CompletedRecordTtl` | 7 days | Completed records are deleted after this |
+| `DeadLetteredRecordTtl` | 30 days | Dead-lettered records are deleted after this |
+
+### Startup
+
+Call `UsePersistentEventBroker` after building the service provider to start the polling and maintenance loops:
+
+```csharp
+var serviceProvider = serviceCollection.BuildServiceProvider();
+serviceProvider.UsePersistentEventBroker(throwOnValidationErrors: true);
+```
+
+On startup, validation checks that every handler with a `handlerName` has its event type in `EventRegistry`, and every event in `EventRegistry` has at least one named handler. Set `throwOnValidationErrors: true` for strict mode (default logs warnings).
+
+## Important Considerations
+
+- **At-least-once delivery** — a crash after claiming may cause duplicate processing. Handlers must be idempotent.
+- **Escaped exceptions are dead-lettered** — if an exception escapes the pipeline unhandled, the record is immediately dead-lettered. `IRetryPolicy` is not consulted. Handle exceptions inside the pipeline.
+- **Name stability** — changing `handlerName` or `EventRegistry` names breaks the link to existing storage records.
+- **Serialization** — event types must be serializable. Each `IEventStorage` implementation owns its serialization format.
+- **Not event sourcing** — completed records are deleted after `CompletedRecordTtl`.
+- **Not a transactional outbox** — writes to storage are not atomic with the caller's database transaction.
+
