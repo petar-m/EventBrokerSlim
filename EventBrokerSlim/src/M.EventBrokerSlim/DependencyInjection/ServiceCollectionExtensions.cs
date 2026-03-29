@@ -26,7 +26,7 @@ public record EventPipeline(Type Event, IPipeline Pipeline, string? HandlerName 
 /// <summary>
 /// Extension methods for setting up event broker in an <see cref="IServiceCollection" />.
 /// </summary>
-public static class ServiceCollectionExtensions
+public static partial class ServiceCollectionExtensions
 {
     private static readonly object _defaultEventBrokerKey = Guid.NewGuid();
 

@@ -315,6 +315,30 @@ serviceCollection.AddEventHandlerPipeline<TEvent>(pipeline);
 
  `Add*EventHandler<TEvent, THandler>` and `AddEventHandlerPipeline<TEvent>` support optional parameter `eventBrokerKey`. These handlers are used when event is published by event broker instance with the same key. The optional `handlerName` parameter is used to identify handlers in [persistent event processing](#handler-names).
 
+### Handler Options
+
+`Add*EventHandler<TEvent, THandler>` and `AddEventHandlerPipeline<TEvent>` accept an optional `Action<EventHandlerOptions>` or `Action<PipelineHandlerOptions>` delegate for a more readable, less error-prone configuration:
+
+```csharp
+serviceCollection
+    .AddTransientEventHandler<TEvent1, THandler1>(o => o
+        .ForBroker("broker1")
+        .WithHandlerName("my-handler")
+        .WithServiceKey("custom-key"))
+    .AddScopedEventHandler<TEvent2, THandler2>(o => o
+        .ForBroker("broker1"))
+    .AddSingletonEventHandler<TEvent3, THandler3>(o => o
+        .ForBroker("broker1"));
+```
+
+Pipeline handlers use `PipelineHandlerOptions` (which does not have `WithServiceKey`, since pipelines are passed directly and not resolved from DI):
+
+```csharp
+serviceCollection.AddEventHandlerPipeline<TEvent>(pipeline, o => o
+    .ForBroker("broker1")
+    .WithHandlerName("my-pipeline-handler"));
+```
+
 ## Publishing Events  
 
 Events are published by `IEventBroker.Publish` method.
