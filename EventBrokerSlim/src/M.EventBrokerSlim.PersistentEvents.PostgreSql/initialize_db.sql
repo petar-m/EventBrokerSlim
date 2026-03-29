@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS ebs_0.events (
 --   - PARTIAL: Only indexes 'Scheduled' events (status=1). Keeps index small and fast, excluding millions of completed events.
 --   - INCLUDE: Payload-free columns (id, last_updated_at, event_name, handler_name) are included to allow Index-Only Scans.
 --              This avoids visiting the heap for the high-frequency polling query.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ebs_0_events_scheduled_polling 
+CREATE INDEX IF NOT EXISTS idx_ebs_0_events_scheduled_polling 
 ON ebs_0.events (scheduled_at ASC) 
 INCLUDE (id, last_updated_at, event_name, handler_name)
 WHERE status = 1;
@@ -40,7 +40,7 @@ WHERE status = 1;
 -- Query: UPDATE ... WHERE status = 2 (InProgress) AND claimed_at <= @claimed_before
 -- Optimization:
 --   - PARTIAL: Only indexes 'InProgress' events. Extremely small index.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ebs_0_events_inprogress_timeout 
+CREATE INDEX IF NOT EXISTS idx_ebs_0_events_inprogress_timeout 
 ON ebs_0.events (claimed_at) 
 WHERE status = 2;
 
@@ -49,6 +49,6 @@ WHERE status = 2;
 -- Optimization:
 --   - PARTIAL: Only indexes 'Completed' (3) and 'DeadLettered' (4) events.
 --   - COMPOSITE: (status, last_updated_at) allows efficient range scans for deletion.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ebs_0_events_cleanup 
+CREATE INDEX IF NOT EXISTS idx_ebs_0_events_cleanup 
 ON ebs_0.events (status, last_updated_at) 
 WHERE status IN (3, 4);
