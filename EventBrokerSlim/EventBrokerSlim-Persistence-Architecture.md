@@ -52,7 +52,7 @@ It is a **durable in-process event bus** - publish an event, every registered ha
 
 **Narrow scope, low commitment.** It does one thing - durable in-process fan-out - and does not grow into a framework. Adopting it does not constrain your architecture or require you to buy into a broader ecosystem.
 
-**Can coexist with job schedulers.** EventBrokerSlim handles event-driven dispatch; Hangfire or Quartz.NET handle scheduled and background jobs. They solve different problems and work naturally alongside each other.
+**Coexists with other tools.** EventBrokerSlim handles durable in-process fan-out; job schedulers handle scheduled and background jobs; message brokers and distributed messaging frameworks handle cross-service event distribution. They solve different problems and work naturally alongside each other.
 
 ### When to Choose Something Else
 
