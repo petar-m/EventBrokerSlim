@@ -53,7 +53,7 @@ var pipelineBuilder = PipelineBuilder
     .Build();
 
 // Register the event handler pipeline for SampleEvent with a handler name to enable persistence
-builder.Services.AddEventHandlerPipeline<SampleEvent>(pipelineBuilder.Pipelines[0], handlerName: "sample-event-handler");
+builder.Services.AddEventHandlerPipeline<SampleEvent>(pipelineBuilder.Pipelines[0], opt => opt.WithHandlerName("sample-event-handler"));
 
 var app = builder.Build();
 
