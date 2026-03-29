@@ -28,8 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuncPipeline.Tests", "FuncP
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBrokerSlim", "EventBrokerSlim", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		EventBrokerSlim\EventBrokerSlim-Persistence-Architecture.md = EventBrokerSlim\EventBrokerSlim-Persistence-Architecture.md
 		EventBrokerSlim\package-icon.png = EventBrokerSlim\package-icon.png
+		EventBrokerSlim\Architecture-Events-Persistence.md = EventBrokerSlim\Architecture-Events-Persistence.md
 		EventBrokerSlim\ReadMe.md = EventBrokerSlim\ReadMe.md
 	EndProjectSection
 EndProject
@@ -59,6 +59,20 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSqlTestApp.AppHost", "EventBrokerSlim\test\PostgreSql\PostgreSqlTestApp.AppHost\PostgreSqlTestApp.AppHost.csproj", "{9546F1E6-9921-7CA4-32FE-EF62794E0E2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSqlTestApp.ServiceDefaults", "EventBrokerSlim\test\PostgreSql\PostgreSqlTestApp.ServiceDefaults\PostgreSqlTestApp.ServiceDefaults.csproj", "{29B28BFF-6CFF-C33B-861B-864134C8C7B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ADRs", "ADRs", "{C5735971-380C-49BD-AE04-88441CA9E258}"
+	ProjectSection(SolutionItems) = preProject
+		EventBrokerSlim\ADRs\ADR-01-fan-out-at-write-time.md = EventBrokerSlim\ADRs\ADR-01-fan-out-at-write-time.md
+		EventBrokerSlim\ADRs\ADR-02-polling-service-single-dispatch-path.md = EventBrokerSlim\ADRs\ADR-02-polling-service-single-dispatch-path.md
+		EventBrokerSlim\ADRs\ADR-03-optimistic-claiming-broad-polling.md = EventBrokerSlim\ADRs\ADR-03-optimistic-claiming-broad-polling.md
+		EventBrokerSlim\ADRs\ADR-04-single-table-per-event-handler.md = EventBrokerSlim\ADRs\ADR-04-single-table-per-event-handler.md
+		EventBrokerSlim\ADRs\ADR-05-explicit-event-handler-names.md = EventBrokerSlim\ADRs\ADR-05-explicit-event-handler-names.md
+		EventBrokerSlim\ADRs\ADR-06-startup-validation.md = EventBrokerSlim\ADRs\ADR-06-startup-validation.md
+		EventBrokerSlim\ADRs\ADR-07-escaped-exceptions-dead-letter.md = EventBrokerSlim\ADRs\ADR-07-escaped-exceptions-dead-letter.md
+		EventBrokerSlim\ADRs\ADR-08-serialization-responsibility.md = EventBrokerSlim\ADRs\ADR-08-serialization-responsibility.md
+		EventBrokerSlim\ADRs\ADR-09-single-storage-interface.md = EventBrokerSlim\ADRs\ADR-09-single-storage-interface.md
+		EventBrokerSlim\ADRs\ADR-10-maintenance-and-recovery.md = EventBrokerSlim\ADRs\ADR-10-maintenance-and-recovery.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -132,6 +146,7 @@ Global
 		{72AEA9B7-7F19-D8B0-FA3D-D34FC9F3FBC3} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
 		{9546F1E6-9921-7CA4-32FE-EF62794E0E2F} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
 		{29B28BFF-6CFF-C33B-861B-864134C8C7B8} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
+		{C5735971-380C-49BD-AE04-88441CA9E258} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}

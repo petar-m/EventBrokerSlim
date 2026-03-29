@@ -1,5 +1,4 @@
 # EventBrokerSlim Persistent Events
-## Goals, Assumptions, and Architecture Decisions
 
 ---
 
@@ -19,11 +18,11 @@ It does not cover implementation details or backend-specific concerns.
 
 Several .NET libraries address reliability and background processing. Understanding where they sit helps clarify where EventBrokerSlim fits.
 
-**Job schedulers — Hangfire, Quartz.NET, Coravel, TickerQ.** These persist and execute explicitly enqueued work. You schedule a job, a worker picks it up and runs it. They support retries, recurring schedules, and monitoring dashboards. None of them have fan-out — if three things need to happen when an order is placed, you enqueue three jobs, and the coupling lives in the caller.
+**Job schedulers - Hangfire, Quartz.NET, Coravel, TickerQ.** These persist and execute explicitly enqueued work. You schedule a job, a worker picks it up and runs it. They support retries, recurring schedules, and monitoring dashboards. None of them have fan-out - if three things need to happen when an order is placed, you enqueue three jobs, and the coupling lives in the caller.
 
-**Distributed messaging frameworks — MassTransit, Rebus, Wolverine, Brighter.** These support fan-out via message routing and provide durable delivery, sagas, and consumer registration. They abstract over real message brokers (RabbitMQ, Azure Service Bus) or provide their own transport. Capable and well-supported, but they are framework-level commitments with significant infrastructure and learning curve.
+**Distributed messaging frameworks - MassTransit, Rebus, Wolverine, Brighter.** These support fan-out via message routing and provide durable delivery, sagas, and consumer registration. They abstract over real message brokers (RabbitMQ, Azure Service Bus) or provide their own transport. Capable and well-supported, but they are framework-level commitments with significant infrastructure and learning curve.
 
-**Message brokers — RabbitMQ, Azure Service Bus, Amazon SQS.** The right tool for cross-service event distribution, heterogeneous consumers, and high-throughput messaging. Require dedicated infrastructure, operational expertise, and introduce a network hop and a new failure domain.
+**Message brokers - RabbitMQ, Azure Service Bus, Amazon SQS.** The right tool for cross-service event distribution, heterogeneous consumers, and high-throughput messaging. Require dedicated infrastructure, operational expertise, and introduce a network hop and a new failure domain.
 
 | Library | Fan-out | Persistence | Scheduling | Scope |
 |---|---|---|---|---|
@@ -37,21 +36,21 @@ Several .NET libraries address reliability and background processing. Understand
 | MassTransit | ✓ | ✓ | ✓ | Distributed messaging |
 | Rebus | ✓ | ✓ | ✗ | Distributed messaging |
 
-### Where EventBrokerSlim Falls
+### Where EventBrokerSlim Fits
 
-EventBrokerSlim with persistent events sits in the gap between job schedulers and distributed messaging frameworks. It is not a job scheduler — there is no explicit enqueue, no cron scheduling, no job chaining. It is not a distributed messaging framework — there is no broker, no transport, no cross-service routing.
+EventBrokerSlim with persistent events sits in the gap between job schedulers and distributed messaging frameworks. It is not a job scheduler - there is no explicit enqueue, no cron scheduling, no job chaining. It is not a distributed messaging framework - there is no broker, no transport, no cross-service routing.
 
-It is a **durable in-process event bus** — publish an event, every registered handler runs exactly once, reliably, even across crashes and restarts, across multiple instances of the same application.
+It is a **durable in-process event bus** - publish an event, every registered handler runs at least once, reliably, even across crashes and restarts, across multiple instances of the same application.
 
 ### Advantages
 
 **Fan-out with decoupling.** One publish, multiple independent handlers, each with its own delivery guarantee and retry policy. The publisher knows nothing about the handlers. Adding a new handler requires no change to the publisher.
 
-**DI-native programming model.** Handlers are plain classes resolved from your DI container. Retry policies are code. No serialization contracts, no consumer group configuration, no broker-specific concepts to learn.
+**DI-native programming model.** Handlers are plain classes resolved from your DI container — or delegates composed via pipelines. Each handler decides its own retry policy independently, and retry policies are code, not configuration. No serialization contracts, no consumer group configuration, no broker-specific concepts to learn.
 
-**Uses infrastructure you already have.** Persistence runs on your existing database — relational, document, or embedded. No new infrastructure to provision, operate, or monitor. For embedded backends (SQLite, Firebird) not even a database server is needed.
+**Uses infrastructure you already have.** Persistence runs on your existing database - relational, document, or embedded. No new infrastructure to provision, operate, or monitor. For embedded backends (SQLite, Firebird) not even a database server is needed.
 
-**Narrow scope, low commitment.** It does one thing — durable in-process fan-out — and does not grow into a framework. Adopting it does not constrain your architecture or require you to buy into a broader ecosystem.
+**Narrow scope, low commitment.** It does one thing - durable in-process fan-out - and does not grow into a framework. Adopting it does not constrain your architecture or require you to buy into a broader ecosystem.
 
 **Can coexist with job schedulers.** EventBrokerSlim handles event-driven dispatch; Hangfire or Quartz.NET handle scheduled and background jobs. They solve different problems and work naturally alongside each other.
 
@@ -64,17 +63,17 @@ It is a **durable in-process event bus** — publish an event, every registered 
 
 ### The Bottom Line
 
-EventBrokerSlim with persistent events fills the gap below message brokers — where their operational overhead is not justified, but the in-memory-only broker is not reliable enough.
+EventBrokerSlim with persistent events fills the gap below message brokers - where their operational overhead is not justified, but the in-memory-only broker is not reliable enough.
 
 ---
 
 ## Goals
 
-**Durability.** Events published via `IEventBroker.Publish` must not be lost if the process crashes before all handlers have completed. Every handler must eventually process every event it is registered for, even across process restarts.
+**Durability.** Published events must not be lost if the process crashes before all handlers have completed. Every handler must eventually process every event it is registered for, even across process restarts.
 
 **Durable retries.** Handler retry policies must survive process restarts. An event that failed and is awaiting a retry must remain in that state after a crash and be retried correctly when the process comes back up.
 
-**Horizontal scale-out.** Multiple instances of the same application must be able to run concurrently without any handler processing the same event more than once.
+**Horizontal scale-out.** Multiple instances of the same application must be able to run concurrently. The claiming mechanism ([ADR-03](ADRs/ADR-03-optimistic-claiming-broad-polling.md)) must ensure that, under normal operation, at most one instance processes a given record. In failure scenarios (process crash after claim, before ack), a record may be processed more than once - this is the at-least-once trade-off documented in Assumptions.
 
 **Non-breaking.** The existing public interface of `EventBrokerSlim` must remain unchanged. Existing handler code, retry policies, delegate handlers, and DI registrations must require zero modifications to benefit from persistence.
 
@@ -86,174 +85,55 @@ EventBrokerSlim with persistent events fills the gap below message brokers — w
 
 ## Non-Goals
 
-**Not an event sourcing solution.** The store is a delivery mechanism, not an event log. Records exist to ensure handlers execute reliably — they are not a source of truth, do not represent the full history of what happened in the system, and are not intended for replay, projection, or audit. Completed records are deleted according to retention policy. Applications that need event sourcing should use a dedicated solution.
+**Not an event sourcing solution.** The store is a delivery mechanism, not an event log. Records exist to ensure handlers execute reliably - they are not a source of truth, do not represent the full history of what happened in the system, and are not intended for replay, projection, or audit. Completed records are deleted according to retention policy. Applications that need event sourcing should use a dedicated solution.
 
 **Not a transactional outbox.** The event write is not atomic with the caller's own database transaction. Supporting this would require sharing the caller's database connection and transaction, constraining the design to same-database relational deployments only and coupling the event store interface to transaction management concerns. Applications that need true transactional outbox semantics should use a dedicated solution such as MassTransit, NServiceBus, or Wolverine. `EventBrokerSlim` provides at-least-once delivery across process restarts, which is sufficient for the majority of durability use cases.
 
 ---
 
-## Assumptions
-
-**A record is only processed if a matching handler is registered.** When `Publish` is called, records are written for the handler names known to the publishing instance. Any instance with a matching handler registered will eventually claim and process the record. An instance without that handler simply never claims it — it does not interfere and does not cause an error. If no running instance has the handler registered, the record remains pending until a TTL or retention policy cleans it up.
-
-**At-least-once delivery is acceptable.** In failure scenarios (process crash after claim, before ack), an event may be dispatched to a handler more than once. Handlers should be idempotent. This is a standard and documented constraint, not a deficiency.
-
-**Events are serializable.** Because events must be written to a store and later deserialized for replay, all event types must be serializable. Serialization format and mechanism are the responsibility of each `IEventStorage` implementation — the core library provides no shared serializer. This is a new requirement that does not exist in the in-memory-only version of the library.
-
-**Handler names are explicit and stable.** Each handler participating in persistence must be registered with an explicit `handlerName`. This name is used as the handler identifier in the store. It is not derived from the type name — this is essential for delegate/pipeline handlers, where there is no distinguishable type to derive a name from. The name must be stable across deployments; changing it is a breaking change requiring a migration.
-
-**Event names are explicit and stable.** Each event type participating in persistence must be registered in `EventRegistry` with a stable string name. The store uses this name rather than the C# type name, so namespace and class renames are non-breaking. Property-level changes (renamed, removed, or retyped properties) remain breaking because deserialization depends on the payload structure.
-
-**Event names are globally unique across broker instances.** `EventRegistry` is a global singleton shared across all keyed broker instances in the same process. The same event type maps to exactly one name, and the same name maps to exactly one event type, regardless of which broker instance publishes or handles it. Event identity is unambiguous across the entire process — reasoning about events, their handlers, and store records is consistent whether working with a single broker or multiple. Applications with multiple broker instances share the same registry.
-
-**The event store is external infrastructure.** The caller is responsible for provisioning and operating the backing database. The library provides schema scripts and client configuration, but operational concerns (backups, monitoring, scaling) are outside its scope.
-
----
-
-## Architecture Decisions
-
-### AD-1: Fan-out at write time
-
-When `Publish` is called, the persistence layer resolves all handler names registered for that event type from the local DI container and writes one independent record per handler name to the store. The event is identified in the store by its name from `EventRegistry`, not its C# type name.
-
-**Why:** This mirrors exactly what the in-memory broker already does — every registered handler receives every event. Writing one record per handler at publish time means the store contains the full set of work the publishing instance knows about. Any instance with a matching handler registered will claim and process its records independently. Instances without a matching handler ignore those records. Records that no instance ever claims are eventually cleaned up by TTL and retention policies.
-
-The alternative — fan-out at read time, where one event record is written and each handler tracks its own offset — was considered and rejected. It requires a durable subscription registry, introduces a bootstrapping problem (events published before a handler registers its subscription are missed), and makes completion tracking a heuristic rather than a deterministic check.
-
----
-
-### AD-2: The polling service is the single dispatch path
-
-When persistence is enabled, `IEventBroker` is implemented by a persistent broker that writes to the store and returns — no in-memory dispatch occurs at publish time. A background polling loop (`EventStoragePolling`) is the sole dispatch path. It continuously fetches candidate records, claims them using optimistic concurrency, and dispatches them through the in-memory handler machinery. Ack/nack/dead-letter results are written back to the store.
-
-To reduce latency, the persistent broker signals the polling loop after a write — waking it up immediately rather than waiting for the next poll interval. This is an optimisation; the poller's correctness does not depend on it.
-
-**Known limitation:** The polling loop and handler runner use `Task.Factory.StartNew` with `LongRunning` rather than `IHostedService`. Integration with the ASP.NET Core hosted service lifecycle is not currently implemented.
-
-**Why:** A single dispatch path eliminates dual-path confusion — there is no ambiguity about whether an event was handled in-memory or via the store. It also means fresh events and replayed events after a crash follow exactly the same code path, making the system easier to reason about and test.
-
----
-
-### AD-3: Claiming is atomic and timestamp-based; a periodic process handles recovery
-
-The polling service fetches a batch of candidate records using a broad query — `status = 'Scheduled' AND scheduled_at <= now` — with no handler name filter and passes them to the handler runner via an internal channel. The handler runner discards candidates with no matching local handler. When a concurrency slot is available, the handler runner attempts to claim a candidate using optimistic concurrency: a conditional update that sets `status = InProgress` and `claimed_at = now` only if `status` is still `Scheduled` at update time. If another instance claimed the record first, the condition fails and the handler moves on. The claim attempt happens immediately before processing, not during polling. The mechanism varies by backend — a conditional `UPDATE` with row count check for SQL, `findOneAndUpdate` for MongoDB, an atomic Lua script for Redis, a conditional patch with ETag for CosmosDB — but the outcome is identical across all backends: at most one instance claims any given record.
-
-No instance identifier is stored — with horizontal scaling there is no reliable stable identifier per instance, and none is needed.
-
-A `MaintenanceRunner` in the core library runs three independent maintenance loops, each with random jitter on startup and between runs to prevent contention across instances:
-
-- `RescheduleClaimedExceedingProcessingTimeoutAsync` — runs on a cadence tied to `ProcessingTimeout`; resets `InProgress` records where `claimed_at` exceeds `ProcessingTimeout` back to `Scheduled` with `scheduled_at = now`, incrementing `processing_timeouts_count`; dead-letters instead of reset once `MaxProcessingTimeouts` is exceeded
-- `DeadLetterUnclaimedAsync` — runs hourly by default; dead-letters `Scheduled` records that have not been claimed within `UnclaimedTtl` measured from `scheduled_at`
-- `DeleteCompletedAndDeadLetteredExceedingTtlAsync` — runs hourly by default; deletes `Completed` and `DeadLettered` records beyond their respective retention periods
-
-The schedule is owned by the core library; each backend implements the three methods on `IEventStorage` using configuration supplied at backend registration time.
-
-**Why:** A broad query is simpler and more efficiently indexable than a query filtered by a potentially large list of handler names. In-memory filtering before claiming avoids wasteful claim-then-release cycles in partial deployments. Optimistic concurrency keeps the claim mechanism uniform across backends — each backend expresses the same conditional update in its own idiom without requiring distributed locks or consensus.
-
----
-
-### AD-4: One store table, one record per (event, handler name)
-
-All records — regardless of event type or handler — live in a single table. The record schema includes the event name, handler name, serialized payload, status, attempt count, retry timestamp, claim metadata, and error information. The event payload is duplicated across all handler records for the same event.
-
-**Why:** A single table keeps the schema simple and backend-agnostic. Querying by handler name and status is sufficient for all polling operations. Each record is fully self-contained — claiming, dispatching, retrying, and cleaning up a record requires no joins and no coordination with other records. The payload duplication is the accepted tradeoff: the alternative of separating events and handler records into two tables (one event row, multiple handler rows) eliminates duplication but adds a join on every poll query and complicates cleanup, since the event row can only be deleted once all its handler rows are in a terminal state.
-
----
-
-### AD-5: Event and handler names decouple the store from C# type names
-
-Event types are registered in `EventRegistry` with explicit stable string names. Handler registrations supply an explicit `handlerName`. These names — not C# type names — are stored in the event store as the identifiers for event types and handlers respectively.
-
-`EventRegistry` is defined once by the application and registered in DI as a singleton:
-
-```csharp
-var registry = new EventRegistry()
-    .Add<OrderPlaced>("order-placed")
-    .Add<OrderCancelled>("order-cancelled");
-
-services.AddSingleton(registry);
-```
-
-Handler names are supplied at registration time via the optional `handlerName` parameter on both class-based and delegate handler registration methods. The parameter is optional — handlers without a `handlerName` participate only in in-memory dispatch and are invisible to the persistence layer. This preserves the non-breaking guarantee: existing handler registrations require no changes unless they need to participate in persistence.
-
-**Why:** C# type names are fragile as long-lived store identifiers — namespaces get reorganized, classes get renamed. Decoupling store identifiers from type names means these are non-breaking refactors. The explicit name is also the only viable approach for delegate/pipeline handlers, where the handler is an `IPipeline` instance and no distinguishable type name exists. Using explicit names uniformly across both handler kinds keeps the registration API consistent.
-
----
-
-### AD-6: Startup validation
-
-When persistence is enabled, the application performs eager validation on startup before accepting any traffic:
-
-- Every handler registered with a `handlerName` must have its event type present in `EventRegistry`
-- Every event type in `EventRegistry` should have at least one handler with a `handlerName` registered — events of that type will be written to the store but never claimed
-
-By default, both rules emit warnings via the configured logger. Applications that want stricter enforcement can opt in to throwing on validation errors by passing `throwOnValidationErrors: true` to `UsePersistentEventBroker`.
-
-Publishing an event whose type is not in `EventRegistry` is handled the same way as the in-memory broker handles events with no registered handlers: a warning is logged and the event is silently skipped. This matches the in-memory broker's behavior, preserving the seamless switch between in-memory and persistent modes. The warning respects the `DisableMissingHandlerWarningLog` setting.
-
-**Why:** Surfacing misconfiguration at startup rather than at first publish means problems are discovered immediately and deterministically, not buried in a rarely-exercised code path. Defaulting to warnings keeps the library non-breaking for development and gradual migration scenarios, while the opt-in throw gives production deployments a strict fail-fast guarantee. The publish-time behavior mirrors the in-memory broker to maintain consistent fire-and-forget semantics regardless of the persistence mode — code that works with the in-memory broker must not break when switching to persistence.
-
----
-
-### AD-7: Escaped pipeline exceptions always dead-letter; the retry policy is not consulted
-
-If an exception escapes the pipeline without being handled, the event record is immediately dead-lettered. The retry policy is not consulted in this case — `RetryRequested` and `Abandoned` are ignored.
-
-**Why:** The pipeline contract guarantees that exceptions are handled within the pipeline — via an error handling delegate or `IEventHandler<TEvent>.OnError`. An escaped exception means the handler failed to honour that contract. Consulting the retry policy after an unhandled exception would allow handlers to abuse the mechanism — throwing deliberately while setting `RetryRequested` to get retry behaviour without explicit error handling. Dead-lettering on escaped exceptions enforces the contract and keeps error handling explicit: a handler that wants retry-on-exception must implement that decision in `OnError` or an error handling delegate.
-
----
-
-### AD-8: Serialization is the responsibility of IEventStorage implementations
-
-The core library does not provide a shared serializer. Each `IEventStorage` implementation is responsible for serializing and deserializing event payloads in whatever format suits the backend. `EventRegistry` is passed to `TryClaimAsync` so the backend can resolve CLR types from event names during deserialization.
-
-**Why:** `EventBrokerSlim` is AOT-compatible. A shared JSON serializer based on reflection would break AOT-compatible deployments. Beyond AOT, serialization format is legitimately a backend concern — a Redis backend may prefer MessagePack, a PostgreSQL backend may prefer JSON, a custom backend may use Protobuf or stream large payloads differently. Offloading serialization to the backend keeps the core library free of serialization dependencies and allows each backend to make the choice that best fits its constraints, including AOT compatibility.
-
----
-
-### AD-9: `IEventStorage` remains a single interface
-
-A proposal was evaluated to split `IEventStorage` into four role-specific interfaces — `IEventScheduler`, `IEventPoller`, `IEventProcessor`, `IEventMaintenance` — to address an Interface Segregation Principle (ISP) violation. Each internal consumer (`PersistentEventBroker`, `EventStoragePolling`, `EventHandlerRunner`, `MaintenanceRunner`) uses a distinct subset of the interface's 10 methods.
-
-The proposal was rejected.
-
-**Why:** The ISP violation is entirely internal. All consumers of `IEventStorage` are non-public classes within the core library — external users interact with `IEventBroker`, never with `IEventStorage` directly. The violation is contained and does not leak to adopters.
-
-For implementors — the actual audience of the public `IEventStorage` contract — a single interface is the better design. A storage provider must implement all operations; there is no valid partial implementation. A single interface signals this clearly, provides compile-time completeness via "Implement Interface" in the IDE, and avoids the discoverability problem of requiring implementors to discover and implement four separate interfaces that are all mandatory. Splitting would misleadingly suggest the interfaces can be implemented independently.
-
-Keeping the composite interface (`IEventStorage : IEventScheduler, ...`) was also considered, but it reintroduces the same coupling the segregation aims to eliminate — consumers could depend on the composite type. Removing the composite and relying on runtime DI validation to enforce completeness trades compile-time safety for runtime checks, which is a step backward.
-
----
-
 ## Out of Scope
+
+The following topologies and backends were evaluated and explicitly excluded. While Non-Goals above define what the feature does not try to be, this section covers specific designs that were considered and rejected during development.
 
 ### Queue backends (RabbitMQ, Azure Storage Queues, Azure Service Bus)
 
-Queue backends were explored and excluded. The fan-out at write time strategy requires one queue per handler name — each handler type needs its own queue so that messages can be consumed independently. This is viable but means using a queue as a queryable database with worse querying capabilities. A database does this job better and more simply.
+Queue backends were explored and excluded. The [fan-out at write time](ADRs/ADR-01-fan-out-at-write-time.md) strategy requires one queue per handler name - each handler type needs its own queue so that messages can be consumed independently. This is viable but means using a queue as a queryable database with worse querying capabilities. A database does this job better and more simply.
 
 More fundamentally, the moment you need a queue with fan-out and independent per-handler delivery, you are in message broker territory. That problem is already solved by RabbitMQ exchanges, Azure Service Bus topic subscriptions, and similar infrastructure. Replicating that inside `EventBrokerSlim` would be building a message broker, which is explicitly not the goal.
 
 ### Publisher-only processes
 
-A process with no handler registrations writes zero records to the store — it has nothing to fan out to. Events published from such a process are silently lost. This is a direct consequence of fan-out at write time: the publisher writes records only for handlers it knows about in its own DI container.
+A process with no handler registrations writes zero records to the store - it has nothing to fan out to. Events published from such a process are silently lost. This is a direct consequence of [fan-out at write time](ADRs/ADR-01-fan-out-at-write-time.md): the publisher writes records only for handlers it knows about in its own DI container.
 
-Partial deployments — where different instances have different subsets of handlers — work naturally. Each instance writes records for the handlers it knows about, and any instance with a matching handler will eventually claim and process them. Records for handlers that no instance ever registers remain pending until TTL or a retention policy cleans them up.
+Partial deployments - where different instances have different subsets of handlers - work naturally. Each instance writes records for the handlers it knows about, and any instance with a matching handler will eventually claim and process them. Records for handlers that no instance ever registers remain pending until TTL or a retention policy cleans them up.
 
-The publisher-only topology — a dedicated process with no handlers whose sole role is publishing — falls into distributed event broker territory and is out of scope. Supporting it would require fan-out at read time, which introduces a subscription registry, a bootstrapping problem, and heuristic completion tracking. `EventBrokerSlim`'s identity is in-process fan-out, and every publishing process is expected to carry at least some handler registrations.
+The publisher-only topology - a dedicated process with no handlers whose sole role is publishing - is not supported by the core library. Supporting it natively would require fan-out at read time, which introduces a subscription registry, a bootstrapping problem, and heuristic completion tracking.
+
+However, a publisher-only process can be achieved through a dedicated `IEventStorage` implementation that only writes records on Publish and uses no-ops for claiming, dispatch, and maintenance. The consuming instances would use a standard storage backend to poll and process records from the same store. This approach is outside the scope of the core library but is enabled by the pluggable storage abstraction.
 
 ### Cross-service event distribution
 
-Distributing events across heterogeneous services — where different services handle different event types, or where a publisher and consumer are entirely separate applications — is out of scope. This is the core problem that full-scale message brokers exist to solve, and `EventBrokerSlim` deliberately does not compete in that space.
+Distributing events across heterogeneous services - where different services handle different event types, or where a publisher and consumer are entirely separate applications - is out of scope. This is the core problem that full-scale message brokers exist to solve, and `EventBrokerSlim` deliberately does not compete in that space.
 
 The persistent events feature targets a single application scaled horizontally. The store is a durability mechanism, not a transport.
 
 ---
 
-## Known Limitations
+## Assumptions
 
-**`IEventBroker.PublishDeferred` does not accept a `CancellationToken`.** The method signature does not expose a cancellation token parameter. Deferred publishes use the broker's internal shutdown token and cannot be cancelled by the caller. This is a known interface limitation inherited from the base `IEventBroker` contract and is not currently planned for change.
+**A record is only processed if a matching handler is registered.** When Publish is called, records are written for the handler names known to the publishing instance ([ADR-01](ADRs/ADR-01-fan-out-at-write-time.md)). Any instance with a matching handler registered will eventually claim and process the record. An instance without that handler simply never claims it - it does not interfere and does not cause an error. If no running instance has the handler registered, the record remains pending until a TTL or retention policy cleans it up.
 
-**No `IHostedService` integration.** The polling loop and maintenance runner use long-running background tasks rather than the ASP.NET Core `IHostedService` lifecycle. This means they are not subject to graceful shutdown coordination via `IHostedService.StopAsync`. Shutdown is handled via the shared `CancellationTokenSource` cancelled by `IEventBroker.Shutdown()`.
+**At-least-once delivery is acceptable.** In failure scenarios (process crash after claim, before ack - see [ADR-03](ADRs/ADR-03-optimistic-claiming-broad-polling.md)), an event may be dispatched to a handler more than once. Handlers should be idempotent. This is a standard and documented constraint, not a deficiency.
+
+**Events are serializable.** Because events must be written to a store and later deserialized for re-dispatch, all event types must be serializable. Serialization format and mechanism are the responsibility of each `IEventStorage` implementation ([ADR-08](ADRs/ADR-08-serialization-responsibility.md)) — the core library provides no shared serializer. This is a new requirement that does not exist in the in-memory-only version of the library.
+
+**Handler names are explicit and stable.** Each handler participating in persistence must be registered with an explicit handler name ([ADR-05](ADRs/ADR-05-explicit-event-handler-names.md)). This name is used as the handler identifier in the store. It is not derived from the type name - this is essential for delegate/pipeline handlers, where there is no distinguishable type to derive a name from. The name must be stable across deployments; changing it is a breaking change requiring a migration.
+
+**Event names are explicit and stable.** Each event type participating in persistence must be registered in the event registry with a stable string name ([ADR-05](ADRs/ADR-05-explicit-event-handler-names.md)). The store uses this name rather than the C# type name, so namespace and class renames are non-breaking. Property-level changes (renamed, removed, or retyped properties) remain breaking because deserialization depends on the payload structure.
+
+**Event names are globally unique across broker instances.** The event registry is a global singleton shared across all broker instances (including [keyed](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection#keyed-services) broker instances) in the same process. The same event type maps to exactly one name, and the same name maps to exactly one event type, regardless of which broker instance publishes or handles it. Event identity is unambiguous across the entire process - reasoning about events, their handlers, and store records is consistent whether working with a single broker or multiple. Applications with multiple broker instances share the same registry.
+
+**The event store is external infrastructure.** The caller is responsible for provisioning and operating the backing database. The library provides schema scripts and client configuration, but operational concerns (backups, monitoring, scaling) are outside its scope.
 
 ---
 
@@ -261,18 +141,77 @@ The persistent events feature targets a single application scaled horizontally. 
 
 Adding persistence introduces real operational overhead that does not exist with the in-memory-only broker. Adopters should be aware of:
 
-**Database dependency.** The application now depends on an external store being available. Store unavailability will cause `Publish` to fail.
+**Startup validation.** When persistence is enabled, the application validates handler and event registry consistency at startup ([ADR-06](ADRs/ADR-06-startup-validation.md)). By default, misconfigurations emit warnings; applications can opt in to strict mode to throw on validation errors.
+
+**Database dependency.** The application now depends on an external store being available. Store unavailability will cause Publish to fail.
 
 **Schema management.** Each backend package provides migration scripts. Schema changes across library versions must be applied as part of deployment.
 
-**Dead-letter monitoring.** Records land in a dead-letter state when the retry policy is exhausted, when a handler explicitly calls `Abandon()`, or when an exception escapes the pipeline unhandled. Dead-lettered records are not retried automatically. Monitoring and tooling for dead-letter inspection and requeue is necessary for production use.
+**Dead-letter monitoring.** Records land in a dead-letter state when the retry policy is exhausted, when a handler explicitly abandons the event, or when an exception escapes the pipeline unhandled ([ADR-07](ADRs/ADR-07-escaped-exceptions-dead-letter.md)). Dead-lettered records are not retried automatically. Monitoring and tooling for dead-letter inspection and requeue is necessary for production use.
 
-**Polling interval tuning.** The in-memory signal ensures the publishing process dispatches freshly published events with minimal latency. Other instances discover available work only on their next poll interval — during event spikes, idle instances join processing with a delay up to the polling interval. Shorter intervals reduce cross-instance latency at the cost of more store queries when idle.
+**Polling interval tuning.** The in-memory signal ([ADR-02](ADRs/ADR-02-polling-service-single-dispatch-path.md)) ensures the publishing process dispatches freshly published events with minimal latency. Other instances discover available work only on their next poll interval - during event spikes, idle instances join processing with a delay up to the polling interval. Shorter intervals reduce cross-instance latency at the cost of more store queries when idle.
 
-**Processing timeout tuning.** The processing timeout must be longer than the longest expected handler execution time. Too short and `InProgress` records are incorrectly reset to `Scheduled` and dispatched again. Too long and records from crashed instances remain stuck until the next maintenance run. `MaxProcessingTimeouts` caps how many times a record can be reset before being dead-lettered, preventing indefinite cycling of a persistently stuck record.
+**Processing timeout tuning.** The processing timeout ([ADR-10](ADRs/ADR-10-maintenance-and-recovery.md)) must be longer than the longest expected handler execution time. Too short and in-progress records are incorrectly reset to scheduled and dispatched again. Too long and records from crashed instances remain stuck until the next maintenance run. A maximum processing timeouts threshold caps how many times a record can be reset before being dead-lettered, preventing indefinite cycling of a persistently stuck record.
 
-**Unclaimed timeout tuning.** The unclaimed timeout determines how long a `Scheduled` record that is never claimed waits before being dead-lettered. This covers removed handlers, missing consumers, and deferred publishes that no instance ever processes. Should be set comfortably above the expected maximum time between a publish and a consumer coming online.
+**Unclaimed timeout tuning.** The unclaimed timeout ([ADR-10](ADRs/ADR-10-maintenance-and-recovery.md)) determines how long a scheduled record that is never claimed waits before being dead-lettered. This covers removed handlers, missing consumers, and deferred publishes that no instance ever processes. Should be set comfortably above the expected maximum time between a publish and a consumer coming online.
 
-**Handler name stability.** The `handlerName` supplied at registration is stored in the event store as the handler identifier. Changing it is a breaking change — in-flight records under the old name will never be claimed. Treat handler name changes as migrations.
+**Handler name stability.** The handler name supplied at registration ([ADR-05](ADRs/ADR-05-explicit-event-handler-names.md)) is stored in the event store as the handler identifier. Changing it is a breaking change - in-flight records under the old name will never be claimed. Treat handler name changes as migrations.
 
-**Event name stability.** The name registered in `EventRegistry` is stored as the event type identifier. Changing it is a breaking change — existing records under the old name cannot be deserialized or claimed correctly. C# type renames and namespace changes are safe as long as the registered name does not change. Property-level changes (renamed, removed, or retyped fields) are breaking regardless, as deserialization depends on the payload structure.
+**Event name stability.** The name registered in the event registry ([ADR-05](ADRs/ADR-05-explicit-event-handler-names.md)) is stored as the event type identifier. Changing it is a breaking change - existing records under the old name cannot be deserialized or claimed correctly. Type renames and namespace changes are safe as long as the registered name does not change. Property-level changes (renamed, removed, or retyped fields) are breaking regardless, as deserialization depends on the payload structure.
+
+**PublishDeferred does not accept a cancellation token.** The method signature does not expose a cancellation token parameter. Deferred publishes use the broker's internal shutdown token and cannot be cancelled by the caller. This is a known interface limitation inherited from the public contract and is not currently planned for change.
+
+**No hosted service integration.** The polling loop ([ADR-02](ADRs/ADR-02-polling-service-single-dispatch-path.md)) and maintenance runner use long-running background tasks rather than the ASP.NET Core hosted service lifecycle. They are not subject to graceful shutdown coordination. Shutdown is triggered by calling the broker's Shutdown method.
+
+---
+
+## Appendix A: Architecture Decision Records
+
+Architecture decisions are documented as individual ADRs in the [`ADRs/`](ADRs/) folder. The sections above reference them where relevant.
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [ADR-01](ADRs/ADR-01-fan-out-at-write-time.md) | Fan-out at write time | One record per handler name written at publish time |
+| [ADR-02](ADRs/ADR-02-polling-service-single-dispatch-path.md) | Polling service is the single dispatch path | All dispatch goes through the store polling loop, no in-memory fast path |
+| [ADR-03](ADRs/ADR-03-optimistic-claiming-broad-polling.md) | Optimistic concurrency claiming | Broad polling query with in-memory filtering; atomic conditional claim per backend |
+| [ADR-04](ADRs/ADR-04-single-table-per-event-handler.md) | One store table, one record per (event, handler name) | Single table, self-contained records, payload duplication accepted |
+| [ADR-05](ADRs/ADR-05-explicit-event-handler-names.md) | Explicit event and handler names | Stable string names decouple store identifiers from C# type names |
+| [ADR-06](ADRs/ADR-06-startup-validation.md) | Startup validation | Eager validation of handler/event registration consistency at startup |
+| [ADR-07](ADRs/ADR-07-escaped-exceptions-dead-letter.md) | Escaped exceptions dead-letter | Unhandled pipeline exceptions bypass retry policy and dead-letter immediately |
+| [ADR-08](ADRs/ADR-08-serialization-responsibility.md) | Serialization is backend responsibility | Each IEventStorage implementation owns serialization; no shared serializer |
+| [ADR-09](ADRs/ADR-09-single-storage-interface.md) | IEventStorage remains a single interface | ISP split rejected; single interface is better for implementors |
+| [ADR-10](ADRs/ADR-10-maintenance-and-recovery.md) | Periodic maintenance for recovery and cleanup | Three independent loops: processing timeout reset, unclaimed TTL dead-lettering, completed and dead-lettered record deletion |
+
+---
+
+## Appendix B: How It Works
+
+### Publish and dispatch
+
+The following diagram shows how events flow from Publish through the polling loop to handler dispatch. Each record is self-contained ([ADR-04](ADRs/ADR-04-single-table-per-event-handler.md)). See also [ADR-01](ADRs/ADR-01-fan-out-at-write-time.md) (fan-out at write), [ADR-02](ADRs/ADR-02-polling-service-single-dispatch-path.md) (single dispatch path), and [ADR-03](ADRs/ADR-03-optimistic-claiming-broad-polling.md) (claiming).
+
+```mermaid
+flowchart TD
+    A([Application calls Publish]) --> B[Write one record per handler to store]
+    B --> C([Signal polling loop])
+    C --> D[Fetch scheduled records from store]
+    D --> E[Filter by local handler registrations]
+    E --> F{Claim via optimistic concurrency}
+    F -- Claimed --> G[Handler processes event]
+    F -- Already claimed --> H([Skip])
+    G --> I{Outcome}
+    I -- Success --> J[Record completed]
+    I -- Retry requested --> K[Record rescheduled]
+    I -- Abandoned / unhandled exception --> L[Record dead-lettered]
+```
+
+### Maintenance
+
+Three independent periodic loops handle recovery and cleanup. See [ADR-10](ADRs/ADR-10-maintenance-and-recovery.md).
+
+```mermaid
+flowchart LR
+    M([Maintenance loops]) --> N[Reset timed-out in-progress records]
+    M --> O[Dead-letter unclaimed records past TTL]
+    M --> P[Delete completed and dead-lettered records past retention]
+```
