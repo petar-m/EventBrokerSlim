@@ -68,6 +68,36 @@ public class OrderPlacedHandler : IEventHandler<OrderPlaced>
 }
 ```
 
+**Alternative: delegate handler**
+
+Instead of a class, define the handler as a delegate pipeline:
+
+```csharp
+public record OrderPlaced(string OrderId, decimal Amount);
+
+IPipeline pipeline = PipelineBuilder.Create()
+    .NewPipeline()
+    .Execute(static async (IRetryPolicy retryPolicy, INext next) =>
+    {
+        try
+        {
+            await next.RunAsync();
+        }
+        catch(Exception exception)
+        {
+            // optionally retry
+            retryPolicy.RetryAfter(TimeSpan.FromSeconds(5));
+        }
+    })
+    .Execute(static async (OrderPlaced @event, ISomeService service, CancellationToken ct) =>
+    {
+        // process the event — must be idempotent
+        await service.ProcessOrder(@event, ct);
+    })
+    .Build()
+    .Pipelines[0];
+```
+
 ### 2. Register the event registry
 
 Map each event type to a stable string name. The name is stored in the database — it must not change between deployments:
@@ -92,6 +122,22 @@ Or using the options API:
 
 ```csharp
 serviceCollection.AddTransientEventHandler<OrderPlaced, OrderPlacedHandler>(o => o
+    .WithHandlerName("OrderPlacedHandler"));
+```
+
+**Alternative: delegate handler**
+
+Register the delegate pipeline with a persistent name:
+
+```csharp
+serviceCollection.AddEventHandlerPipeline<OrderPlaced>(pipeline,
+    handlerName: "OrderPlacedHandler");
+```
+
+Or using the options API:
+
+```csharp
+serviceCollection.AddEventHandlerPipeline<OrderPlaced>(pipeline, o => o
     .WithHandlerName("OrderPlacedHandler"));
 ```
 
