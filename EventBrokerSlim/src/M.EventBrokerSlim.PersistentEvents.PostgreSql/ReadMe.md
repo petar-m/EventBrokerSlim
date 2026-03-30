@@ -168,6 +168,14 @@ On startup, validation checks that:
 
 Set `throwOnValidationErrors: true` for strict mode (default logs warnings).
 
+### 6. Publish events
+
+`IEventBroker` is registered in the DI container and can be injected where needed:
+
+```csharp
+await eventBroker.Publish(new OrderPlaced("order-123", 49.99m));
+```
+
 ## Configuration Reference
 
 ### DatabaseSettings
