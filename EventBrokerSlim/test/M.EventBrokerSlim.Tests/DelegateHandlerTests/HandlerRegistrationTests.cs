@@ -1,5 +1,4 @@
 ﻿using FuncPipeline;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 

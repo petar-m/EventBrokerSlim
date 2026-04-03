@@ -1,6 +1,5 @@
 ﻿using FuncPipeline;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DynamicDelegateHandlerTests;
 
