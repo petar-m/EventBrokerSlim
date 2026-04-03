@@ -6,6 +6,8 @@ namespace M.EventBrokerSlim.Tests;
 
 public class EventBrokerTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Publish_Null_Throws()
     {
@@ -20,7 +22,7 @@ public class EventBrokerTests
 
         // Act Assert
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-        await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.Publish<TestEvent>(null));
+        await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.Publish<TestEvent>(null, CancellationToken.None));
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 
@@ -114,12 +116,12 @@ public class EventBrokerTests
 
         // Act
         eventsRecorder.Expect(1);
-        await eventBroker.Publish(new TestEvent(CorrelationId: 1));
+        await eventBroker.Publish(new TestEvent(CorrelationId: 1), _ct);
 
         var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
         eventBroker.Shutdown();
 
-        var exception = await Assert.ThrowsAsync<EventBrokerPublishNotAvailableException>(async () => await eventBroker.Publish(new TestEvent(CorrelationId: 2)));
+        var exception = await Assert.ThrowsAsync<EventBrokerPublishNotAvailableException>(async () => await eventBroker.Publish(new TestEvent(CorrelationId: 2), _ct));
 
         // Assert
         Assert.True(completed);
@@ -226,7 +228,7 @@ public class EventBrokerTests
         // Act
         eventsRecorder.Expect(1, 2);
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(300));
-        await eventBroker.Publish(new TestEvent(CorrelationId: 2));
+        await eventBroker.Publish(new TestEvent(CorrelationId: 2), _ct);
 
         var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
 
@@ -289,10 +291,10 @@ public class EventBrokerTests
         // Act
         foreach(var @event in expected)
         {
-            await eventBroker.Publish(@event);
+            await eventBroker.Publish(@event, _ct);
         }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(200));
+        await Task.Delay(TimeSpan.FromMilliseconds(200), _ct);
 
         eventBroker.Shutdown();
 
@@ -329,10 +331,10 @@ public class EventBrokerTests
         // Act
         foreach(var @event in expected)
         {
-            await eventBroker.Publish(@event);
+            await eventBroker.Publish(@event, _ct);
         }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        await Task.Delay(TimeSpan.FromMilliseconds(100), _ct);
 
         eventBroker.Shutdown();
 
@@ -367,9 +369,9 @@ public class EventBrokerTests
         eventsRecorder.Expect(testEvent);
 
         // Act
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        await Task.Delay(TimeSpan.FromMilliseconds(100), _ct);
 
         eventBroker.Shutdown();
 

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 namespace M.EventBrokerSlim.Tests;
 public class ExceptionHandlingTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task UnhandledException_FromEventHandler_IsPassedTo_OnError()
     {
@@ -21,7 +23,7 @@ public class ExceptionHandlingTests
         // Act
         var testEvent = new TestEvent(CorrelationId: 1, ThrowFromHandle: true);
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
@@ -47,7 +49,7 @@ public class ExceptionHandlingTests
         // Act
         var testEvent = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
@@ -74,7 +76,7 @@ public class ExceptionHandlingTests
         // Act
         var testEvent = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromSeconds(1));
 
@@ -105,7 +107,7 @@ public class ExceptionHandlingTests
         // Act
         var event1 = new TestEvent(CorrelationId: 1, ThrowFromHandle: true, ThrowFromOnError: true);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
@@ -132,7 +134,7 @@ public class ExceptionHandlingTests
         // Act
         var event1 = new TestEvent(CorrelationId: 1, ThrowFromHandle: true, ThrowFromOnError: true);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromSeconds(1));
 

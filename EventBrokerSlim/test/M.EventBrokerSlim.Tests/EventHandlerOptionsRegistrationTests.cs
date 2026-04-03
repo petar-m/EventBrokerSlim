@@ -6,12 +6,11 @@ namespace M.EventBrokerSlim.Tests;
 
 public class EventHandlerOptionsRegistrationTests
 {
-    private readonly ITestOutputHelper _output;
     private readonly EventsTracker _tracker;
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
-    public EventHandlerOptionsRegistrationTests(ITestOutputHelper output)
+    public EventHandlerOptionsRegistrationTests()
     {
-        _output = output;
         _tracker = new EventsTracker();
     }
 
@@ -72,7 +71,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
@@ -98,7 +97,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
@@ -124,7 +123,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
@@ -156,7 +155,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
@@ -182,7 +181,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await defaultBroker.Publish(new TestEventBase(1));
+        await defaultBroker.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert
@@ -270,7 +269,7 @@ public class EventHandlerOptionsRegistrationTests
         _tracker.ExpectedItemsCount = 4;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
         // Assert

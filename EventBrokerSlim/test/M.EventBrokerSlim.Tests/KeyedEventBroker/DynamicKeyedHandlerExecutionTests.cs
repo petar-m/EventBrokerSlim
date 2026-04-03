@@ -9,6 +9,7 @@ public class DynamicKeyedHandlerExecutionTests
     private readonly ITestOutputHelper _output;
     private readonly ServiceCollection _serviceCollection;
     private readonly EventsTracker _tracker;
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public DynamicKeyedHandlerExecutionTests(ITestOutputHelper output)
     {
@@ -41,7 +42,7 @@ public class DynamicKeyedHandlerExecutionTests
 
         // Act
         _ = dynamicEventHandlers1.Add<TestEventBase>(pipeline);
-        await eventBroker1.Publish(new TestEventBase(2));
+        await eventBroker1.Publish(new TestEventBase(2), _ct);
 
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
@@ -76,12 +77,12 @@ public class DynamicKeyedHandlerExecutionTests
 
         // Act
         IDynamicHandlerClaimTicket claimTicket = dynamicEventHandlers.Add<TestEventBase>(pipeline);
-        await eventBroker1.Publish(new TestEventBase(2));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker1.Publish(new TestEventBase(2), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         dynamicEventHandlers.Remove(claimTicket);
 
-        await eventBroker1.Publish(new TestEventBase(3));
+        await eventBroker1.Publish(new TestEventBase(3), _ct);
 
         await _tracker.Wait(TimeSpan.FromMilliseconds(300));
 

@@ -2,6 +2,8 @@
 
 public class HandlerRegistrationTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public void RegisterHandlerAsTransient_AddsToServiceCollection()
     {
@@ -126,7 +128,7 @@ public class HandlerRegistrationTests
             $"1_{typeof(TestEventHandler1).Name}",
             $"1_{typeof(TestEventHandler2).Name}");
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -158,7 +160,7 @@ public class HandlerRegistrationTests
             $"1_{typeof(TestEventHandler1).Name}",
             $"1_{typeof(TestEventHandler2).Name}");
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 

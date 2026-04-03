@@ -2,6 +2,8 @@
 
 public class MultipleHandlersTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task MultipleHandlers_AllExecuted()
     {
@@ -27,7 +29,7 @@ public class MultipleHandlersTests
             $"1_{typeof(TestEventHandler1).Name}",
             $"1_{typeof(TestEventHandler2).Name}");
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 

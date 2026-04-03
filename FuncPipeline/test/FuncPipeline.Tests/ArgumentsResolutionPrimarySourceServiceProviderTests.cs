@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,8 @@ using Xunit;
 namespace FuncPipeline.Tests;
 public class ArgumentsResolutionPrimarySourceServiceProviderTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Found_Attribute()
     {
@@ -30,7 +33,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -61,7 +64,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -92,7 +95,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -136,7 +139,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -181,7 +184,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -205,7 +208,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -238,7 +241,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -259,7 +262,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -293,7 +296,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -316,7 +319,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -357,7 +360,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -385,7 +388,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -427,7 +430,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -452,7 +455,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -485,7 +488,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         var context = new PipelineRunContext().Set(typeof(ITestStub), contextFunc);
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -529,7 +532,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         var context = new PipelineRunContext().Set(typeof(ITestStub), contextFunc);
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -555,7 +558,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -591,7 +594,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -614,7 +617,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -654,7 +657,7 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -663,5 +666,4 @@ public class ArgumentsResolutionPrimarySourceServiceProviderTests
         Assert.Equal("No FuncPipeline.Tests.ITestStub found in PipelineRunContext. ResolveFromAttribute { PrimarySource = Services, Fallback = True, PrimaryNotFound = ThrowException, SecondaryNotFound = ThrowException, Key =  }",
              result.Exception.Message);
     }
-
 }
