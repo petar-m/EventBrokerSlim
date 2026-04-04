@@ -67,10 +67,10 @@ jobs:
         dotnet-version: 9.x
 
     - name: Restore dependencies
-      run: dotnet restore EventBrokerSlim.sln
+      run: dotnet restore EventBrokerSlim.slnx
 
     - name: Build
-      run: dotnet build EventBrokerSlim.sln --no-restore --configuration Release -p:Version=${{ env.VERSION }}
+      run: dotnet build EventBrokerSlim.slnx --no-restore --configuration Release -p:Version=${{ env.VERSION }}
 
     - name: Run Unit Tests EventBrokerSlim net8.0
       run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
