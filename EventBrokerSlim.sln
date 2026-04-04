@@ -74,6 +74,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ADRs", "ADRs", "{C5735971-3
 		EventBrokerSlim\ADRs\ADR-10-maintenance-and-recovery.md = EventBrokerSlim\ADRs\ADR-10-maintenance-and-recovery.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests", "EventBrokerSlim\test\PostgreSql\M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests\M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj", "{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,10 @@ Global
 		{29B28BFF-6CFF-C33B-861B-864134C8C7B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29B28BFF-6CFF-C33B-861B-864134C8C7B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29B28BFF-6CFF-C33B-861B-864134C8C7B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -147,6 +153,7 @@ Global
 		{9546F1E6-9921-7CA4-32FE-EF62794E0E2F} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
 		{29B28BFF-6CFF-C33B-861B-864134C8C7B8} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
 		{C5735971-380C-49BD-AE04-88441CA9E258} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{671D9100-EB90-4D9F-91B0-E49D6DCA7EA9} = {A815C3FE-2EF2-4549-845D-69FE4C0CC800}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF065088-581B-465F-AD20-DDDA34D00505}
