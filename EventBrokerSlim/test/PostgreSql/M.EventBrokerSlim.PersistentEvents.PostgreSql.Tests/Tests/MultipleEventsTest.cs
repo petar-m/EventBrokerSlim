@@ -60,10 +60,14 @@ public class MultipleEventsTest : IDisposable
 
         await receiver.WaitForEventsAsync(4, TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var receivedEvents = receiver.GetReceivedEvents();
-        Assert.Equal(event1, receivedEvents.Single(x => x is SampleEvent e && e.Message == "event 1"));
-        Assert.Equal(event2, receivedEvents.Single(x => x is SampleEvent2 e && e.Value == 2));
-        Assert.Equal(event3, receivedEvents.Single(x => x is SampleEvent e && e.Message == "event 3"));
-        Assert.Equal(event4, receivedEvents.Single(x => x is SampleEvent2 e && e.Value == 4));
+        var receivedEvent1 = Assert.Single(receivedEvents, e => e.Event is SampleEvent se && se.Message == "event 1");
+        var receivedEvent2 = Assert.Single(receivedEvents, e => e.Event is SampleEvent2 se && se.Value == 2);
+        var receivedEvent3 = Assert.Single(receivedEvents, e => e.Event is SampleEvent se && se.Message == "event 3");
+        var receivedEvent4 = Assert.Single(receivedEvents, e => e.Event is SampleEvent2 se && se.Value == 4);
+        Assert.Equal(event1, receivedEvent1.Event);
+        Assert.Equal(event2, receivedEvent2.Event);
+        Assert.Equal(event3, receivedEvent3.Event);
+        Assert.Equal(event4, receivedEvent4.Event);
     }
 
     public void Dispose()

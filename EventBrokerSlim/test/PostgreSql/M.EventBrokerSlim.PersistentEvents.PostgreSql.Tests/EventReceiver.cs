@@ -9,9 +9,7 @@ public class EventReceiver
 
     public void Add(EventRecord record) => _receivedEvents.Add(new ReceivedEvent(record.DeserializedEvent, record, DateTime.UtcNow));
 
-    public List<object> GetReceivedEvents() => _receivedEvents.Select(e => e.Event).ToList();
-
-    public List<ReceivedEvent> GetRecorded() => _receivedEvents.ToList();
+    public List<ReceivedEvent> GetReceivedEvents() => _receivedEvents.ToList();
 
     public async Task<TEvent> WaitForSingleAsync<TEvent>(TimeSpan timeout, CancellationToken cancellationToken) where TEvent : class
     {
@@ -38,7 +36,7 @@ public class EventReceiver
         var wait = TimeSpan.FromMilliseconds(100);
         do
         {
-            if (_receivedEvents.Count > count)
+            if(_receivedEvents.Count > count)
             {
                 throw new Exception($"Expected {count} events, but received {_receivedEvents.Count}");
             }

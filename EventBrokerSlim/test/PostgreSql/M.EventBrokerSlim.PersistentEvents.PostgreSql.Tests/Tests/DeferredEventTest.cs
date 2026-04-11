@@ -49,7 +49,8 @@ public class DeferredEventTest : IDisposable
 
         await receiver.WaitForEventsAsync(1, TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var receivedEvents = receiver.GetReceivedEvents();
-        Assert.Equal(event1, receivedEvents.Single(x => x is SampleEvent e && e.Message == "event 1"));
+        var receivedEvent = Assert.Single(receivedEvents, e => e.Event is SampleEvent se && se.Message == "event 1");
+        Assert.Equal(event1, receivedEvent.Event);
     }
 
     public void Dispose()

@@ -28,7 +28,7 @@ public class MultipleEventsIncludingDeferredTest : IDisposable
                 cfg.ScheduledBatchSize = 2;
 
                 db.ConnectionString = setup.ConnectionString;
-                db.Schema = "ebs_1";
+                db.Schema = "ebs_3";
                 db.Table = nameof(MultipleEventsIncludingDeferredTest);
                 db.CreateEventsTable();
             }))
@@ -59,7 +59,7 @@ public class MultipleEventsIncludingDeferredTest : IDisposable
         await broker.Publish(event4, TestContext.Current.CancellationToken);
 
         await receiver.WaitForEventsAsync(4, TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        var receivedEvents = receiver.GetRecorded();
+        var receivedEvents = receiver.GetReceivedEvents();
         var receivedEvent1 = Assert.Single(receivedEvents, e => e.Event is SampleEvent se && se.Message == "event 1");
         var receivedEvent2 = Assert.Single(receivedEvents, e => e.Event is SampleEvent2 se && se.Value == 2);
         var receivedEvent3 = Assert.Single(receivedEvents, e => e.Event is SampleEvent se && se.Message == "event 3");
