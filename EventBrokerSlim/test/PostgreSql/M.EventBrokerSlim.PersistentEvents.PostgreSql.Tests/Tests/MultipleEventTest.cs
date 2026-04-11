@@ -6,12 +6,12 @@ using PostgreSqlIntegrationTests;
 
 namespace M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.Tests;
 
-public class MultipleEventTest : IDisposable
+public class MultipleEventsTest : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly IServiceScope _scope;
 
-    public MultipleEventTest(Setup setup)
+    public MultipleEventsTest(Setup setup)
     {
         var builder = PipelineBuilder
             .Create()
@@ -29,7 +29,7 @@ public class MultipleEventTest : IDisposable
 
                 db.ConnectionString = setup.ConnectionString;
                 db.Schema = "ebs_1";
-                db.Table = nameof(MultipleEventTest);
+                db.Table = nameof(MultipleEventsTest);
                 db.CreateEventsTable();
             }))
             .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
