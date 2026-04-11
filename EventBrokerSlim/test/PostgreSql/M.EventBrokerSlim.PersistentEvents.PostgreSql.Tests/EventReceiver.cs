@@ -11,6 +11,8 @@ public class EventReceiver
 
     public List<object> GetReceivedEvents() => _receivedEvents.Select(e => e.Event).ToList();
 
+    public List<ReceivedEvent> GetRecorded() => _receivedEvents.ToList();
+
     public async Task<TEvent> WaitForSingleAsync<TEvent>(TimeSpan timeout, CancellationToken cancellationToken) where TEvent : class
     {
         var deadline = DateTime.UtcNow + timeout;
