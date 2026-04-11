@@ -8,4 +8,11 @@ builder.AddProject<Projects.PostgreSqlTestApp>("postgresqltestapp")
     .WaitFor(db)
     .WithEnvironment("ConnectionStrings__PostgreSql", db);
 
-await builder.Build().RunAsync();
+try
+{
+    await builder.Build().RunAsync();
+}
+catch(TaskCanceledException)
+{
+    // Ignore cancellation during shutdown
+}
