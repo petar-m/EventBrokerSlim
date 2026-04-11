@@ -8,21 +8,27 @@ namespace M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.Tests;
 
 public class SingleEventTest : IDisposable
 {
-    private readonly Setup _setup;
     private readonly ServiceProvider _serviceProvider;
     private readonly IServiceScope _scope;
 
     public SingleEventTest(Setup setup)
     {
-        _setup = setup;
-        var services = new ServiceCollection().AddEventBroker(_setup);
-
         var builder = PipelineBuilder
             .Create()
             .NewPipeline()
             .Execute(async (SampleEvent e, EventReceiver r, EventRecord record) => r.Add(record))
             .Build();
-        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"));
+        var services = new ServiceCollection()
+            .AddEventBroker(x => x.WithPostgreSqlPersistence((db, cfg) =>
+            {
+                db.ConnectionString = setup.ConnectionString;
+                db.Schema = "custom_schema";
+                db.Table = "custom_events_table";
+                db.CreateEventsTable();
+            }))
+            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
+            .AddSingleton(EventRegistryHelper.Registry)
+            .AddSingleton<EventReceiver>();
 
         _serviceProvider = services.BuildServiceProvider();
         _serviceProvider.UsePersistentEventBroker(throwOnValidationErrors: true);
