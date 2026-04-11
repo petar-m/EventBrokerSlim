@@ -36,39 +36,39 @@ internal class PostgreSqlStorage : IEventStorage
         _eventBrokerSettings = eventBrokerSettings;
         _logger = logger ?? NullLogger<PostgreSqlStorage>.Instance;
         _completeSingleSqlUpdate = $"""
-            UPDATE {databaseSettings.Schema}.events
+            UPDATE {databaseSettings.Schema}.{databaseSettings.Table}
             SET status = @completed, last_updated_at = @last_updated_at
             WHERE id = @id;
             """;
         _deadLetterSingleSqlUpdate = $"""
-            UPDATE {databaseSettings.Schema}.events
+            UPDATE {databaseSettings.Schema}.{databaseSettings.Table}
             SET status = @dead_lettered, last_updated_at = @last_updated_at, last_error = @error
             WHERE id = @id;
             """;
         _fetchScheduledSqlQuery = $"""
             SELECT id, last_updated_at, event_name, handler_name
-            FROM {databaseSettings.Schema}.events
+            FROM {databaseSettings.Schema}.{databaseSettings.Table}
             WHERE status = @scheduled AND scheduled_at <= @now
             ORDER BY scheduled_at ASC
             LIMIT @batch_size;
             """;
         _retrySingleSqlUpdate = $"""
-            UPDATE {databaseSettings.Schema}.events
+            UPDATE {databaseSettings.Schema}.{databaseSettings.Table}
             SET status = @scheduled, scheduled_at = @scheduled_at, retry_attempt_count = @attempt_count, retry_last_delay = @retry_last_delay, last_updated_at = @last_updated_at, last_error = @error
             WHERE id = @id;
             """;
         _tryClaimSingleSqlUpdate = $"""
-            UPDATE {databaseSettings.Schema}.events
+            UPDATE {databaseSettings.Schema}.{databaseSettings.Table}
             SET status = @in_progress, claimed_at = @claimed_at, last_updated_at = @last_updated_at
             WHERE id = @candidate_id AND status = @scheduled AND last_updated_at = @candidate_last_updated_at
             RETURNING id, event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, claimed_at, created_at, last_updated_at, last_error, processing_timeouts_count;
             """;
         _scheduleSqlInsert = $$"""
-            INSERT INTO {{databaseSettings.Schema}}.events (event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, created_at, last_updated_at, processing_timeouts_count)
+            INSERT INTO {{databaseSettings.Schema}}.{{databaseSettings.Table}} (event_id, event_name, handler_name, payload, status, scheduled_at, retry_attempt_count, retry_last_delay, created_at, last_updated_at, processing_timeouts_count)
             VALUES {0};
             """;
         _rescheduleClaimedExceedingProcessingTimeoutUpdateSql = $"""
-           UPDATE {databaseSettings.Schema}.events
+           UPDATE {databaseSettings.Schema}.{databaseSettings.Table}
            SET
                status = CASE
                    WHEN processing_timeouts_count >= @max_processing_timeouts THEN @dead_lettered
@@ -94,14 +94,14 @@ internal class PostgreSqlStorage : IEventStorage
            WHERE status = @in_progress AND claimed_at <= @claimed_before
            """;
         _deadLetterUnclaimedSqlUpdate = $"""
-            UPDATE {databaseSettings.Schema}.events SET
+            UPDATE {databaseSettings.Schema}.{databaseSettings.Table} SET
                 status = @dead_lettered,
                 last_updated_at = @last_updated_at,
                 last_error = @error
             WHERE status = @scheduled AND scheduled_at <= @scheduled_before;
             """;
         _deleteDeadLetteredAndCompletedExceededTtlSql = $"""
-            DELETE FROM {databaseSettings.Schema}.events
+            DELETE FROM {databaseSettings.Schema}.{databaseSettings.Table}
             WHERE 
             (status = @completed AND last_updated_at <= @completed_before) OR 
             (status = @dead_lettered AND last_updated_at <= @dead_lettered_before);

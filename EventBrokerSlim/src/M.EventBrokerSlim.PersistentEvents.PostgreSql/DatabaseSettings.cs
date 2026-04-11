@@ -17,4 +17,10 @@ public class DatabaseSettings
     /// </summary>
     /// <remarks>The default value is "ebs_0". This property determines the database schema under which "events" table was created.</remarks>
     public string Schema { get; set; } = "ebs_0";
+
+    /// <summary>
+    /// Gets or sets the name of the database table used for storing events.
+    /// </summary>
+    /// <remarks>The default value is "events". This property determines the name of the table used for storing events in the database.</remarks>
+    public string Table { get; set; } = "events";
 }

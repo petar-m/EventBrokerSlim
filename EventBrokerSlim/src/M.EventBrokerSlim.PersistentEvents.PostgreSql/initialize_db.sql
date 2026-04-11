@@ -1,7 +1,9 @@
 -- This SQL script initializes the database schema for the Event Broker Slim library's persistent event dispatching feature.
 
 -- ----------
--- IMPORTANT: ebs_0 is the default schema name. If you have multiple instances, make sure to replace it with a unique schema name for each instance.
+-- IMPORTANT: If you have multiple broker instances, ensure a unique schema.table name for each instance.
+-- ebs_0  is the default schema name. 
+-- events is the default table  name. 
 -- ----------
 CREATE SCHEMA IF NOT EXISTS ebs_0;
 

@@ -28,8 +28,9 @@ public static class DatabaseSettingsExtensions
     /// connection string cannot be null or empty.</param>
     public static void CreateEventsTable(this DatabaseSettings settings)
     {
-        ArgumentException.ThrowIfNullOrEmpty(settings.ConnectionString, nameof(settings.ConnectionString));
-        ArgumentException.ThrowIfNullOrEmpty(settings.Schema, nameof(settings.Schema));
+        ArgumentException.ThrowIfNullOrWhiteSpace(settings.ConnectionString, nameof(settings.ConnectionString));
+        ArgumentException.ThrowIfNullOrWhiteSpace(settings.Schema, nameof(settings.Schema));
+        ArgumentException.ThrowIfNullOrWhiteSpace(settings.Table, nameof(settings.Table));
 
         using var dataSource = NpgsqlDataSource.Create(settings.ConnectionString);
         using var connection = dataSource.CreateConnection();
@@ -38,15 +39,17 @@ public static class DatabaseSettingsExtensions
          -- This SQL script initializes the database schema for the Event Broker Slim library's persistent event dispatching feature.
 
          -- ----------
-         -- IMPORTANT: ebs_0 is the default schema name. If you have multiple instances, make sure to replace it with a unique schema name for each instance.
+         -- IMPORTANT: If you have multiple broker instances, ensure a unique schema.table name for each instance.
+         -- ebs_0  is the default schema name. 
+         -- events is the default table  name. 
          -- ----------
          CREATE SCHEMA IF NOT EXISTS {settings.Schema};
 
-         CREATE SEQUENCE IF NOT EXISTS {settings.Schema}.event_id_seq AS BIGINT MINVALUE 1 START 1 INCREMENT 1;
+         CREATE SEQUENCE IF NOT EXISTS {settings.Schema}.{settings.Table}_id_seq AS BIGINT MINVALUE 1 START 1 INCREMENT 1;
 
          -- Events table for persistent event dispatch work items
-         CREATE TABLE IF NOT EXISTS {settings.Schema}.events (
-             id BIGINT PRIMARY KEY DEFAULT nextval('{settings.Schema}.event_id_seq'),
+         CREATE TABLE IF NOT EXISTS {settings.Schema}.{settings.Table} (
+             id BIGINT PRIMARY KEY DEFAULT nextval('{settings.Schema}.{settings.Table}_id_seq'),
              event_id TEXT NOT NULL,
              event_name TEXT NOT NULL,
              handler_name TEXT NOT NULL,
@@ -68,8 +71,8 @@ public static class DatabaseSettingsExtensions
          --   - PARTIAL: Only indexes 'Scheduled' events (status=1). Keeps index small and fast, excluding millions of completed events.
          --   - INCLUDE: Payload-free columns (id, last_updated_at, event_name, handler_name) are included to allow Index-Only Scans.
          --              This avoids visiting the heap for the high-frequency polling query.
-         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_events_scheduled_polling 
-         ON {settings.Schema}.events (scheduled_at ASC) 
+         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_{settings.Table}_scheduled_polling 
+         ON {settings.Schema}.{settings.Table} (scheduled_at ASC) 
          INCLUDE (id, last_updated_at, event_name, handler_name)
          WHERE status = 1;
 
@@ -77,8 +80,8 @@ public static class DatabaseSettingsExtensions
          -- Query: UPDATE ... WHERE status = 2 (InProgress) AND claimed_at <= @claimed_before
          -- Optimization:
          --   - PARTIAL: Only indexes 'InProgress' events. Extremely small index.
-         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_events_inprogress_timeout 
-         ON {settings.Schema}.events (claimed_at) 
+         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_{settings.Table}_inprogress_timeout 
+         ON {settings.Schema}.{settings.Table} (claimed_at) 
          WHERE status = 2;
 
          -- 3. Cleanup Index (Partial Index for Terminal states)
@@ -86,8 +89,8 @@ public static class DatabaseSettingsExtensions
          -- Optimization:
          --   - PARTIAL: Only indexes 'Completed' (3) and 'DeadLettered' (4) events.
          --   - COMPOSITE: (status, last_updated_at) allows efficient range scans for deletion.
-         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_events_cleanup 
-         ON {settings.Schema}.events (status, last_updated_at) 
+         CREATE INDEX IF NOT EXISTS idx_{settings.Schema}_{settings.Table}_cleanup 
+         ON {settings.Schema}.{settings.Table} (status, last_updated_at) 
          WHERE status IN (3, 4);
          """;
         connection.Open();
