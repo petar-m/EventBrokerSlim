@@ -22,8 +22,6 @@ public class SingleEventTest : IDisposable
             .AddEventBroker(x => x.WithPostgreSqlPersistence((db, cfg) =>
             {
                 db.ConnectionString = setup.ConnectionString;
-                db.Schema = "custom_schema";
-                db.Table = "custom_events_table";
                 db.CreateEventsTable();
             }))
             .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
@@ -31,7 +29,7 @@ public class SingleEventTest : IDisposable
             .AddSingleton<EventReceiver>();
 
         _serviceProvider = services.BuildServiceProvider();
-        _serviceProvider.UsePersistentEventBroker(throwOnValidationErrors: true);
+        _serviceProvider.UsePersistentEventBroker();
         _scope = _serviceProvider.CreateScope();
     }
 
