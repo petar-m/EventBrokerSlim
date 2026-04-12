@@ -42,8 +42,10 @@ public class SingleEventTest : IDisposable
 
         await broker.Publish(sampleEvent, TestContext.Current.CancellationToken);
 
-        var received = await receiver.WaitForSingleAsync<SampleEvent>(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        Assert.Equal(sampleEvent, received);
+        await receiver.WaitForEventsAsync(1, TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        var receivedEvents = receiver.GetReceivedEvents();
+        Assert.Single(receivedEvents);
+        Assert.Equal(sampleEvent, receivedEvents[0].Event);
     }
 
     public void Dispose()

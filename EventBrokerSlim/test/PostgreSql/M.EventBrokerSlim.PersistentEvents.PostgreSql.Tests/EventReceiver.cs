@@ -11,25 +11,6 @@ public class EventReceiver
 
     public List<ReceivedEvent> GetReceivedEvents() => _receivedEvents.ToList();
 
-    public async Task<TEvent> WaitForSingleAsync<TEvent>(TimeSpan timeout, CancellationToken cancellationToken) where TEvent : class
-    {
-        var deadline = DateTime.UtcNow + timeout;
-        var wait = TimeSpan.FromMilliseconds(100);
-        do
-        {
-            TEvent? e = _receivedEvents.SingleOrDefault(e => e.Event is TEvent)?.Event as TEvent;
-            if(e != null)
-            {
-                return e;
-            }
-
-            await Task.Delay(wait, cancellationToken);
-        }
-        while(DateTime.UtcNow <= deadline);
-
-        throw new TimeoutException($"Timeout waiting for event of type {typeof(TEvent).Name}");
-    }
-
     public async Task WaitForEventsAsync(int count, TimeSpan timeout, CancellationToken cancellationToken)
     {
         var deadline = DateTime.UtcNow + timeout;
