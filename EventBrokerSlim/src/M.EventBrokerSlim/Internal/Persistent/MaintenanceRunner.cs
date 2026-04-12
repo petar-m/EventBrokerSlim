@@ -28,67 +28,35 @@ internal class MaintenanceRunner
     public void Run()
     {
         var cancellationToken = _cancellationTokenSource.Token;
-        _ = Task.Run(
-            async () =>
-            {
-                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
-                do
-                {
-                    try
-                    {
-                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
-                        await _eventStorage.DeadLetterUnclaimedAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                    catch(Exception ex)
-                    {
-                        _logger.LogError(ex, "Error dead-lettering unclaimed events exceeding TTL.");
-                    }
 
-                    jitter = TimeSpan.FromMinutes(60 + Random.Shared.Next(-10, 10));
-                } while(!cancellationToken.IsCancellationRequested);
-            },
+        Run(async () => await _eventStorage.DeadLetterUnclaimedAsync(cancellationToken),
+            _settings.DeadLetterUnclaimedExecuteInterval,
+            "Error dead-lettering unclaimed events exceeding TTL.",
             cancellationToken);
 
-        _ = Task.Run(
-            async () =>
-            {
-                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
-                do
-                {
-                    try
-                    {
-                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
-                        await _eventStorage.DeleteCompletedAndDeadLetteredExceedingTtlAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                    catch(Exception ex)
-                    {
-                        _logger.LogError(ex, "Error deleting completed and dead-lettered events exceeding TTL.");
-                    }
-
-                    jitter = TimeSpan.FromMinutes(60 + Random.Shared.Next(-10, 10));
-                } while(!cancellationToken.IsCancellationRequested);
-            },
+        Run(async () => await _eventStorage.DeleteCompletedAndDeadLetteredExceedingTtlAsync(cancellationToken).ConfigureAwait(false),
+            _settings.DeleteCompletedAndDeadLetteredExceedingTtlExecuteInterval,
+            "Error deleting completed and dead-lettered events exceeding TTL.",
             cancellationToken);
 
-        var processingTimeoutMinutes = Math.Max(2, (int)_settings.ProcessingTimeout.TotalMinutes);
+        Run(async () => await _eventStorage.RescheduleClaimedExceedingProcessingTimeoutAsync(cancellationToken).ConfigureAwait(false),
+            _settings.RescheduleClaimedExceedingProcessingTimeoutExecuteInterval,
+            "Error rescheduling claimed events exceeding processing timeout.",
+            cancellationToken);
+    }
+
+    private void Run(Func<Task> task, Jitter jitter, string errorMessage, CancellationToken cancellationToken)
+    {
         _ = Task.Run(
             async () =>
             {
-                var jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, 5));
+                TimeSpan delay = jitter.Initial.GetNext();
                 do
                 {
                     try
                     {
-                        await Task.Delay(jitter, cancellationToken).ConfigureAwait(false);
-                        await _eventStorage.RescheduleClaimedExceedingProcessingTimeoutAsync(cancellationToken).ConfigureAwait(false);
+                        await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                        await task().ConfigureAwait(false);
                     }
                     catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
                     {
@@ -96,10 +64,10 @@ internal class MaintenanceRunner
                     }
                     catch(Exception ex)
                     {
-                        _logger.LogError(ex, "Error rescheduling claimed events exceeding processing timeout.");
+                        _logger.LogError(ex, errorMessage);
                     }
 
-                    jitter = TimeSpan.FromMinutes(Random.Shared.Next(1, processingTimeoutMinutes));
+                    delay = jitter.Regular.GetNext();
                 } while(!cancellationToken.IsCancellationRequested);
             },
             cancellationToken);
