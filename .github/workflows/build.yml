@@ -61,11 +61,6 @@ jobs:
         echo "version: ${{ env.VERSION }}"
         echo "project: ${{ env.PROJECT }}"
 
-    # - name: Setup .NET
-    #   uses: actions/setup-dotnet@v4
-    #   with:
-    #     dotnet-version: 9.x
-
     - name: Restore dependencies
       run: dotnet restore EventBrokerSlim.slnx
 
@@ -90,7 +85,7 @@ jobs:
     - name: Run Unit Tests FuncPipeline net10.0
       run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
-    - name: Run Integration Tests FuncPipeline net10.0
+    - name: Run M.EventBrokerSlim.PersistentEvents.PostgreSql Tests
       run: dotnet test EventBrokerSlim/test/PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
 
     - name: Install Markdown Test Report Tool
