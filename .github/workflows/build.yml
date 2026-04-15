@@ -76,15 +76,15 @@ jobs:
 
     - name: Generate Markdown Test Report
       if: success() || failure()
-      run: liquid --inputs "File=**/*.trx;Format=Trx" --output-file testresults/testresults.md --title "Unit Tests"
+      run: liquid --inputs "File=**/*.trx;Format=Trx" --output-file testresults/testresults.md --title "Tests"
 
-    - name: Output Unit Tests Summary
+    - name: Output Tests Summary
       if: success() || failure()
       run: |
         summary=$(<"testresults/testresults.md")
         echo "$summary" >> "$GITHUB_STEP_SUMMARY"
 
-    - name: Unit Tests Code Coverage Report
+    - name: Tests Code Coverage Report
       if: success() || failure()  
       uses: danielpalme/ReportGenerator-GitHub-Action@v5
       with:
@@ -92,7 +92,7 @@ jobs:
         targetdir: "coveragereport"
         reporttypes: "MarkdownSummaryGithub"
         verbosity: "Info"
-        title: "Unit Tests Code Coverage"
+        title: "Tests Code Coverage"
         toolpath: "reportgeneratortool"
 
     - name: Output Code Coverage Summary
