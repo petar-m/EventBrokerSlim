@@ -7,36 +7,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector" Version="6.0.4">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.2.1" />
 		<PackageReference Include="MELT" Version="1.1.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
 		<PackageReference Include="System.Text.Json" Version="9.0.4" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Remove="test_coverage\coverage\**" />
-		<EmbeddedResource Remove="test_coverage\coverage\**" />
-		<None Remove="test_coverage\coverage\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Remove="test_coverage\coverage.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
