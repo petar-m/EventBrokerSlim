@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="M.EventBrokerSlim" Version="5.0.0" />
     <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
@@ -38,7 +39,7 @@
     <None Include="../../package-icon.png" Pack="true" PackagePath="\" />
     <None Include="ReadMe.md" Pack="true" PackagePath="\" />
 
-    <ProjectReference Include="..\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />
+    <!--<ProjectReference Include="..\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />-->
   </ItemGroup>
 
 </Project>

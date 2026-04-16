@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\M.EventBrokerSlim.PersistentEvents.PostgreSql\M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
-    <ProjectReference Include="..\..\..\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />
+    <!--<ProjectReference Include="..\..\..\src\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />-->
     <ProjectReference Include="..\PostgreSqlTestApp.AppHost\PostgreSqlTestApp.AppHost.csproj" />
   </ItemGroup>
 
