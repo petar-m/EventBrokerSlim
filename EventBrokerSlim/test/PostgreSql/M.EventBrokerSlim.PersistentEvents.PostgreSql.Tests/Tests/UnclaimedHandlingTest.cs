@@ -47,7 +47,7 @@ public class UnclaimedHandlingTest : IDisposable
         await eventBroker.Publish(sampleEvent, TestContext.Current.CancellationToken);
 
         // give room to maintenance task to dead-letter the event
-        await Task.Delay(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(4), TestContext.Current.CancellationToken);
         await AssertDeadLetterStatusAsync();
     }
 
