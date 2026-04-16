@@ -1,4 +1,5 @@
 ﻿using FuncPipeline;
+using M.EventBrokerSlim.Persistent;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
@@ -52,5 +53,45 @@ public  class HandlerRegistrationTests
         var pipelineRegistry = scope.ServiceProvider.GetRequiredKeyedService<PipelineRegistry>(key);
         Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
         Assert.Null(scope.ServiceProvider.GetService<PipelineRegistry>());
+    }
+
+    [Fact]
+    public void NullPipeline_is_not_registered_as_handler()
+    {
+        _serviceCollection.AddEventBroker();
+        _serviceCollection.AddEventHandlerPipeline<Event1>(NullPipeline.Instance);
+        using var services = _serviceCollection.BuildServiceProvider(true);
+        using var scope = services.CreateScope();
+
+        var pipelineRegistry = scope.ServiceProvider.GetRequiredService<PipelineRegistry>();
+
+        Assert.Empty(pipelineRegistry.Get(typeof(Event1)));
+    }
+
+    [Fact]
+    public void NullPipeline_is_not_registered_as_named_handler()
+    {
+        _serviceCollection.AddEventBroker();
+        _serviceCollection.AddEventHandlerPipeline<Event1>(NullPipeline.Instance, handlerName: "null-handler");
+        using var services = _serviceCollection.BuildServiceProvider(true);
+        using var scope = services.CreateScope();
+
+        var pipelineRegistry = scope.ServiceProvider.GetRequiredService<PipelineRegistry>();
+
+        Assert.Null(pipelineRegistry.Get("null-handler"));
+    }
+
+    [Fact]
+    public void NullPipeline_is_not_registered_as_handler_name()
+    {
+        _serviceCollection.AddEventBroker();
+        _serviceCollection.AddEventHandlerPipeline<Event1>(NullPipeline.Instance, handlerName: "null-handler");
+        using var services = _serviceCollection.BuildServiceProvider(true);
+        using var scope = services.CreateScope();
+
+        var pipelineRegistry = scope.ServiceProvider.GetRequiredService<PipelineRegistry>();
+
+        var name = Assert.Single(pipelineRegistry.GetHandlerNames<Event1>());
+        Assert.Equal("null-handler", name);
     }
 }

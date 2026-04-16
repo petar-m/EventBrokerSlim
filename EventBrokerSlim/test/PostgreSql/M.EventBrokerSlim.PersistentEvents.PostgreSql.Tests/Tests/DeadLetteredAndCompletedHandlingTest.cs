@@ -1,8 +1,7 @@
-﻿using M.EventBrokerSlim.DependencyInjection;
+﻿using FuncPipeline;
+using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
-using NpgsqlTypes;
 using PostgreSqlIntegrationTests;
 
 namespace M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.Tests;
@@ -11,6 +10,7 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly Setup _setup;
+    private readonly IServiceScope _scope;
 
     public DeadLetteredAndCompletedHandlingTest(Setup setup)
     {
@@ -32,48 +32,37 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
             }))
             .AddSingleton(EventRegistryHelper.Registry);
 
+        var builder = PipelineBuilder.Create()
+            .NewPipeline()
+            .Execute(() => Task.CompletedTask) // produces status completed
+            .Build()
+            .NewPipeline()
+            .Execute((IRetryPolicy retryPolicy) => // produces status dead lettered
+            {
+                retryPolicy.Abandon();
+                return Task.CompletedTask;
+            })
+            .Build();
+
+        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], handlerName: "handler-1");
+        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[1], handlerName: "handler-2");
+
         _serviceProvider = services.BuildServiceProvider();
-        _serviceProvider.UsePersistentEventBroker();
+        _scope = _serviceProvider.CreateScope();
+        _scope.ServiceProvider.UsePersistentEventBroker();
     }
 
     [Fact]
-    public async Task Scheduled_event_exceeding_unclaimed_TTL_is_dead_lettered()
+    public async Task Dead_lettered_and_completed_events_exceeding_TTL_are_deleted()
     {
-        await SetupEventAsync(EventStatus.DeadLettered);
-        await SetupEventAsync(EventStatus.Completed);
+        var eventBroker = _scope.ServiceProvider.GetRequiredService<IEventBroker>();
+        var sampleEvent = new SampleEvent("two handlers");
+
+        await eventBroker.Publish(sampleEvent, TestContext.Current.CancellationToken);
 
         // give room to maintenance task to delete the events
         await Task.Delay(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
         await AssertNoRowsAsync();
-    }
-
-    private async Task SetupEventAsync(EventStatus status)
-    {
-        using var connection = _setup.DataSource.CreateConnection();
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            INSERT INTO ebs_10.DeadLetteredAndCompletedHandlingTest 
-                (event_id,  event_name,  handler_name,  payload,  status,  scheduled_at,  retry_attempt_count,  retry_last_delay,  created_at,  last_updated_at,  processing_timeouts_count)
-            VALUES 
-                (@event_id, @event_name, @handler_name, @payload, @status, @scheduled_at, @retry_attempt_count, @retry_last_delay, @created_at, @last_updated_at, @processing_timeouts_count);
-            """;
-        command.Parameters.Add(new NpgsqlParameter("@event_id", NpgsqlDbType.Text) { Value = Guid.NewGuid().ToString() });
-        command.Parameters.Add(new NpgsqlParameter("@event_name", NpgsqlDbType.Text) { Value = "sample-event" });
-        command.Parameters.Add(new NpgsqlParameter("@payload", NpgsqlDbType.Text) { Value = "{}" });
-        command.Parameters.Add(new NpgsqlParameter("@status", NpgsqlDbType.Integer) { Value = (int)status });
-        command.Parameters.Add(new NpgsqlParameter("@scheduled_at", NpgsqlDbType.TimestampTz) { Value = DateTime.UtcNow });
-        command.Parameters.Add(new NpgsqlParameter("@retry_attempt_count", NpgsqlDbType.Integer) { Value = 0 });
-        command.Parameters.Add(new NpgsqlParameter("@retry_last_delay", NpgsqlDbType.Interval) { Value = TimeSpan.Zero });
-        command.Parameters.Add(new NpgsqlParameter("@created_at", NpgsqlDbType.TimestampTz) { Value = DateTime.UtcNow });
-        command.Parameters.Add(new NpgsqlParameter("@last_updated_at", NpgsqlDbType.TimestampTz) { Value = DateTime.UtcNow });
-        command.Parameters.Add(new NpgsqlParameter("@processing_timeouts_count", NpgsqlDbType.Integer) { Value = 0 });
-        command.Parameters.Add(new NpgsqlParameter("@handler_name", NpgsqlDbType.Text) { Value = "handler" });
-
-        await connection.OpenAsync(TestContext.Current.CancellationToken);
-        var rowsAffected = await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
-        connection.Close();
-
-        Assert.Equal(1, rowsAffected);
     }
 
     private async Task AssertNoRowsAsync()
@@ -88,7 +77,8 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
     }
     public void Dispose()
     {
-        _serviceProvider.GetRequiredService<IEventBroker>().Shutdown();
+        _scope.ServiceProvider.GetRequiredService<IEventBroker>().Shutdown();
+        _scope.Dispose();
         _serviceProvider.Dispose();
     }
 }

@@ -17,6 +17,7 @@ public class PipelineRegistry
     private readonly FrozenDictionary<Type, ImmutableArray<EventPipeline>> _pipelines;
     private readonly FrozenDictionary<string, EventPipeline> _namedHandlers;
     private readonly FrozenDictionary<Type, ImmutableArray<string>> _handlerNamesByEventType;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PipelineRegistry"/> class.
     /// </summary>
@@ -25,6 +26,7 @@ public class PipelineRegistry
     public PipelineRegistry(IEnumerable<EventPipeline> pipelines, IServiceScopeFactory serviceScopeFactory)
     {
         _pipelines = pipelines
+            .Where(x => x.Pipeline is not NullPipeline)
             .Select(x =>
             {
                 x.Pipeline.ServiceScopeFactory ??= serviceScopeFactory;
@@ -43,7 +45,7 @@ public class PipelineRegistry
                 x => x.Select(x => x.HandlerName!).ToImmutableArray());
 
         _namedHandlers = pipelines
-             .Where(x => !string.IsNullOrEmpty(x.HandlerName))
+             .Where(x => !string.IsNullOrEmpty(x.HandlerName) && x.Pipeline is not NullPipeline)
              .GroupBy(x => x.HandlerName)
              .ToFrozenDictionary(x => x.Key!, x => x.Single());
     }
