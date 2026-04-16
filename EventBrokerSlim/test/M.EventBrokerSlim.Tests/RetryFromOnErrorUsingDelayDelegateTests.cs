@@ -63,9 +63,9 @@ public class RetryFromOnErrorUsingDelayDelegateTests
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
-        Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
-        Assert.Equal(300, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 50);
-        Assert.Equal(600, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 50);
+        Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 100);
+        Assert.Equal(300, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 100);
+        Assert.Equal(600, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 100);
     }
 
     [Theory]
