@@ -3,7 +3,7 @@
 [![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows/build.yml/badge.svg)](https://github.com/petar-m/EventBrokerSlim/actions)
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.PostgreSql.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.PostgreSql)    
 
-PostgreSQL storage backend for [EventBrokerSlim](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/ReadMe.md) persistent events — durable, at-least-once event delivery that survives process restarts.
+PostgreSQL storage backend for [EventBrokerSlim](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/ReadMe.md) persistent events - durable, at-least-once event delivery that survives process restarts.
 
 For the design rationale behind persistent events, see the [architecture document](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md) and [ADRs](https://github.com/petar-m/EventBrokerSlim/tree/main/EventBrokerSlim/ADRs).
 
@@ -37,14 +37,14 @@ var databaseSettings = new DatabaseSettings
 databaseSettings.CreateEventsTable();
 ```
 
-The call is idempotent — it uses `CREATE ... IF NOT EXISTS` and is safe to run on every startup in development.
+The call is idempotent - it uses `CREATE ... IF NOT EXISTS` and is safe to run on every startup in development.
 
 > [!WARNING]
 > `CreateEventsTable()` requires DDL permissions (create schemas, tables, sequences, and indexes). Production applications should typically run this as part of a deployment or migration process, not at application startup.
 
 ### Option 2: Manual SQL script
 
-Apply the `initialize_db.sql` script included in the package source. The default schema name is `ebs_0` — replace it with a unique name if running multiple event broker instances against the same database.
+Apply the `initialize_db.sql` script included in the package source. The default schema name is `ebs_0` - replace it with a unique name if running multiple event broker instances against the same database.
 
 ## Quick Start
 
@@ -57,7 +57,7 @@ public class OrderPlacedHandler : IEventHandler<OrderPlaced>
 {
     public async Task Handle(OrderPlaced @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
     {
-        // process the event — must be idempotent
+        // process the event - must be idempotent
     }
 
     public async Task OnError(Exception exception, OrderPlaced @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
@@ -91,7 +91,7 @@ IPipeline pipeline = PipelineBuilder.Create()
     })
     .Execute(static async (OrderPlaced @event, ISomeService service, CancellationToken ct) =>
     {
-        // process the event — must be idempotent
+        // process the event - must be idempotent
         await service.ProcessOrder(@event, ct);
     })
     .Build()
@@ -100,7 +100,7 @@ IPipeline pipeline = PipelineBuilder.Create()
 
 ### 2. Register the event registry
 
-Map each event type to a stable string name. The name is stored in the database — it must not change between deployments:
+Map each event type to a stable string name. The name is stored in the database - it must not change between deployments:
 
 ```csharp
 var eventRegistry = new EventRegistry()
@@ -111,7 +111,7 @@ serviceCollection.AddSingleton(eventRegistry);
 
 ### 3. Register handlers with persistent names
 
-Only handlers registered with a `handlerName` participate in persistent event processing:
+Only handlers registered with a `handlerName` have their names included in fan-out - when an event is published, one storage record is created per registered handler name:
 
 ```csharp
 serviceCollection.AddTransientEventHandler<OrderPlaced, OrderPlacedHandler>(
@@ -164,7 +164,7 @@ serviceProvider.UsePersistentEventBroker(throwOnValidationErrors: true);
 
 On startup, validation checks that:
 - Every handler with a `handlerName` has its event type registered in `EventRegistry`  
-- Every event in `EventRegistry` has at least one named handler  
+- Every event in `EventRegistry` has at least one named handler (including `NullPipeline` registrations)  
 
 Set `throwOnValidationErrors: true` for strict mode (default logs warnings).
 
@@ -201,9 +201,9 @@ await eventBroker.Publish(new OrderPlaced("order-123", 49.99m));
 
 **At-least-once delivery.** A crash after claiming a record but before completing it may cause duplicate processing. Handlers must be idempotent.
 
-**Escaped exceptions are dead-lettered.** If an exception escapes the handler pipeline unhandled, the record is immediately dead-lettered — `IRetryPolicy` is not consulted. Handle exceptions inside the pipeline to use retries.
+**Escaped exceptions are dead-lettered.** If an exception escapes the handler pipeline unhandled, the record is immediately dead-lettered - `IRetryPolicy` is not consulted. Handle exceptions inside the pipeline to use retries.
 
-**Name stability.** Changing a `handlerName` or an `EventRegistry` name is a breaking change — in-flight records under the old name will never be claimed. Treat name changes as migrations.
+**Name stability.** Changing a `handlerName` or an `EventRegistry` name is a breaking change - in-flight records under the old name will never be claimed. Treat name changes as migrations.
 
 **Serialization.** Events are serialized using `System.Text.Json` with camelCase property naming, no indentation, and null values omitted. Event types must be serializable under these settings.
 
@@ -211,7 +211,7 @@ await eventBroker.Publish(new OrderPlaced("order-123", 49.99m));
 
 **Not a transactional outbox.** The event write to PostgreSQL is not atomic with the caller's own database transaction.
 
-**Dead-letter monitoring.** Records land in a dead-letter state when the retry policy is exhausted, when a handler abandons the event, or when an exception escapes unhandled. Dead-lettered records are not retried automatically — monitoring and tooling for inspection and requeue is necessary for production use.
+**Dead-letter monitoring.** Records land in a dead-letter state when the retry policy is exhausted, when a handler abandons the event, or when an exception escapes unhandled. Dead-lettered records are not retried automatically - monitoring and tooling for inspection and requeue is necessary for production use.
 
 ## Database Schema
 

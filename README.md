@@ -10,6 +10,14 @@ An implementation of broadcasting events in a fire-and-forget style.
 
 For breaking changes in version 4 please look at the [release notes](https://github.com/petar-m/EventBrokerSlim/releases/tag/EventBrokerSlim_v4.0.0).
 
+# EventBrokerSlim.PersistentEvents.PostgreSql
+
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.PostgreSql.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.PostgreSql)    
+
+PostgreSQL storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+
+[EventBrokerSlim.PersistentEvents.PostgreSql documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md)
+
 # FuncPipeline
 
 [![NuGet](https://img.shields.io/nuget/v/FuncPipeline.svg)](https://www.nuget.org/packages/FuncPipeline)    

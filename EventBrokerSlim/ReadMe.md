@@ -390,11 +390,11 @@ If added as a parameter, the `IRetryPolicy` will be passed to the delegate. It h
 
 # Persistent Events
 
-EventBrokerSlim supports optional event persistence providing durable, at-least-once event delivery that survives process restarts. Persistence is opt-in — the in-memory broker works without any storage backend. For detailed design rationale, see the [architecture document](EventBrokerSlim-Persistence-Architecture.md) and [ADRs](ADRs/).
+EventBrokerSlim supports optional event persistence providing durable, at-least-once event delivery that survives process restarts. Persistence is opt-in - the in-memory broker works without any storage backend. For detailed design rationale, see the [architecture document](EventBrokerSlim-Persistence-Architecture.md) and [ADRs](ADRs/).
 
 ## How It Works
 
-When persistence is enabled, `IEventBroker.Publish` writes one record per registered handler to the storage backend and returns — no in-memory dispatch occurs. A background polling loop fetches scheduled records, claims them using optimistic concurrency, and dispatches them to the corresponding handler pipeline. After execution, each record is marked as completed, scheduled for retry, or dead-lettered.
+When persistence is enabled, `IEventBroker.Publish` writes one record per registered handler to the storage backend and returns - no in-memory dispatch occurs. A background polling loop fetches scheduled records, claims them using optimistic concurrency, and dispatches them to the corresponding handler pipeline. After execution, each record is marked as completed, scheduled for retry, or dead-lettered.
 
 ## Configuration
 
@@ -412,13 +412,28 @@ serviceCollection.AddSingleton(eventRegistry);
 
 ### Handler Names
 
-The `handlerName` parameter on `Add*EventHandler` and `AddEventHandlerPipeline` links a handler to its storage records. Only handlers with a `handlerName` participate in persistent event processing:
+The `handlerName` parameter on `Add*EventHandler` and `AddEventHandlerPipeline` links a handler to its storage records. Only handlers with a `handlerName` have their names included in fan-out - when an event is published, one storage record is created per registered handler name:
 
 ```csharp
 serviceCollection
     .AddTransientEventHandler<SomeEvent, SomeEventHandler>(handlerName: "SomeEventHandler")
     .AddEventHandlerPipeline<SomeEvent>(pipeline, handlerName: "SomeEventPipeline");
 ```
+
+### Publish-Only Handlers
+
+`NullPipeline` enables a publish-only scenario where a process registers handler names for fan-out record creation without processing events locally. Records written by the publishing instance are claimed and processed by other instances that have real handlers registered under the same names.
+
+```csharp
+serviceCollection.AddEventHandlerPipeline<SomeEvent>(NullPipeline.Instance, handlerName: "SomeEventHandler");
+```
+
+When registered with `NullPipeline.Instance`:
+- The handler name is included in fan-out - `Publish` writes a record for this handler to the store
+- The handler is excluded from local dispatch - the record is not claimed or processed on this instance
+- Another instance with a real handler registered under the same name will claim and process the record
+
+This supports the publisher-only topology: a dedicated process that only publishes events to storage, while separate consumer instances handle processing.
 
 ### Storage Backend
 
@@ -460,14 +475,14 @@ var serviceProvider = serviceCollection.BuildServiceProvider();
 serviceProvider.UsePersistentEventBroker(throwOnValidationErrors: true);
 ```
 
-On startup, validation checks that every handler with a `handlerName` has its event type in `EventRegistry`, and every event in `EventRegistry` has at least one named handler. Set `throwOnValidationErrors: true` for strict mode (default logs warnings).
+On startup, validation checks that every handler with a `handlerName` has its event type in `EventRegistry`, and every event in `EventRegistry` has at least one named handler (including `NullPipeline` registrations). Set `throwOnValidationErrors: true` for strict mode (default logs warnings).
 
 ## Important Considerations
 
-- **At-least-once delivery** — a crash after claiming may cause duplicate processing. Handlers must be idempotent.
-- **Escaped exceptions are dead-lettered** — if an exception escapes the pipeline unhandled, the record is immediately dead-lettered. `IRetryPolicy` is not consulted. Handle exceptions inside the pipeline.
-- **Name stability** — changing `handlerName` or `EventRegistry` names breaks the link to existing storage records.
-- **Serialization** — event types must be serializable. Each `IEventStorage` implementation owns its serialization format.
-- **Not event sourcing** — completed records are deleted after `CompletedRecordTtl`.
-- **Not a transactional outbox** — writes to storage are not atomic with the caller's database transaction.
+- **At-least-once delivery** - a crash after claiming may cause duplicate processing. Handlers must be idempotent.
+- **Escaped exceptions are dead-lettered** - if an exception escapes the pipeline unhandled, the record is immediately dead-lettered. `IRetryPolicy` is not consulted. Handle exceptions inside the pipeline.
+- **Name stability** - changing `handlerName` or `EventRegistry` names breaks the link to existing storage records.
+- **Serialization** - event types must be serializable. Each `IEventStorage` implementation owns its serialization format.
+- **Not event sourcing** - completed records are deleted after `CompletedRecordTtl`.
+- **Not a transactional outbox** - writes to storage are not atomic with the caller's database transaction.
 

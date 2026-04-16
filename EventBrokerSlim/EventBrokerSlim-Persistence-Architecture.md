@@ -46,7 +46,7 @@ It is a **durable in-process event bus** - publish an event, every registered ha
 
 **Fan-out with decoupling.** One publish, multiple independent handlers, each with its own delivery guarantee and retry policy. The publisher knows nothing about the handlers. Adding a new handler requires no change to the publisher.
 
-**DI-native programming model.** Handlers are plain classes resolved from your DI container — or delegates composed via pipelines. Each handler decides its own retry policy independently, and retry policies are code, not configuration. No serialization contracts, no consumer group configuration, no broker-specific concepts to learn.
+**DI-native programming model.** Handlers are plain classes resolved from your DI container - or delegates composed via pipelines. Each handler decides its own retry policy independently, and retry policies are code, not configuration. No serialization contracts, no consumer group configuration, no broker-specific concepts to learn.
 
 **Uses infrastructure you already have.** Persistence runs on your existing database - relational, document, or embedded. No new infrastructure to provision, operate, or monitor. For embedded backends (SQLite, Firebird) not even a database server is needed.
 
@@ -103,13 +103,17 @@ More fundamentally, the moment you need a queue with fan-out and independent per
 
 ### Publisher-only processes
 
-A process with no handler registrations writes zero records to the store - it has nothing to fan out to. Events published from such a process are silently lost. This is a direct consequence of [fan-out at write time](ADRs/ADR-01-fan-out-at-write-time.md): the publisher writes records only for handlers it knows about in its own DI container.
+A process with no handler registrations at all writes zero records to the store - it has nothing to fan out to. This is a direct consequence of [fan-out at write time](ADRs/ADR-01-fan-out-at-write-time.md): the publisher writes records only for handlers it knows about in its own DI container.
 
 Partial deployments - where different instances have different subsets of handlers - work naturally. Each instance writes records for the handlers it knows about, and any instance with a matching handler will eventually claim and process them. Records for handlers that no instance ever registers remain pending until TTL or a retention policy cleans them up.
 
-The publisher-only topology - a dedicated process with no handlers whose sole role is publishing - is not supported by the core library. Supporting it natively would require fan-out at read time, which introduces a subscription registry, a bootstrapping problem, and heuristic completion tracking.
+The publisher-only topology - a dedicated process with no real handlers whose sole role is publishing - is supported through `NullPipeline`. Register `NullPipeline.Instance` with the handler names that should participate in fan-out:
 
-However, a publisher-only process can be achieved through a dedicated `IEventStorage` implementation that only writes records on Publish and uses no-ops for claiming, dispatch, and maintenance. The consuming instances would use a standard storage backend to poll and process records from the same store. This approach is outside the scope of the core library but is enabled by the pluggable storage abstraction.
+```csharp
+services.AddEventHandlerPipeline<SomeEvent>(NullPipeline.Instance, handlerName: "SomeEventHandler");
+```
+
+`NullPipeline` handler names are included in fan-out (records are written to the store on publish) but excluded from local dispatch (the handler runner does not claim or process them). Separate consumer instances with real handlers registered under the same names claim and process the records from the shared store.
 
 ### Cross-service event distribution
 
@@ -125,7 +129,7 @@ The persistent events feature targets a single application scaled horizontally. 
 
 **At-least-once delivery is acceptable.** In failure scenarios (process crash after claim, before ack - see [ADR-03](ADRs/ADR-03-optimistic-claiming-broad-polling.md)), an event may be dispatched to a handler more than once. Handlers should be idempotent. This is a standard and documented constraint, not a deficiency.
 
-**Events are serializable.** Because events must be written to a store and later deserialized for re-dispatch, all event types must be serializable. Serialization format and mechanism are the responsibility of each `IEventStorage` implementation ([ADR-08](ADRs/ADR-08-serialization-responsibility.md)) — the core library provides no shared serializer. This is a new requirement that does not exist in the in-memory-only version of the library.
+**Events are serializable.** Because events must be written to a store and later deserialized for re-dispatch, all event types must be serializable. Serialization format and mechanism are the responsibility of each `IEventStorage` implementation ([ADR-08](ADRs/ADR-08-serialization-responsibility.md)) - the core library provides no shared serializer. This is a new requirement that does not exist in the in-memory-only version of the library.
 
 **Handler names are explicit and stable.** Each handler participating in persistence must be registered with an explicit handler name ([ADR-05](ADRs/ADR-05-explicit-event-handler-names.md)). This name is used as the handler identifier in the store. It is not derived from the type name - this is essential for delegate/pipeline handlers, where there is no distinguishable type to derive a name from. The name must be stable across deployments; changing it is a breaking change requiring a migration.
 
