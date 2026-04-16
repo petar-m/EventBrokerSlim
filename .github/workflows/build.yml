@@ -105,6 +105,10 @@ jobs:
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim' }}    
       run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
     
+    - name: Create NuGet Package for EventBrokerSlim.PersistentEvents.PostgreSql
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim.PersistentEvents.PostgreSql' }}    
+      run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
     - name: Create NuGet Package for FuncPipeline
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'FuncPipeline' }}    
       run: dotnet pack FuncPipeline/src/FuncPipeline/FuncPipeline.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg

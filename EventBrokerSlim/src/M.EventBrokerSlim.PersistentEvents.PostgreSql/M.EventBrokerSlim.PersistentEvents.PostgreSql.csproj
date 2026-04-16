@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!--<PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>-->
+    <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
     <RespositoryType>git</RespositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <Tags>event-broker;producer-consumer;fire-and-forget;</Tags>
     <Authors>Petar Marinov</Authors>
-    <!--<PackageIcon>package-icon.png</PackageIcon>-->
-    <!--<Description>In-memory fire-and-forget event broker.</Description>-->
+    <PackageIcon>package-icon.png</PackageIcon>
+    <Description>PostgreSQL persistent events for EventBrokerSlim.</Description>
     <Copyright>Copyright Petar Marinov</Copyright>
     <PackageTags>event-broker;producer-consumer;fire-and-forget;</PackageTags>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
@@ -22,20 +22,20 @@
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!--<IsAotCompatible>true</IsAotCompatible>-->
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\package-icon.png" Link="package-icon.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--<None Include="../../package-icon.png" Pack="true" PackagePath="\" /> -->
+    <None Include="../../package-icon.png" Pack="true" PackagePath="\" />
     <None Include="ReadMe.md" Pack="true" PackagePath="\" />
 
     <ProjectReference Include="..\M.EventBrokerSlim\M.EventBrokerSlim.csproj" />
