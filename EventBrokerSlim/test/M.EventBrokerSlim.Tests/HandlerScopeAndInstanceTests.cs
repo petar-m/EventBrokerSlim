@@ -2,6 +2,8 @@
 
 public class HandlerScopeAndInstanceTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Handler_RegisteredAsTransient_Executed_ByDifferentInstances_And_DifferentScopes()
     {
@@ -22,8 +24,8 @@ public class HandlerScopeAndInstanceTests
         var event2 = event1 with { CorrelationId = 2 };
         eventsRecorder.Expect(event1, event2);
 
-        await eventBroker.Publish(event1);
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await eventBroker.Publish(event2, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -57,8 +59,8 @@ public class HandlerScopeAndInstanceTests
         var event2 = event1 with { CorrelationId = 2 };
         eventsRecorder.Expect(event1, event2);
 
-        await eventBroker.Publish(event1);
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await eventBroker.Publish(event2, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -92,8 +94,8 @@ public class HandlerScopeAndInstanceTests
         var event2 = event1 with { CorrelationId = 2 };
         eventsRecorder.Expect(event1, event2);
 
-        await eventBroker.Publish(event1);
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await eventBroker.Publish(event2, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 

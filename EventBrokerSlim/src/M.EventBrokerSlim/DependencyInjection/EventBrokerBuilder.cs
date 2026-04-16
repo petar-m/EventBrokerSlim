@@ -8,13 +8,25 @@ namespace M.EventBrokerSlim.DependencyInjection;
 /// </summary>
 public class EventBrokerBuilder
 {
-    internal EventBrokerBuilder(IServiceCollection services)
+    internal EventBrokerBuilder(IServiceCollection services, object eventBrokerKey)
     {
+        Services = services;
+        EventBrokerKey = eventBrokerKey;
     }
 
     internal int _maxConcurrentHandlers = 2;
 
     internal bool _disableMissingHandlerWarningLog;
+
+    /// <summary>
+    /// The service collection where event broker services and event handlers are registered. This property is used to add services to the DI container.
+    /// </summary>
+    public IServiceCollection Services { get; }
+
+    /// <summary>
+    /// The key used to identify the event broker instance in the DI container.
+    /// </summary>
+    public object EventBrokerKey { get; }
 
     /// <summary>
     /// Sets the maximum number of event handlers to run at the same time.

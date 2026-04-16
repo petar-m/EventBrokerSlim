@@ -33,13 +33,13 @@ jobs:
 
     steps:
  
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - id: set-version
       name: Set Version
       run: |
         ref=${{ github.ref }}
-        pattern="^refs/tags/(EventBrokerSlim|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
+        pattern="^refs/tags/(EventBrokerSlim|EventBrokerSlim.PersistentEvents.PostgreSql|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
         
         if [[ $ref =~ $pattern ]]; then
           is_release=true
@@ -61,34 +61,14 @@ jobs:
         echo "version: ${{ env.VERSION }}"
         echo "project: ${{ env.PROJECT }}"
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.x
-
     - name: Restore dependencies
-      run: dotnet restore EventBrokerSlim.sln
+      run: dotnet restore EventBrokerSlim.slnx
 
     - name: Build
-      run: dotnet build EventBrokerSlim.sln --no-restore --configuration Release -p:Version=${{ env.VERSION }}
+      run: dotnet build EventBrokerSlim.slnx --no-restore --configuration Release -p:Version=${{ env.VERSION }}
 
-    - name: Run Unit Tests EventBrokerSlim net8.0
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
-
-    - name: Run Unit Tests EventBrokerSlim net9.0
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
-
-    - name: Run Unit Tests EventBrokerSlim net10.0
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
-
-    - name: Run Unit Tests FuncPipeline net8.0
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net8.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
-
-    - name: Run Unit Tests FuncPipeline net9.0
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net9.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
-
-    - name: Run Unit Tests FuncPipeline net10.0
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net10.0 --no-build --no-restore --verbosity normal --configuration Release --logger trx --collect:"XPlat Code Coverage" --results-directory testresults
+    - name: Run All Tests
+      run: dotnet test --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
@@ -96,15 +76,15 @@ jobs:
 
     - name: Generate Markdown Test Report
       if: success() || failure()
-      run: liquid --inputs "File=**/*.trx;Format=Trx" --output-file testresults/testresults.md --title "Unit Tests"
+      run: liquid --inputs "File=**/*.trx;Format=Trx" --output-file testresults/testresults.md --title "Tests"
 
-    - name: Output Unit Tests Summary
+    - name: Output Tests Summary
       if: success() || failure()
       run: |
         summary=$(<"testresults/testresults.md")
         echo "$summary" >> "$GITHUB_STEP_SUMMARY"
 
-    - name: Unit Tests Code Coverage Report
+    - name: Tests Code Coverage Report
       if: success() || failure()  
       uses: danielpalme/ReportGenerator-GitHub-Action@v5
       with:
@@ -112,7 +92,7 @@ jobs:
         targetdir: "coveragereport"
         reporttypes: "MarkdownSummaryGithub"
         verbosity: "Info"
-        title: "Unit Tests Code Coverage"
+        title: "Tests Code Coverage"
         toolpath: "reportgeneratortool"
 
     - name: Output Code Coverage Summary
@@ -125,6 +105,10 @@ jobs:
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim' }}    
       run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim/M.EventBrokerSlim.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
     
+    - name: Create NuGet Package for EventBrokerSlim.PersistentEvents.PostgreSql
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim.PersistentEvents.PostgreSql' }}    
+      run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
     - name: Create NuGet Package for FuncPipeline
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'FuncPipeline' }}    
       run: dotnet pack FuncPipeline/src/FuncPipeline/FuncPipeline.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg

@@ -2,16 +2,16 @@
 
 namespace M.EventBrokerSlim.Internal.ObjectPools;
 
-internal class RetryPolicyPooledObjectPolicy : IPooledObjectPolicy<RetryPolicy>
+internal class RetryPolicyPooledObjectPolicy : PooledObjectPolicy<RetryPolicy>
 {
-    public RetryPolicy Create()
+    public override RetryPolicy Create()
     {
         return new RetryPolicy();
     }
 
-    public bool Return(RetryPolicy obj)
+    public override bool Return(RetryPolicy obj)
     {
-        obj.Clear();
+        obj.TryReset();
         return true;
     }
 }

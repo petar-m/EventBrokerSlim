@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -6,6 +7,8 @@ namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionUnknownPropertyValuesTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Source_Unknown_Throws()
     {
@@ -21,7 +24,7 @@ public class ArgumentsResolutionUnknownPropertyValuesTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -46,7 +49,7 @@ public class ArgumentsResolutionUnknownPropertyValuesTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -71,7 +74,7 @@ public class ArgumentsResolutionUnknownPropertyValuesTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);

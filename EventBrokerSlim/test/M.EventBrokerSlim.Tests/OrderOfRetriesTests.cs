@@ -2,6 +2,8 @@
 
 public class OrderOfRetriesTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
@@ -24,9 +26,9 @@ public class OrderOfRetriesTests
         var event2 = new TestEvent2("test");
 
         // Act
-        await eventBroker.Publish(event1);
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(100), _ct);
+        await eventBroker.Publish(event2, _ct);
 
         await eventsTracker.Wait(TimeSpan.FromSeconds(1));
 

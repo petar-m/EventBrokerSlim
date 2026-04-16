@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,8 @@ namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionServiceScopeOptionsTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task ServiceScopePerFunction_True()
     {
@@ -30,7 +33,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .Build()
             .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         Assert.True(result.IsSuccessful);
         Assert.True(result.Context.TryGet<(int Dependency1, int Dependency2)>(out var dependencies));
@@ -60,7 +63,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .Build()
             .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         Assert.True(result.IsSuccessful);
         Assert.True(result.Context.TryGet<(int Dependency1, int Dependency2)>(out var dependencies));
@@ -90,7 +93,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .Build()
             .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         Assert.True(result.IsSuccessful);
         Assert.True(result.Context.TryGet<(int Dependency1, int Dependency2)>(out var dependencies));
@@ -110,7 +113,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .Build()
             .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         Assert.True(result.IsSuccessful, result.Exception?.Message);
     }

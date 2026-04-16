@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventBrokerSlim — Persistent Events Test App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>EventBrokerSlim — PostgreSQL Persistent Events</h1>
+        <p class="subtitle">Publish events and watch them flow through PostgreSQL in real-time via SSE</p>
+    </header>
+
+    <main>
+        <section class="publish-section">
+            <button id="publishBtn">Publish Event</button>
+            <span id="publishStatus" class="status-text"></span>
+        </section>
+
+        <section class="connection-section">
+            <span id="connectionIndicator" class="indicator disconnected"></span>
+            <span id="connectionText">Waiting for events...</span>
+        </section>
+
+        <section class="events-section">
+            <h2>Processed Events</h2>
+            <div id="eventList" class="event-list">
+                <p class="placeholder">No events yet. Click "Publish Event" to get started.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

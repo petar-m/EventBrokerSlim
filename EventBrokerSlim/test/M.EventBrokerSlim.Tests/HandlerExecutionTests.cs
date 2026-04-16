@@ -5,6 +5,8 @@ namespace M.EventBrokerSlim.Tests;
 
 public class HandlerExecutionTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task MaxConcurrentHandlers_IsOne_HandlersAreExecuted_Sequentially()
     {
@@ -24,8 +26,8 @@ public class HandlerExecutionTests
         var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
         eventsRecorder.Expect(event1, event2);
 
-        await eventBroker.Publish(event1);
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await eventBroker.Publish(event2, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -56,8 +58,8 @@ public class HandlerExecutionTests
         var event2 = event1 with { CorrelationId = 2, TimeToRun = TimeSpan.FromMilliseconds(1) };
         eventsRecorder.Expect(event1, event2);
 
-        await eventBroker.Publish(event1);
-        await eventBroker.Publish(event2);
+        await eventBroker.Publish(event1, _ct);
+        await eventBroker.Publish(event2, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -85,7 +87,7 @@ public class HandlerExecutionTests
         // Act
         var event1 = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
@@ -111,7 +113,7 @@ public class HandlerExecutionTests
         // Act
         var event1 = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 
@@ -140,7 +142,7 @@ public class HandlerExecutionTests
         // Act
         var event1 = new TestEvent(CorrelationId: 1);
 
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
 
         await eventsRecorder.Wait(timeout: TimeSpan.FromMilliseconds(50));
 

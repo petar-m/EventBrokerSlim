@@ -1,7 +1,6 @@
 ﻿using FuncPipeline;
 using MELT;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DynamicDelegateHandlerTests;
 
@@ -10,7 +9,7 @@ public class KeyedHandlerExecutionTests
     private readonly ITestOutputHelper _output;
     private readonly ServiceCollection _serviceCollection;
     private readonly EventsTracker _tracker;
-
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
     public KeyedHandlerExecutionTests(ITestOutputHelper output)
     {
         _output = output;
@@ -46,7 +45,7 @@ public class KeyedHandlerExecutionTests
         _tracker.ExpectedItemsCount = 4;
 
         // Act
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
 
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
@@ -84,7 +83,7 @@ public class KeyedHandlerExecutionTests
         _tracker.ExpectedItemsCount = 4;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
 
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 
@@ -122,8 +121,8 @@ public class KeyedHandlerExecutionTests
         _tracker.ExpectedItemsCount = 4;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
-        await eventBroker1.Publish(new TestEventBase(1));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
+        await eventBroker1.Publish(new TestEventBase(1), _ct);
 
         await _tracker.Wait(TimeSpan.FromSeconds(1));
 

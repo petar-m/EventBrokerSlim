@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Xunit;
@@ -6,6 +7,8 @@ namespace FuncPipeline.Tests;
 
 public class PipelineBuilderExecuteOverloadsTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Inject_0_Parameters()
     {
@@ -24,7 +27,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -51,7 +54,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -81,7 +84,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -113,7 +116,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -147,7 +150,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -183,7 +186,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -221,7 +224,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -261,7 +264,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -303,7 +306,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -347,7 +350,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -393,7 +396,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -441,7 +444,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -491,7 +494,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -543,7 +546,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -597,7 +600,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -653,7 +656,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());
@@ -711,7 +714,7 @@ public class PipelineBuilderExecuteOverloadsTests
               .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful, result.Exception?.ToString());

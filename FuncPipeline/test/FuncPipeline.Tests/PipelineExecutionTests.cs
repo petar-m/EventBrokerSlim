@@ -7,6 +7,8 @@ namespace FuncPipeline.Tests;
 
 public class PipelineExecutionTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Execute_Called()
     {
@@ -152,7 +154,7 @@ public class PipelineExecutionTests
               .Build()
               .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         Assert.Equal(context, result.Context);
     }
@@ -166,7 +168,7 @@ public class PipelineExecutionTests
               .Build()
               .Pipelines[0];
 
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         Assert.NotNull(result.Context);
     }

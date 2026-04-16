@@ -6,6 +6,8 @@ namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
 public class ExceptionHandlingTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Exception_WhenResolvingHandlerParameters_IsLogged()
     {
@@ -23,9 +25,9 @@ public class ExceptionHandlingTests
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
-        await eventBroker.Publish(new Event1(1));
+        await eventBroker.Publish(new Event1(1), _ct);
 
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(1), _ct);
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
@@ -54,9 +56,9 @@ public class ExceptionHandlingTests
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
-        await eventBroker.Publish(new Event1(1));
+        await eventBroker.Publish(new Event1(1), _ct);
 
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(1), _ct);
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
@@ -84,10 +86,10 @@ public class ExceptionHandlingTests
         var eventBroker = scope.ServiceProvider.GetRequiredService<IEventBroker>();
 
         // Act
-        await eventBroker.Publish(new Event1(1));
-        await Task.Delay(50);
+        await eventBroker.Publish(new Event1(1), _ct);
+        await Task.Delay(50, _ct);
         eventBroker.Shutdown();
-        await Task.Delay(50);
+        await Task.Delay(50, _ct);
 
         // Assert
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);

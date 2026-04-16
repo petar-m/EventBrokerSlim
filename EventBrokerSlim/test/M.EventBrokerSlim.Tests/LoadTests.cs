@@ -2,6 +2,8 @@
 
 public class LoadTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task Load_MultipleHandlers_With_Retry()
     {
@@ -32,9 +34,9 @@ public class LoadTests
         // Act
         foreach(var i in Enumerable.Range(1, EventsCount))
         {
-            await eventBroker.Publish(new Event1("event", i));
-            await eventBroker.Publish(new Event2("event", i));
-            await eventBroker.Publish(new Event3("event", i));
+            await eventBroker.Publish(new Event1("event", i), _ct);
+            await eventBroker.Publish(new Event2("event", i), _ct);
+            await eventBroker.Publish(new Event3("event", i), _ct);
         }
 
         await eventsTracker.Wait(TimeSpan.FromSeconds(10));

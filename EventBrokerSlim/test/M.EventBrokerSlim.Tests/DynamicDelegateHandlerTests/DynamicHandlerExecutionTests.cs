@@ -1,6 +1,5 @@
 ﻿using FuncPipeline;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DynamicDelegateHandlerTests;
 
@@ -9,6 +8,7 @@ public class DynamicHandlerExecutionTests
     private readonly ITestOutputHelper _output;
     private readonly ServiceCollection _serviceCollection;
     private readonly EventsTracker _tracker;
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public DynamicHandlerExecutionTests(ITestOutputHelper output)
     {
@@ -38,12 +38,11 @@ public class DynamicHandlerExecutionTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         _ = dynamicEventHandlers.Add<TestEventBase>(pipeline);
-        await eventBroker.Publish(new TestEventBase(2));
-
+        await eventBroker.Publish(new TestEventBase(2), _ct);
         await _tracker.Wait(TimeSpan.FromSeconds(300));
 
         // Assert
@@ -71,17 +70,16 @@ public class DynamicHandlerExecutionTests
         _tracker.ExpectedItemsCount = 1;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         IDynamicHandlerClaimTicket claimTicket = dynamicEventHandlers.Add<TestEventBase>(pipeline);
-        await eventBroker.Publish(new TestEventBase(2));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(2), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         dynamicEventHandlers.Remove(claimTicket);
 
-        await eventBroker.Publish(new TestEventBase(3));
-
+        await eventBroker.Publish(new TestEventBase(3), _ct);
         await _tracker.Wait(TimeSpan.FromMilliseconds(300));
 
         // Assert
@@ -111,12 +109,12 @@ public class DynamicHandlerExecutionTests
         _tracker.ExpectedItemsCount = 2;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         _ = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[0]);
         _ = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[1]);
-        await eventBroker.Publish(new TestEventBase(2));
+        await eventBroker.Publish(new TestEventBase(2), _ct);
 
         await _tracker.Wait(TimeSpan.FromMilliseconds(300));
 
@@ -148,18 +146,18 @@ public class DynamicHandlerExecutionTests
         _tracker.ExpectedItemsCount = 2;
 
         // Act
-        await eventBroker.Publish(new TestEventBase(1));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(1), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         IDynamicHandlerClaimTicket claimTicket1 = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[0]);
         IDynamicHandlerClaimTicket claimTicket2 = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[1]);
 
-        await eventBroker.Publish(new TestEventBase(2));
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await eventBroker.Publish(new TestEventBase(2), _ct);
+        await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
         dynamicEventHandlers.RemoveRange([claimTicket1, claimTicket2]);
 
-        await eventBroker.Publish(new TestEventBase(3));
+        await eventBroker.Publish(new TestEventBase(3), _ct);
 
         await _tracker.Wait(TimeSpan.FromMilliseconds(300));
 

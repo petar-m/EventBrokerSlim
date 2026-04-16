@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,8 @@ namespace FuncPipeline.Tests;
 
 public class ArgumentsResolutionPrimarySourceContextTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task NoFallback_Throw_Attribute()
     {
@@ -33,7 +36,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var context = new PipelineRunContext();
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -82,7 +85,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var context = new PipelineRunContext();
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -110,7 +113,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -143,7 +146,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -173,7 +176,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var context = new PipelineRunContext().Set<ITestStub>(contextFunc);
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync(context);
+        PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -204,7 +207,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -235,7 +238,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -276,7 +279,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -303,7 +306,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -348,7 +351,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -377,7 +380,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -407,7 +410,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -435,7 +438,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -477,7 +480,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -505,7 +508,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.True(result.IsSuccessful);
@@ -535,7 +538,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);
@@ -581,7 +584,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .Pipelines[0];
 
         // Act
-        PipelineRunResult result = await pipeline.RunAsync();
+        PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
         // Assert
         Assert.False(result.IsSuccessful);

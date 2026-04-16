@@ -398,3 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 .idea/
 test_coverage/
+/EventBrokerSlim/test/PostgreSql/PostgreSqlTestApp/appsettings.Development.json
+/EventBrokerSlim/test/PostgreSql/PostgreSqlTestApp.AppHost/appsettings.Development.json

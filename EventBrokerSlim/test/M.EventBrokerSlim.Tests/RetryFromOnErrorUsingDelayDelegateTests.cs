@@ -2,6 +2,8 @@
 
 public class RetryFromOnErrorUsingDelayDelegateTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
@@ -24,7 +26,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
         var event1 = new TestEvent("test");
 
         // Act
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
         await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
@@ -55,7 +57,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
         var event1 = new TestEvent("test");
 
         // Act
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
         await eventsTracker.Wait(TimeSpan.FromSeconds(2));
 
         // Assert
@@ -88,7 +90,7 @@ public class RetryFromOnErrorUsingDelayDelegateTests
         var event1 = new TestEvent("test");
 
         // Act
-        await eventBroker.Publish(event1);
+        await eventBroker.Publish(event1, _ct);
         await eventsTracker.Wait(TimeSpan.FromSeconds(3));
 
         // Assert

@@ -2,6 +2,8 @@
 
 public class HandlerRegistrationTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public void RegisterHandlerAsTransient_AddsToServiceCollection()
     {
@@ -36,6 +38,46 @@ public class HandlerRegistrationTests
         var serviceDescriptor = serviceCollection.Single(x => x.IsKeyedService && x.KeyedImplementationType == typeof(TestEventHandler));
 
         Assert.Equal(ServiceLifetime.Singleton, serviceDescriptor.Lifetime);
+    }
+
+    [Fact]
+    public void AddEventBroker_CalledTwice_Throws()
+    {
+        var serviceCollection = new ServiceCollection()
+            .AddEventBroker();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => serviceCollection.AddEventBroker());
+
+        Assert.Equal(
+            "An EventBroker is already registered. Only a single default (non-keyed) instance is allowed. Each non default EventBroker instance must use a unique key.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddKeyedEventBroker_SameKey_Throws()
+    {
+        var serviceCollection = new ServiceCollection()
+            .AddKeyedEventBroker("broker1");
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => serviceCollection.AddKeyedEventBroker("broker1"));
+
+        Assert.Equal(
+            "An EventBroker with key 'broker1' is already registered. Each event broker instance must use a unique key.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void AddKeyedEventBroker_DifferentKeys_DoesNotThrow()
+    {
+        var exception = Record.Exception(() =>
+            new ServiceCollection()
+                .AddEventBroker()
+                .AddKeyedEventBroker("broker1")
+                .AddKeyedEventBroker("broker2"));
+
+        Assert.Null(exception);
     }
 
     [Fact]
@@ -86,7 +128,7 @@ public class HandlerRegistrationTests
             $"1_{typeof(TestEventHandler1).Name}",
             $"1_{typeof(TestEventHandler2).Name}");
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 
@@ -118,7 +160,7 @@ public class HandlerRegistrationTests
             $"1_{typeof(TestEventHandler1).Name}",
             $"1_{typeof(TestEventHandler2).Name}");
 
-        await eventBroker.Publish(testEvent);
+        await eventBroker.Publish(testEvent, _ct);
 
         var completed = await eventsRecorder.WaitForExpected(timeout: TimeSpan.FromSeconds(1));
 

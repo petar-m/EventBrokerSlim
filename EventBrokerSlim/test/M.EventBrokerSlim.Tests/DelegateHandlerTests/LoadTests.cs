@@ -1,13 +1,13 @@
 ﻿using FuncPipeline;
 using MELT;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace M.EventBrokerSlim.Tests.DelegateHandlerTests;
 
 public class LoadTests
 {
     private readonly ITestOutputHelper _output;
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public LoadTests(ITestOutputHelper output)
     {
@@ -68,9 +68,9 @@ public class LoadTests
         // Act
         foreach(var i in Enumerable.Range(1, EventsCount))
         {
-            await eventBroker.Publish(new Event1(i));
-            await eventBroker.Publish(new Event2(i));
-            await eventBroker.Publish(new Event3(i));
+            await eventBroker.Publish(new Event1(i), _ct);
+            await eventBroker.Publish(new Event2(i), _ct);
+            await eventBroker.Publish(new Event3(i), _ct);
         }
 
         await eventsTracker.Wait(TimeSpan.FromSeconds(10));
