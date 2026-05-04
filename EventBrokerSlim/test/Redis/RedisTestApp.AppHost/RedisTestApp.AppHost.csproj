@@ -1,0 +1,19 @@
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.2.1">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>8e2e3bb0-8740-4107-9e7c-5a3cdd03be21</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.2.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RedisTestApp\RedisTestApp.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -257,7 +257,7 @@ public static partial class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds a scoped event handler serviceimplementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
+    /// Adds a scoped event handler service implementing <see cref="IEventHandler{TEvent}"/> to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <typeparam name="TEvent">
     /// The type of event the handler processes.

@@ -16,6 +16,8 @@ on:
     paths-ignore:
       - "README.md"
       - "EventBrokerSlim/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md"
       - "EventBrokerSlim/package-icon.png" 
       - "FuncPipeline/ReadMe.md"
       - ".gitignore" 
@@ -39,7 +41,7 @@ jobs:
       name: Set Version
       run: |
         ref=${{ github.ref }}
-        pattern="^refs/tags/(EventBrokerSlim|EventBrokerSlim.PersistentEvents.PostgreSql|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
+        pattern="^refs/tags/(EventBrokerSlim|EventBrokerSlim.PersistentEvents.PostgreSql|EventBrokerSlim.PersistentEvents.Redis|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
         
         if [[ $ref =~ $pattern ]]; then
           is_release=true
@@ -113,6 +115,10 @@ jobs:
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'FuncPipeline' }}    
       run: dotnet pack FuncPipeline/src/FuncPipeline/FuncPipeline.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
     
+    - name: Create NuGet Package for EventBrokerSlim.PersistentEvents.Redis
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim.PersistentEvents.Redis' }}    
+      run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/M.EventBrokerSlim.PersistentEvents.Redis.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
     - name: Publish NuGet Package
       if: ${{ success() && env.IS_RELEASE == 'true' }}    
       run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API }} -s https://api.nuget.org/v3/index.json
