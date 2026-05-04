@@ -1,50 +1,24 @@
-# M.EventBrokerSlim.PersistentEvents.PostgreSql  
+# M.EventBrokerSlim.PersistentEvents.Redis  
 
 [![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows/build.yml/badge.svg)](https://github.com/petar-m/EventBrokerSlim/actions)
-[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.PostgreSql.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.PostgreSql)    
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.Redis.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.Redis)    
 
-PostgreSQL storage backend for [EventBrokerSlim](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/ReadMe.md) persistent events - durable, at-least-once event delivery that survives process restarts.
+Redis storage backend for [EventBrokerSlim](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/ReadMe.md) persistent events - durable, at-least-once event delivery that survives process restarts.
 
 For the design rationale behind persistent events, see the [architecture document](https://github.com/petar-m/EventBrokerSlim/blob/main/EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md) and [ADRs](https://github.com/petar-m/EventBrokerSlim/tree/main/EventBrokerSlim/ADRs).
 
 ## Prerequisites
 
 - .NET 8.0 or later  
-- PostgreSQL server  
+- Redis server  
 - [M.EventBrokerSlim](https://www.nuget.org/packages/M.EventBrokerSlim) (pulled automatically as a dependency)
 
 ## Installation
 
 ```shell
-dotnet add package M.EventBrokerSlim.PersistentEvents.PostgreSql
+dotnet add package M.EventBrokerSlim.PersistentEvents.Redis
 ```
 
-## Database Setup
-
-The package requires a schema, table, sequence, and indexes in your PostgreSQL database. There are two ways to set them up:
-
-### Option 1: Programmatic (development / simple deployments)
-
-Call `CreateEventsTable()` on a `DatabaseSettings` instance:
-
-```csharp
-var databaseSettings = new DatabaseSettings
-{
-    ConnectionString = "Host=localhost;Database=mydb;Username=myuser;Password=mypassword",
-    Schema = "ebs_0"
-};
-
-databaseSettings.CreateEventsTable();
-```
-
-The call is idempotent - it uses `CREATE ... IF NOT EXISTS` and is safe to run on every startup in development.
-
-> [!WARNING]
-> `CreateEventsTable()` requires DDL permissions (create schemas, tables, sequences, and indexes). Production applications should typically run this as part of a deployment or migration process, not at application startup.
-
-### Option 2: Manual SQL script
-
-Apply the `initialize_db.sql` script included in the package source. The default schema name is `ebs_0` - replace it with a unique name if running multiple event broker instances against the same database.
 
 ## Quick Start
 
@@ -100,7 +74,7 @@ IPipeline pipeline = PipelineBuilder.Create()
 
 ### 2. Register the event registry
 
-Map each event type to a stable string name. The name is stored in the database - it must not change between deployments:
+Map each event type to a stable string name. The name is stored in Redis - it must not change between deployments:
 
 ```csharp
 var eventRegistry = new EventRegistry()
@@ -141,17 +115,31 @@ serviceCollection.AddEventHandlerPipeline<OrderPlaced>(pipeline, o => o
     .WithHandlerName("OrderPlacedHandler"));
 ```
 
-### 4. Configure the event broker with PostgreSQL persistence
+### 4. Configure the event broker with Redis persistence
 
 ```csharp
 serviceCollection.AddEventBroker(x => x
     .WithMaxConcurrentHandlers(3)
-    .WithPostgreSqlPersistence((db, settings) =>
+    .WithRedisPersistence((redis, settings) =>
     {
-        db.ConnectionString = "Host=localhost;Database=mydb;Username=myuser;Password=mypassword";
-        db.Schema = "ebs_0";
+        redis.ConnectionString = "localhost:6379";
+        redis.KeyPrefix = "ebs_0";
         settings.PollingInterval = TimeSpan.FromSeconds(10);
         settings.ProcessingTimeout = TimeSpan.FromMinutes(5);
+    }));
+```
+
+**Using a registered `IConnectionMultiplexer`**
+
+If you already have a `IConnectionMultiplexer` registered in the DI container, you can reuse it instead of providing a connection string:
+
+```csharp
+serviceCollection.AddEventBroker(x => x
+    .WithMaxConcurrentHandlers(3)
+    .WithRedisPersistence((redis, settings) =>
+    {
+        redis.UseRegisteredMultiplexer = true;
+        redis.KeyPrefix = "ebs_0";
     }));
 ```
 
@@ -178,24 +166,25 @@ await eventBroker.Publish(new OrderPlaced("order-123", 49.99m));
 
 ## Configuration Reference
 
-### DatabaseSettings
+### RedisSettings
 
-| Property | Default | Description |
-|---|---|---|
-| `ConnectionString` | `null` | PostgreSQL connection string. **Required.** |
-| `Schema` | `"ebs_0"` | Database schema for the events table. Use a unique schema per event broker instance when sharing the same database. |
+| Property                   | Default   | Description                                                                                                                           |
+| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConnectionString`         | `null`    | Redis connection string (e.g. `"localhost:6379"`). **Required** unless `UseRegisteredMultiplexer` is `true`.                          |
+| `UseRegisteredMultiplexer` | `false`   | When `true`, resolves an `IConnectionMultiplexer` from the DI container instead of creating a new connection from `ConnectionString`. |
+| `KeyPrefix`                | `"ebs_0"` | Prefix for all Redis keys. Use a unique prefix per event broker instance when sharing the same Redis server.                          |
 
 ### PersistentEventBrokerSettings
 
-| Property | Default | Description |
-|---|---|---|
-| `PollingInterval` | 10 seconds | How often the poller checks for scheduled records. Shorter intervals reduce cross-instance latency at the cost of more queries when idle. |
-| `ProcessingTimeout` | 5 minutes | In-progress records exceeding this duration are rescheduled. Must be longer than the longest expected handler execution time. |
-| `MaxProcessingTimeouts` | 10 | Maximum number of times a record can be rescheduled due to processing timeout before it is dead-lettered. |
-| `ScheduledBatchSize` | 10 | Maximum number of scheduled records fetched per poll. |
-| `UnclaimedTtl` | 7 days | Scheduled records not claimed within this duration (measured from `scheduled_at`) are dead-lettered. |
-| `CompletedRecordTtl` | 7 days | Completed records are deleted after this duration. |
-| `DeadLetteredRecordTtl` | 30 days | Dead-lettered records are deleted after this duration. Should be long enough to give operators time to inspect and act. |
+| Property                | Default    | Description                                                                                                                               |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `PollingInterval`       | 10 seconds | How often the poller checks for scheduled records. Shorter intervals reduce cross-instance latency at the cost of more queries when idle. |
+| `ProcessingTimeout`     | 5 minutes  | In-progress records exceeding this duration are rescheduled. Must be longer than the longest expected handler execution time.             |
+| `MaxProcessingTimeouts` | 10         | Maximum number of times a record can be rescheduled due to processing timeout before it is dead-lettered.                                 |
+| `ScheduledBatchSize`    | 10         | Maximum number of scheduled records fetched per poll.                                                                                     |
+| `UnclaimedTtl`          | 7 days     | Scheduled records not claimed within this duration (measured from `scheduled_at`) are dead-lettered.                                      |
+| `CompletedRecordTtl`    | 7 days     | Completed records are deleted after this duration.                                                                                        |
+| `DeadLetteredRecordTtl` | 30 days    | Dead-lettered records are deleted after this duration. Should be long enough to give operators time to inspect and act.                   |
 
 ## Important Considerations
 
@@ -209,40 +198,48 @@ await eventBroker.Publish(new OrderPlaced("order-123", 49.99m));
 
 **Not event sourcing.** The store is a delivery mechanism, not an event log. Completed records are deleted according to `CompletedRecordTtl`.
 
-**Not a transactional outbox.** The event write to PostgreSQL is not atomic with the caller's own database transaction.
+**Not a transactional outbox.** The event write to Redis is not atomic with the caller's own database transaction.
 
 **Dead-letter monitoring.** Records land in a dead-letter state when the retry policy is exhausted, when a handler abandons the event, or when an exception escapes unhandled. Dead-lettered records are not retried automatically - monitoring and tooling for inspection and requeue is necessary for production use.
 
-## Database Schema
+## Redis Data Model
 
-The package creates the following schema (default name `ebs_0`):
+All data is stored under the configured `KeyPrefix` (default `ebs_0`). The `{KeyPrefix}` portion is wrapped in braces in the actual keys to enable Redis hash-tag-based slot routing for cluster compatibility.
 
-### Events Table
+### Event Records
 
-| Column | Type | Description |
-|---|---|---|
-| `id` | `BIGINT` (PK) | Auto-incrementing record identifier |
-| `event_id` | `TEXT` | Unique identifier for the event instance (shared across fan-out records) |
-| `event_name` | `TEXT` | Registered event name from `EventRegistry` |
-| `handler_name` | `TEXT` | Registered handler name |
-| `payload` | `TEXT` | JSON-serialized event data |
-| `status` | `INT` | 1=Scheduled, 2=InProgress, 3=Completed, 4=DeadLettered |
-| `scheduled_at` | `TIMESTAMPTZ` | When the record becomes eligible for processing |
-| `retry_attempt_count` | `INTEGER` | Number of retry attempts |
-| `retry_last_delay` | `INTERVAL` | Duration of the last retry delay |
-| `claimed_at` | `TIMESTAMPTZ` | When the record was claimed for processing |
-| `created_at` | `TIMESTAMPTZ` | When the record was created |
-| `last_updated_at` | `TIMESTAMPTZ` | When the record was last updated (used for optimistic concurrency) |
-| `last_error` | `TEXT` | Error message from the most recent failure |
-| `processing_timeouts_count` | `INTEGER` | Number of times processing timed out |
+Each event record is stored as a Redis Hash at key `{KeyPrefix}:evt:{id}` where `id` is a GUID.
 
-### Indexes
+| Field                       | Description                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| `event_id`                  | Unique identifier for the event instance (shared across fan-out records)               |
+| `event_name`                | Registered event name from `EventRegistry`                                             |
+| `handler_name`              | Registered handler name                                                                |
+| `payload`                   | JSON-serialized event data                                                             |
+| `status`                    | 1=Scheduled, 2=InProgress, 3=Completed, 4=DeadLettered                                 |
+| `scheduled_at`              | Unix timestamp (ms) when the record becomes eligible for processing                    |
+| `retry_attempt_count`       | Number of retry attempts                                                               |
+| `retry_last_delay`          | Duration of the last retry delay (ms)                                                  |
+| `claimed_at`                | Unix timestamp (ms) when the record was claimed for processing                         |
+| `created_at`                | Unix timestamp (ms) when the record was created                                        |
+| `last_updated_at`           | Unix timestamp (ms) when the record was last updated (used for optimistic concurrency) |
+| `last_error`                | Error message from the most recent failure                                             |
+| `processing_timeouts_count` | Number of times processing timed out                                                   |
 
-| Index | Purpose |
-|---|---|
-| **Polling** (partial, `status=1`) | Covers the high-frequency polling query. Includes `id`, `last_updated_at`, `event_name`, `handler_name` for index-only scans. |
-| **Timeout** (partial, `status=2`) | Enables efficient timeout detection for in-progress records. |
-| **Cleanup** (partial, `status IN (3,4)`) | Supports retention-based deletion of completed and dead-lettered records. |
+### Sorted Set Indexes
+
+Four sorted sets partition records by status, scored by timestamp for efficient range queries:
+
+| Key                             | Purpose                                                            |
+| ------------------------------- | ------------------------------------------------------------------ |
+| `{KeyPrefix}:idx:scheduled`     | Records eligible for dispatch, scored by `scheduled_at`            |
+| `{KeyPrefix}:idx:in_progress`   | Records currently being processed, scored by `claimed_at`          |
+| `{KeyPrefix}:idx:completed`     | Finished records awaiting TTL cleanup, scored by `last_updated_at` |
+| `{KeyPrefix}:idx:dead_lettered` | Failed records awaiting inspection, scored by `last_updated_at`    |
+
+### Atomicity
+
+All state transitions (schedule, claim, complete, retry, dead-letter, timeout reschedule, cleanup) are executed as atomic Lua scripts, ensuring consistency even under concurrent access.
 
 ## License
 
