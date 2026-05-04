@@ -3,7 +3,6 @@ using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;
 using RedisIntegrationTests;
-using YamlDotNet.Core.Tokens;
 
 namespace M.EventBrokerSlim.PersistentEvents.Redis.Tests.Tests;
 

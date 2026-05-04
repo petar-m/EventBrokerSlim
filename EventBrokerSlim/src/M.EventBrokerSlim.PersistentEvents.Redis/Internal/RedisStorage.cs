@@ -371,5 +371,10 @@ internal class RedisStorage : IEventStorage, IDisposable
     public void Dispose()
     {
         _connectionMultiplexer.ConnectionRestored -= OnConnectionRestored;
+        if(!_redisSettings.UseRegisteredMultiplexer)
+        {
+            _connectionMultiplexer.Close();
+            _connectionMultiplexer.Dispose();
+        }
     }
 }
