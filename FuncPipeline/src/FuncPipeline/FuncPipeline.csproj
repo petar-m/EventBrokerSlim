@@ -15,7 +15,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim#funcpipeline</PackageProjectUrl>
         <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
