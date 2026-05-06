@@ -4,20 +4,26 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - "README.md"
-      - "EventBrokerSlim/ReadMe.md"
+      - "ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim/ReadMe.md"
+      - "EventBrokerSlim/ReadMe.md" 
+      - "EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md" 
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
       - "EventBrokerSlim/package-icon.png" 
       - "FuncPipeline/ReadMe.md"
-      - ".gitignore"
+      - ".gitignore" 
     tags:
       - '*'
   pull_request:
     branches: [ main ]
     paths-ignore:
-      - "README.md"
-      - "EventBrokerSlim/ReadMe.md"
-      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
+      - "ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim/ReadMe.md"
+      - "EventBrokerSlim/ReadMe.md" 
+      - "EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md" 
       - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
       - "EventBrokerSlim/package-icon.png" 
       - "FuncPipeline/ReadMe.md"
       - ".gitignore" 
