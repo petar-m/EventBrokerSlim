@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PostgreSqlTestApp.ServiceDefaults\PostgreSqlTestApp.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Tests.ServiceDefaults\Tests.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\src\M.EventBrokerSlim.PersistentEvents.PostgreSql\M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
   </ItemGroup>
 

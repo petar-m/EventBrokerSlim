@@ -28,17 +28,16 @@
   <Folder Name="/EventBrokerSlim/test/">
     <Project Path="EventBrokerSlim/test/AotTestApp/AotTestApp.csproj" />
     <Project Path="EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj" />
+    <Project Path="EventBrokerSlim/test/Tests.ServiceDefaults/Tests.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/EventBrokerSlim/test/PostgreSql/">
     <Project Path="EventBrokerSlim/test/PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj" />
     <Project Path="EventBrokerSlim/test/PostgreSql/PostgreSqlTestApp.AppHost/PostgreSqlTestApp.AppHost.csproj" />
-    <Project Path="EventBrokerSlim/test/PostgreSql/PostgreSqlTestApp.ServiceDefaults/PostgreSqlTestApp.ServiceDefaults.csproj" />
     <Project Path="EventBrokerSlim/test/PostgreSql/PostgreSqlTestApp/PostgreSqlTestApp.csproj" />
   </Folder>
   <Folder Name="/EventBrokerSlim/test/Redis/">
     <Project Path="EventBrokerSlim/test/Redis/M.EventBrokerSlim.PersistentEvents.Redis.Tests/M.EventBrokerSlim.PersistentEvents.Redis.Tests.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp.AppHost/RedisTestApp.AppHost.csproj" />
-    <Project Path="EventBrokerSlim/test/Redis/RedisTestApp.ServiceDefaults/TestApp.ServiceDefaults.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp/RedisTestApp.csproj" />
   </Folder>
   <Folder Name="/FuncPipeline/">

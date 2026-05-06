@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\M.EventBrokerSlim.PersistentEvents.Redis\M.EventBrokerSlim.PersistentEvents.Redis.csproj" />
-    <ProjectReference Include="..\RedisTestApp.ServiceDefaults\TestApp.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Tests.ServiceDefaults\Tests.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
