@@ -23,6 +23,7 @@
   <Folder Name="/EventBrokerSlim/src/">
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/M.EventBrokerSlim.PersistentEvents.Redis.csproj" />
+    <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim/M.EventBrokerSlim.csproj" />
   </Folder>
   <Folder Name="/EventBrokerSlim/test/">
@@ -39,6 +40,11 @@
     <Project Path="EventBrokerSlim/test/Redis/M.EventBrokerSlim.PersistentEvents.Redis.Tests/M.EventBrokerSlim.PersistentEvents.Redis.Tests.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp.AppHost/RedisTestApp.AppHost.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp/RedisTestApp.csproj" />
+  </Folder>
+  <Folder Name="/EventBrokerSlim/test/SqlServer/">
+    <Project Path="EventBrokerSlim/test/SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests.csproj" />
+    <Project Path="EventBrokerSlim/test/SqlServer/SqlServerTestApp.AppHost/SqlServerTestApp.AppHost.csproj" />
+    <Project Path="EventBrokerSlim/test/SqlServer/SqlServerTestApp/SqlServerTestApp.csproj" />
   </Folder>
   <Folder Name="/FuncPipeline/">
     <File Path="FuncPipeline/ReadMe.md" />

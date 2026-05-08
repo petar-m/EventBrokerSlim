@@ -1,0 +1,153 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+header {
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    color: #1a1a2e;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+h2 {
+    font-size: 1.1rem;
+    color: #1a1a2e;
+    margin-bottom: 0.75rem;
+}
+
+.publish-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+button {
+    background: #4361ee;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #3a56d4;
+}
+
+button:active {
+    background: #2f47b3;
+}
+
+button:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+}
+
+.status-text {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.connection-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.indicator.connected {
+    background: #38b000;
+    box-shadow: 0 0 4px rgba(56, 176, 0, 0.5);
+}
+
+.indicator.disconnected {
+    background: #d00000;
+}
+
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.placeholder {
+    color: #999;
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+    border: 1px dashed #ddd;
+}
+
+.event-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    animation: slideIn 0.3s ease-out;
+}
+
+.event-card .message {
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 0.25rem;
+}
+
+.event-card .timestamps {
+    font-size: 0.8rem;
+    color: #888;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.event-card .latency {
+    font-size: 0.8rem;
+    color: #4361ee;
+    font-weight: 500;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
