@@ -26,6 +26,14 @@ Redis storage backend for EventBrokerSlim persistent events — durable, at-leas
 
 [EventBrokerSlim.PersistentEvents.Redis documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md)
 
+# EventBrokerSlim.PersistentEvents.SqlServer
+
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.SqlServer.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.SqlServer)    
+
+SqlServer storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+
+[EventBrokerSlim.PersistentEvents.SqlServer documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/ReadMe.md)
+
 # FuncPipeline
 
 [![NuGet](https://img.shields.io/nuget/v/FuncPipeline.svg)](https://www.nuget.org/packages/FuncPipeline)    

@@ -59,5 +59,6 @@
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path="README.md" />
   </Folder>
 </Solution>
