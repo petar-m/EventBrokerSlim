@@ -73,48 +73,29 @@ internal class RedisStorage : IEventStorage, IDisposable
 
     public async Task<IEnumerable<ScheduledEventRecord>> FetchScheduledAsync(int batchSize, CancellationToken cancellationToken = default)
     {
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var argv = new
+        {
+            scheduledIndexKey = (RedisKey)_scheduledIndexKey,
+            now = (RedisValue)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            batchSize = (RedisValue)batchSize
+        };
 
-        // Get IDs of scheduled events due for processing
-        RedisValue[] ids = await _db.SortedSetRangeByScoreAsync(
-            key: _scheduledIndexKey,
-            start: double.NegativeInfinity,
-            stop: now,
-            take: batchSize)
-            .ConfigureAwait(false);
+        RedisResult result = await _luaScripts.FetchScheduled.EvaluateAsync(_db, argv).ConfigureAwait(false);
 
-        if(ids.Length == 0)
+        if(result.IsNull || result.Length == 0)
         {
             return Enumerable.Empty<ScheduledEventRecord>();
         }
 
-        // Fetch only the lightweight fields needed (no payload yet)
-        var fields = new RedisValue[] { "event_name", "handler_name", "last_updated_at" };
-
-        Task<RedisValue[]>[] tasks = ids
-            .Select(id => _db.HashGetAsync(id.ToString(), fields))
-            .ToArray();
-
-        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-
-        // Map to ScheduledEventRecord
-        var records = new List<ScheduledEventRecord>(ids.Length);
-        for(int i = 0; i < ids.Length; i++)
+        const int fieldsPerRecord = 4;
+        var records = new List<ScheduledEventRecord>(result.Length / fieldsPerRecord);
+        for(int i = 0; i < result.Length; i += fieldsPerRecord)
         {
-            RedisValue[] fieldsResult = results[i];
-
-            // Guard against a record being deleted between ZRANGEBYSCORE and HMGET
-            if(fieldsResult[0].IsNull)
-            {
-                continue;
-            }
-
-            records.Add(new ScheduledEventRecord(
-                Id: ids[i]!,
-                LastUpdatedAt: DateTimeOffset.FromUnixTimeMilliseconds((long)fieldsResult[2]).UtcDateTime,
-                EventName: fieldsResult[0]!,
-                HandlerName: fieldsResult[1]!
-            ));
+            string id = (string)result[i]!;
+            string eventName = (string)result[i + 1]!;
+            string handlerName = (string)result[i + 2]!;
+            DateTime utcDateTime = DateTimeOffset.FromUnixTimeMilliseconds((long)result[i + 3]).UtcDateTime;
+            records.Add(new ScheduledEventRecord(id, utcDateTime, eventName, handlerName));
         }
 
         return records;

@@ -7,6 +7,23 @@ namespace M.EventBrokerSlim.PersistentEvents.Redis.Internal;
 
 internal sealed class LuaScripts
 {
+
+    private static readonly LuaScript _preparedFetchScheduled = LuaScript.Prepare(
+        """
+        local ids = redis.call('ZRANGEBYSCORE', @scheduledIndexKey, '-inf', @now, 'LIMIT', 0, @batchSize)
+        local result = {}
+        for _, recordKey in ipairs(ids) do
+            local fields = redis.call('HMGET', recordKey, 'event_name', 'handler_name', 'last_updated_at')
+            if fields[1] then
+                result[#result + 1] = recordKey
+                result[#result + 1] = fields[1]
+                result[#result + 1] = fields[2]
+                result[#result + 1] = fields[3]
+            end
+        end
+        return result
+        """);
+
     private static readonly LuaScript _preparedSchedule = LuaScript.Prepare(
         """
         redis.call('HSET', @recordKey,
@@ -173,6 +190,7 @@ internal sealed class LuaScripts
         _logger = logger;
     }
 
+    public LoadedLuaScript FetchScheduled { get; private set; } = null!;
     public LoadedLuaScript Schedule { get; private set; } = null!;
     public LoadedLuaScript TryClaim { get; private set; } = null!;
     public LoadedLuaScript Complete { get; private set; } = null!;
@@ -208,6 +226,7 @@ internal sealed class LuaScripts
                 // .Load() issues SCRIPT LOAD synchronously and caches the SHA.
                 // Subsequent executions use EVALSHA; StackExchange.Redis automatically
                 // falls back to EVAL on NOSCRIPT, so a missed server is self-healing.
+                FetchScheduled = _preparedFetchScheduled.Load(server);
                 Schedule = _preparedSchedule.Load(server);
                 TryClaim = _preparedTryClaim.Load(server);
                 Complete = _preparedComplete.Load(server);
