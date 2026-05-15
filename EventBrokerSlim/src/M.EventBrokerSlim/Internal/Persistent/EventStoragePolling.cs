@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -49,13 +48,15 @@ internal class EventStoragePolling
                 _pollRequiredSignal.Reset();
                 IEnumerable<ScheduledEventRecord> eventRecords =
                     await _eventStorage.TryFetchScheduledAsync(_settings.ScheduledBatchSize, _logger, cancellationToken).ConfigureAwait(false);
+                int fetched = 0;
                 foreach(ScheduledEventRecord eventRecord in eventRecords)
                 {
                     await _handlerRunnerChannel.Writer.WriteAsync(eventRecord, cancellationToken).ConfigureAwait(false);
+                    fetched++;
                 }
 
                 // If we fetched less than the batch size, it's likely there are no more ready events, so wait for a signal or timeout before polling again
-                if(eventRecords.Count() != _settings.ScheduledBatchSize)
+                if(fetched != _settings.ScheduledBatchSize)
                 {
                     await _pollRequiredSignal.WaitForSignalAsync(_settings.PollingInterval, cancellationToken).ConfigureAwait(false);
                 }
