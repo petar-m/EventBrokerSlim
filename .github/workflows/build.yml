@@ -10,6 +10,8 @@ on:
       - "EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md" 
       - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md"
       - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/ReadMe.md"
       - "EventBrokerSlim/package-icon.png" 
       - "FuncPipeline/ReadMe.md"
       - ".gitignore" 
@@ -24,6 +26,8 @@ on:
       - "EventBrokerSlim/EventBrokerSlim-Persistence-Architecture.md" 
       - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md"
       - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/ReadMe.md"
+      - "EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/ReadMe.md"
       - "EventBrokerSlim/package-icon.png" 
       - "FuncPipeline/ReadMe.md"
       - ".gitignore" 
@@ -47,7 +51,7 @@ jobs:
       name: Set Version
       run: |
         ref=${{ github.ref }}
-        pattern="^refs/tags/(EventBrokerSlim|EventBrokerSlim.PersistentEvents.PostgreSql|EventBrokerSlim.PersistentEvents.Redis|EventBrokerSlim.PersistentEvents.SqlServer|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
+        pattern="^refs/tags/(EventBrokerSlim|EventBrokerSlim.PersistentEvents.PostgreSql|EventBrokerSlim.PersistentEvents.Redis|EventBrokerSlim.PersistentEvents.SqlServer|EventBrokerSlim.PersistentEvents.Sqlite|FuncPipeline)_v([0-9]+.[0-9]+.[0-9]+(-.+)?)$"
         
         if [[ $ref =~ $pattern ]]; then
           is_release=true
@@ -128,6 +132,10 @@ jobs:
     - name: Create NuGet Package for EventBrokerSlim.PersistentEvents.SqlServer
       if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim.PersistentEvents.SqlServer' }}    
       run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
+    - name: Create NuGet Package for EventBrokerSlim.PersistentEvents.Sqlite
+      if: ${{ success() && env.IS_RELEASE == 'true' && env.PROJECT == 'EventBrokerSlim.PersistentEvents.Sqlite' }}    
+      run: dotnet pack EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.csproj -p:PackageVersion=${{ env.VERSION }} --output ./ --configuration Release --no-restore --no-build  -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
     - name: Publish NuGet Package
       if: ${{ success() && env.IS_RELEASE == 'true' }}    

@@ -34,6 +34,14 @@ SqlServer storage backend for EventBrokerSlim persistent events — durable, at-
 
 [EventBrokerSlim.PersistentEvents.SqlServer documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/ReadMe.md)
 
+# EventBrokerSlim.PersistentEvents.Sqlite
+
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.Sqlite.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.Sqlite)    
+
+SQLite storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+
+[EventBrokerSlim.PersistentEvents.Sqlite documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/ReadMe.md)
+
 # FuncPipeline
 
 [![NuGet](https://img.shields.io/nuget/v/FuncPipeline.svg)](https://www.nuget.org/packages/FuncPipeline)    

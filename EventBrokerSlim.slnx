@@ -23,6 +23,7 @@
   <Folder Name="/EventBrokerSlim/src/">
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/M.EventBrokerSlim.PersistentEvents.Redis.csproj" />
+    <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim/M.EventBrokerSlim.csproj" />
   </Folder>
@@ -40,6 +41,10 @@
     <Project Path="EventBrokerSlim/test/Redis/M.EventBrokerSlim.PersistentEvents.Redis.Tests/M.EventBrokerSlim.PersistentEvents.Redis.Tests.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp.AppHost/RedisTestApp.AppHost.csproj" />
     <Project Path="EventBrokerSlim/test/Redis/RedisTestApp/RedisTestApp.csproj" />
+  </Folder>
+  <Folder Name="/EventBrokerSlim/test/Sqlite/">
+    <Project Path="EventBrokerSlim/test/Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests.csproj" />
+    <Project Path="EventBrokerSlim/test/Sqlite/SqliteTestApp/SqliteTestApp.csproj" />
   </Folder>
   <Folder Name="/EventBrokerSlim/test/SqlServer/">
     <Project Path="EventBrokerSlim/test/SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests.csproj" />
