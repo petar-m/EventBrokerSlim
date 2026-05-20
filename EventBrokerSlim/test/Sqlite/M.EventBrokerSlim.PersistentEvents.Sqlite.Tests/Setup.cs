@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using M.EventBrokerSlim.PersistentEvents.Sqlite.Tests;
+﻿using M.EventBrokerSlim.PersistentEvents.Sqlite.Tests;
 
 [assembly: AssemblyFixture(typeof(Setup))]
 
@@ -25,7 +23,7 @@ public class Setup : IDisposable
     {
         try
         {
-            //Directory.Delete(_tempDirectory, recursive: true);
+            Directory.Delete(_tempDirectory, recursive: true);
         }
         catch
         {
