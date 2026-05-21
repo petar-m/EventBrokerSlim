@@ -14,7 +14,7 @@ For breaking changes in version 4 please look at the [release notes](https://git
 
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.PostgreSql.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.PostgreSql)    
 
-PostgreSQL storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+PostgreSQL storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
 
 [EventBrokerSlim.PersistentEvents.PostgreSql documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/ReadMe.md)
 
@@ -22,7 +22,7 @@ PostgreSQL storage backend for EventBrokerSlim persistent events — durable, at
 
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.Redis.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.Redis)    
 
-Redis storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+Redis storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
 
 [EventBrokerSlim.PersistentEvents.Redis documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/ReadMe.md)
 
@@ -30,7 +30,7 @@ Redis storage backend for EventBrokerSlim persistent events — durable, at-leas
 
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.SqlServer.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.SqlServer)    
 
-SqlServer storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+SqlServer storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
 
 [EventBrokerSlim.PersistentEvents.SqlServer documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.SqlServer/ReadMe.md)
 
@@ -38,9 +38,17 @@ SqlServer storage backend for EventBrokerSlim persistent events — durable, at-
 
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.Sqlite.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.Sqlite)    
 
-SQLite storage backend for EventBrokerSlim persistent events — durable, at-least-once event delivery that survives process restarts.
+SQLite storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
 
 [EventBrokerSlim.PersistentEvents.Sqlite documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/ReadMe.md)
+
+# EventBrokerSlim.PersistentEvents.LiteDb
+
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.LiteDb.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.LiteDb)    
+
+LiteDb storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
+
+[EventBrokerSlim.PersistentEvents.LiteDb documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.LiteDb/ReadMe.md)
 
 # FuncPipeline
 
