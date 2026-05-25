@@ -22,6 +22,7 @@
   </Folder>
   <Folder Name="/EventBrokerSlim/src/">
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.LiteDb/M.EventBrokerSlim.PersistentEvents.LiteDb.csproj" />
+    <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.MongoDb/M.EventBrokerSlim.PersistentEvents.MongoDb.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Redis/M.EventBrokerSlim.PersistentEvents.Redis.csproj" />
     <Project Path="EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.csproj" />
@@ -36,6 +37,11 @@
   <Folder Name="/EventBrokerSlim/test/LiteDb/">
     <Project Path="EventBrokerSlim/test/LiteDb/LiteDbTestApp/LiteDbTestApp.csproj" />
     <Project Path="EventBrokerSlim/test/LiteDb/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests.csproj" />
+  </Folder>
+  <Folder Name="/EventBrokerSlim/test/MongoDb/">
+    <Project Path="EventBrokerSlim/test/MongoDb/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests.csproj" />
+    <Project Path="EventBrokerSlim/test/MongoDb/MongoDbTestApp.AppHost/MongoDbTestApp.AppHost.csproj" />
+    <Project Path="EventBrokerSlim/test/MongoDb/MongoDbTestApp/MongoDbTestApp.csproj" />
   </Folder>
   <Folder Name="/EventBrokerSlim/test/PostgreSql/">
     <Project Path="EventBrokerSlim/test/PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj" />

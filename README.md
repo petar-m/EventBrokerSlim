@@ -50,6 +50,14 @@ LiteDb storage backend for EventBrokerSlim persistent events - durable, at-least
 
 [EventBrokerSlim.PersistentEvents.LiteDb documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.LiteDb/ReadMe.md)
 
+# EventBrokerSlim.PersistentEvents.MongoDb
+
+[![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.PersistentEvents.MongoDb.svg)](https://www.nuget.org/packages/M.EventBrokerSlim.PersistentEvents.MongoDb)    
+
+MongoDb storage backend for EventBrokerSlim persistent events - durable, at-least-once event delivery that survives process restarts.
+
+[EventBrokerSlim.PersistentEvents.MongoDb documentation](EventBrokerSlim/src/M.EventBrokerSlim.PersistentEvents.MongoDb/ReadMe.md)
+
 # FuncPipeline
 
 [![NuGet](https://img.shields.io/nuget/v/FuncPipeline.svg)](https://www.nuget.org/packages/FuncPipeline)    
