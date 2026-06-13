@@ -1,20 +1,6 @@
 # Site settings
 title: EventBrokerSlim Docs
 description: "EventBrokerSlim documentation site"
-baseurl: ""        # leave empty for user.github.io/repo
+theme: "just-the-docs"
 url: "https://petar-m.github.io/EventBrokerSlim"  # replace with your site URL
 
-# Use remote_theme to avoid installing gems on GitHub Pages
-remote_theme: pmarsceill/just-the-docs
-
-# Just the Docs options
-just_the_docs:
-  repository_url: "https://github.com/petar-m/EventBrokerSlim"
-  logo:
-    src: assets/images/package-icon.png
-
-# Jekyll settings
-markdown: kramdown
-kramdown:
-  input: GFM
-exclude: [node_modules, vendor, Gemfile.lock]
