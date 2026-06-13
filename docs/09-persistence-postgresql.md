@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Persistent Events: PostgreSQL
+title: "Persistent Events: PostgreSQL"
 nav_order: 9
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Persistent Events: LiteDB
+title: "Persistent Events: LiteDB"
 nav_order: 7
 ---
 

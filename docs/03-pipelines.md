@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Pipelines
+title: "Pipelines"
 nav_order: 3
 ---
 

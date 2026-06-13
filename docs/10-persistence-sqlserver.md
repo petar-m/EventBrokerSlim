@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Persistent Events: SQL Server
+title: "Persistent Events: SQL Server"
 nav_order: 10
 ---
 

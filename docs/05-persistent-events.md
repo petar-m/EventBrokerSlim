@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Persistent Events
+title: "Persistent Events"
 nav_order: 5
 ---
 

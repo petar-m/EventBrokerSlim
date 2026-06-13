@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Persistent Events: MongoDB
+title: "Persistent Events: MongoDB"
 nav_order: 8
 ---
 

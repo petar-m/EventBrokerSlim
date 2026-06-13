@@ -1,6 +1,6 @@
 ---
 layout: default
-title: In-memory event broker
+title: "In-memory event broker"
 nav_order: 4
 ---
 

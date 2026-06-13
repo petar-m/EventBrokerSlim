@@ -1,6 +1,6 @@
 ---
 layout: default
-title: EventBrokerSlim
+title: "EventBrokerSlim"
 ---
 
 # EventBrokerSlim
