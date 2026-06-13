@@ -35,7 +35,7 @@ jobs:
           bundle install --jobs 4 --retry 3
 
       - name: Build Jekyll site from docs using just-the-docs
-        run: bundle exec jekyll build -s docs -d _site
+        run: bundle exec jekyll build -s docs -d _site --config _config.yml
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
