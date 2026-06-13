@@ -1,3 +1,8 @@
+---
+title: In-memory event broker
+nav_order: 4
+---
+
 # In-memory event broker
 
 This page covers the in-memory event broker in depth: how it dispatches events, the handler lifecycle, and the full feature surface.
@@ -178,12 +183,12 @@ var pipeline = PipelineBuilder.Create()
 
 ### Retry state
 
-| Member | What it tells you |
-|---|---|
-| `IRetryPolicy.Attempt` | Current attempt number (1 on the first retry) |
-| `IRetryPolicy.LastDelay` | The delay used before the current attempt |
+| Member                        | What it tells you                                   |
+| ----------------------------- | --------------------------------------------------- |
+| `IRetryPolicy.Attempt`        | Current attempt number (1 on the first retry)       |
+| `IRetryPolicy.LastDelay`      | The delay used before the current attempt           |
 | `IRetryPolicy.RetryRequested` | Whether `RetryAfter()` was called in this execution |
-| `IRetryPolicy.Abandoned` | Whether `Abandon()` was called |
+| `IRetryPolicy.Abandoned`      | Whether `Abandon()` was called                      |
 
 The same `IRetryPolicy` instance is shared throughout one handler's processing of an event. Every delegate in a pipeline can take it as a parameter, and a class-based handler's `Handle()` and `OnError()` both receive it. It also persists across that handler's retries, which is how `Attempt` and `LastDelay` advance. Each handler has its own instance; the policy is never shared between handlers.
 

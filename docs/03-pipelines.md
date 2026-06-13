@@ -1,3 +1,8 @@
+---
+title: Pipelines
+nav_order: 3
+---
+
 # Pipelines
 
 A pipeline is a chain of functions composed by nesting. Each function runs in order and decides whether to call the next one. Every step wraps the rest of the chain, so it can run code before and after everything downstream.
@@ -80,14 +85,14 @@ IPipeline pipeline = builder.Pipelines[0];
 
 When a pipeline runs as an EventBrokerSlim handler, the event broker makes these available as parameters in any order:
 
-| Parameter | Source |
-|---|---|
-| Your event | The published event instance |
-| `IRetryPolicy` | Retry control for this handler execution |
-| `CancellationToken` | The broker's cancellation token |
-| `INext` | Calls the next function in the pipeline |
-| `PipelineRunContext` | The run's shared data bag (see below) |
-| Any DI-registered type | Resolved from the per-execution scope |
+| Parameter              | Source                                   |
+| ---------------------- | ---------------------------------------- |
+| Your event             | The published event instance             |
+| `IRetryPolicy`         | Retry control for this handler execution |
+| `CancellationToken`    | The broker's cancellation token          |
+| `INext`                | Calls the next function in the pipeline  |
+| `PipelineRunContext`   | The run's shared data bag (see below)    |
+| Any DI-registered type | Resolved from the per-execution scope    |
 
 The event instance and `IRetryPolicy` are not magic: the event broker places them into the run's `PipelineRunContext` before executing the pipeline, which is why they resolve as parameters like anything else. `INext`, `PipelineRunContext`, and `CancellationToken` are always available in any FuncPipeline run, broker or not.
 
@@ -131,13 +136,13 @@ By default a parameter is tried in the service provider first, then the context,
 })
 ```
 
-| Property | Effect | Default |
-|---|---|---|
-| `PrimarySource` | Where to look first: `Source.Services` or `Source.Context` | `Services` |
-| `Fallback` | Whether to try the other source if the primary misses | `true` |
-| `PrimaryNotFound` | If the primary misses and there is no fallback: `ThrowException` or `ReturnTypeDefault` | `ReturnTypeDefault` |
-| `SecondaryNotFound` | Same choice for a missed fallback source | `ReturnTypeDefault` |
-| `Key` | Service key, for keyed DI registrations | none |
+| Property            | Effect                                                                                  | Default             |
+| ------------------- | --------------------------------------------------------------------------------------- | ------------------- |
+| `PrimarySource`     | Where to look first: `Source.Services` or `Source.Context`                              | `Services`          |
+| `Fallback`          | Whether to try the other source if the primary misses                                   | `true`              |
+| `PrimaryNotFound`   | If the primary misses and there is no fallback: `ThrowException` or `ReturnTypeDefault` | `ReturnTypeDefault` |
+| `SecondaryNotFound` | Same choice for a missed fallback source                                                | `ReturnTypeDefault` |
+| `Key`               | Service key, for keyed DI registrations                                                 | none                |
 
 Setting `PrimaryNotFound = ThrowException` turns a missing dependency into a hard failure instead of a silently defaulted parameter. The attribute can decorate the parameter directly, or be supplied when calling `Execute` via a `Dictionary<int, ResolveFromAttribute>` keyed by parameter position. The two forms are equivalent.
 

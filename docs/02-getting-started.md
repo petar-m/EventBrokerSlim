@@ -1,3 +1,8 @@
+---
+title: Getting Started
+nav_order: 2
+---
+
 # Getting Started
 
 This guide shows how to register the broker, declare an event and a handler, and publish.

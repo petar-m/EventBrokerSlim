@@ -1,3 +1,8 @@
+---
+title: Persistent Events
+nav_order: 5
+---
+
 # Persistent Events
 
 Persistent events add durability to EventBrokerSlim. Events and retry state survive process restarts and crashes. Multiple instances of the same application can process events concurrently, with an [at-least-once](#at-least-once-delivery) delivery guarantee.
@@ -106,15 +111,15 @@ In the normal case, a record is processed exactly once. But if a process crashes
 
 These settings are shared across all backends via `PersistentEventBrokerSettings`, the second parameter in the backend configuration delegate.
 
-| Setting | Default | Notes |
-|---|---|---|
-| `PollingInterval` | 10 seconds | How often the loop checks for scheduled records. The publishing instance signals immediately on publish; other instances wait up to this interval. |
-| `ProcessingTimeout` | 5 minutes | `InProgress` records older than this are reset to `Scheduled`. Must be longer than your slowest handler. |
-| `MaxProcessingTimeouts` | 10 | After a record has been reset by the processing-timeout loop this many times, it is dead-lettered. |
-| `ScheduledBatchSize` | 10 | Records fetched per poll cycle. Increase if throughput is limited by batch size. |
-| `UnclaimedTtl` | 7 days | `Scheduled` records not claimed within this period are dead-lettered. |
-| `CompletedRecordTtl` | 7 days | `Completed` records are deleted after this. |
-| `DeadLetteredRecordTtl` | 30 days | `DeadLettered` records are retained for this long before deletion. |
+| Setting                 | Default    | Notes                                                                                                                                              |
+| ----------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PollingInterval`       | 10 seconds | How often the loop checks for scheduled records. The publishing instance signals immediately on publish; other instances wait up to this interval. |
+| `ProcessingTimeout`     | 5 minutes  | `InProgress` records older than this are reset to `Scheduled`. Must be longer than your slowest handler.                                           |
+| `MaxProcessingTimeouts` | 10         | After a record has been reset by the processing-timeout loop this many times, it is dead-lettered.                                                 |
+| `ScheduledBatchSize`    | 10         | Records fetched per poll cycle. Increase if throughput is limited by batch size.                                                                   |
+| `UnclaimedTtl`          | 7 days     | `Scheduled` records not claimed within this period are dead-lettered.                                                                              |
+| `CompletedRecordTtl`    | 7 days     | `Completed` records are deleted after this.                                                                                                        |
+| `DeadLetteredRecordTtl` | 30 days    | `DeadLettered` records are retained for this long before deletion.                                                                                 |
 
 Each maintenance loop's execution interval is independently configurable as a jittered, two-phase schedule. The defaults are the cadences noted under [Maintenance loops](#maintenance-loops); most deployments leave them unchanged.
 
@@ -152,14 +157,14 @@ These are the non-obvious choices and their tradeoffs.
 
 ## Choosing a backend
 
-| Backend | Best for | Scale-out |
-|---|---|---|
-| [SQLite](06-persistence-sqlite.md) | Dev, test, single-instance embedded | No |
-| [LiteDB](07-persistence-litedb.md) | Dev, test, single-instance document store | No |
-| [PostgreSQL](09-persistence-postgresql.md) | Production, relational, strong consistency | Yes |
-| [SQL Server](10-persistence-sqlserver.md) | Production, already on SQL Server | Yes |
-| [MongoDB](08-persistence-mongodb.md) | Already running MongoDB, document-oriented workloads | Yes |
-| [Redis](11-persistence-redis.md) | Already running Redis, fast polling | Yes |
+| Backend                                    | Best for                                             | Scale-out |
+| ------------------------------------------ | ---------------------------------------------------- | --------- |
+| [SQLite](06-persistence-sqlite.md)         | Dev, test, single-instance embedded                  | No        |
+| [LiteDB](07-persistence-litedb.md)         | Dev, test, single-instance document store            | No        |
+| [PostgreSQL](09-persistence-postgresql.md) | Production, relational, strong consistency           | Yes       |
+| [SQL Server](10-persistence-sqlserver.md)  | Production, already on SQL Server                    | Yes       |
+| [MongoDB](08-persistence-mongodb.md)       | Already running MongoDB, document-oriented workloads | Yes       |
+| [Redis](11-persistence-redis.md)           | Already running Redis, fast polling                  | Yes       |
 
 Embedded backends (SQLite, LiteDB) require no server. They are single-writer. Horizontal scale-out is not supported. Use them for development and single-instance production scenarios.
 

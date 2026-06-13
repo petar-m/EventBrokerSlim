@@ -1,3 +1,8 @@
+---
+title: Persistent Events: LiteDB
+nav_order: 7
+---
+
 # Persistent Events: LiteDB
 
 LiteDB is an embedded, serverless document database for .NET. It stores everything in a single `.db` file, with no SQL schema and no server to run. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.

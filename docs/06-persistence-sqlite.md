@@ -1,3 +1,8 @@
+---
+title: Persistent Events: SQLite
+nav_order: 6
+---
+
 # Persistent Events: SQLite
 
 SQLite is an embedded database that stores everything in a single file. No server to run, no network connection, no runtime dependency beyond the file itself. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.

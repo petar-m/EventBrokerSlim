@@ -1,3 +1,7 @@
+---
+title: EventBrokerSlim
+---
+
 # EventBrokerSlim
 
 EventBrokerSlim is an in-process, fire-and-forget event bus for .NET. You publish an event and every registered handler runs independently. Add persistence and handler execution survives process crashes, restarts, and horizontal scale-out. All of this is backed by your existing database and requires no changes to publishing or handling code.
@@ -62,17 +66,17 @@ Each step is small. You only pay for the next stage's complexity when you actual
 
 ## How it compares
 
-| Library | Fan-out dispatch | Request-response | Persistence | Scheduling | Broker required | Scope |
-|---|---|---|---|---|---|---|
-| **EventBrokerSlim** | ✓ | ✗ | ✓ | ✗ | ✗ | In-process event bus with optional persistence |
-| MediatR | ✓ | ✓ | ✗ | ✗ | ✗ | In-process requests/notifications |
-| MessagePipe | ✓ | ✓ | ✗ | ✗ | ✗ | High-performance in-process pub/sub |
-| Hangfire | ✗ | ✗ | ✓ | ✓ | ✗ | Background jobs |
-| Quartz.NET | ✗ | ✗ | ✓ | ✓ | ✗ | Cron-style job scheduling |
-| Brighter | ✓ | ✓ | ✓ | ✗ | optional | Command/event dispatch |
-| CAP | ✓ | ✗ | ✓ | ✗ | ✓ | Outbox-pattern event bus |
-| MassTransit | ✓ | ✓ | ✓ | ✓ | ✓ | Distributed messaging |
-| Wolverine | ✓ | ✓ | ✓ | ✓ | optional | Messaging + web framework |
+| Library             | Fan-out dispatch | Request-response | Persistence | Scheduling | Broker required | Scope                                          |
+| ------------------- | ---------------- | ---------------- | ----------- | ---------- | --------------- | ---------------------------------------------- |
+| **EventBrokerSlim** | ✓                | ✗                | ✓           | ✗          | ✗               | In-process event bus with optional persistence |
+| MediatR             | ✓                | ✓                | ✗           | ✗          | ✗               | In-process requests/notifications              |
+| MessagePipe         | ✓                | ✓                | ✗           | ✗          | ✗               | High-performance in-process pub/sub            |
+| Hangfire            | ✗                | ✗                | ✓           | ✓          | ✗               | Background jobs                                |
+| Quartz.NET          | ✗                | ✗                | ✓           | ✓          | ✗               | Cron-style job scheduling                      |
+| Brighter            | ✓                | ✓                | ✓           | ✗          | optional        | Command/event dispatch                         |
+| CAP                 | ✓                | ✗                | ✓           | ✗          | ✓               | Outbox-pattern event bus                       |
+| MassTransit         | ✓                | ✓                | ✓           | ✓          | ✓               | Distributed messaging                          |
+| Wolverine           | ✓                | ✓                | ✓           | ✓          | optional        | Messaging + web framework                      |
 
 EventBrokerSlim fills the gap between in-process notification libraries and distributed messaging libraries. The first offer no path to durability. The second require a broker and the operational footprint that comes with it. EventBrokerSlim is designed to hand off cleanly to a messaging library when you outgrow it.
 

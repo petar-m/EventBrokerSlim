@@ -1,3 +1,8 @@
+---
+title: Persistent Events: SQL Server
+nav_order: 10
+---
+
 # Persistent Events: SQL Server
 
 SQL Server is a relational database server. This backend stores events in a table within a configurable schema, accessed over the network. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.

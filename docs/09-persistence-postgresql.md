@@ -1,3 +1,8 @@
+---
+title: Persistent Events: PostgreSQL
+nav_order: 9
+---
+
 # Persistent Events: PostgreSQL
 
 PostgreSQL is a relational database server. This backend stores events in a table within a configurable schema, accessed over the network. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.

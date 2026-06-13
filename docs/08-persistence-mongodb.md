@@ -1,3 +1,8 @@
+---
+title: Persistent Events: MongoDB
+nav_order: 8
+---
+
 # Persistent Events: MongoDB
 
 MongoDB is a document database that runs as a server, accessed over the network. This backend stores each event as a document in a collection. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.

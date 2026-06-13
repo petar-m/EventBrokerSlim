@@ -1,3 +1,8 @@
+---
+title: Implementing a storage backend
+nav_order: 12
+---
+
 # Implementing a storage backend
 
 EventBrokerSlim ships six storage backends: SQLite, LiteDB, MongoDB, PostgreSQL, SQL Server, and Redis. When your store is none of these, you can add it by implementing one interface: `IEventStorage`.
@@ -10,18 +15,18 @@ This page assumes you have read [Persistent Events](05-persistent-events.md) and
 
 The interface has ten methods. The event broker calls them across the four phases of a record's life; you implement what each does to the store.
 
-| Phase | Method | Must do |
-|---|---|---|
-| Schedule | `ScheduleAsync` | Write one record per handler name. Status `Scheduled`, due now. Serialize the payload here. |
-| Schedule | `ScheduleDeferredAsync` | Same, due after the given delay. |
-| Poll | `FetchScheduledAsync` | Return up to `batchSize` due `Scheduled` records, oldest first, as lightweight `ScheduledEventRecord` (no payload). |
-| Poll | `TryClaimAsync` | Atomically flip one candidate to `InProgress` only if still unchanged since fetch; deserialize and return the `EventRecord`, else `EventRecord.Empty`. |
-| Outcome | `CompleteAsync` | Set `Completed`. Update, never delete. |
-| Outcome | `RetryAsync` | Set back to `Scheduled`, due after `delay`; store attempt count, last delay, and error. |
-| Outcome | `DeadLetterAsync` | Set `DeadLettered`; store the error. |
+| Phase       | Method                                             | Must do                                                                                                                                                        |
+| ----------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schedule    | `ScheduleAsync`                                    | Write one record per handler name. Status `Scheduled`, due now. Serialize the payload here.                                                                    |
+| Schedule    | `ScheduleDeferredAsync`                            | Same, due after the given delay.                                                                                                                               |
+| Poll        | `FetchScheduledAsync`                              | Return up to `batchSize` due `Scheduled` records, oldest first, as lightweight `ScheduledEventRecord` (no payload).                                            |
+| Poll        | `TryClaimAsync`                                    | Atomically flip one candidate to `InProgress` only if still unchanged since fetch; deserialize and return the `EventRecord`, else `EventRecord.Empty`.         |
+| Outcome     | `CompleteAsync`                                    | Set `Completed`. Update, never delete.                                                                                                                         |
+| Outcome     | `RetryAsync`                                       | Set back to `Scheduled`, due after `delay`; store attempt count, last delay, and error.                                                                        |
+| Outcome     | `DeadLetterAsync`                                  | Set `DeadLettered`; store the error.                                                                                                                           |
 | Maintenance | `RescheduleClaimedExceedingProcessingTimeoutAsync` | Reset `InProgress` records older than `ProcessingTimeout` to `Scheduled`, incrementing the timeout count; dead-letter once it reaches `MaxProcessingTimeouts`. |
-| Maintenance | `DeadLetterUnclaimedAsync` | Dead-letter `Scheduled` records still unclaimed past `UnclaimedTtl`. |
-| Maintenance | `DeleteCompletedAndDeadLetteredExceedingTtlAsync` | Delete `Completed` records past `CompletedRecordTtl` and `DeadLettered` past `DeadLetteredRecordTtl`. |
+| Maintenance | `DeadLetterUnclaimedAsync`                         | Dead-letter `Scheduled` records still unclaimed past `UnclaimedTtl`.                                                                                           |
+| Maintenance | `DeleteCompletedAndDeadLetteredExceedingTtlAsync`  | Delete `Completed` records past `CompletedRecordTtl` and `DeadLettered` past `DeadLetteredRecordTtl`.                                                          |
 
 A record carries the fields the lifecycle needs: identity (`Id`, `EventId`), `EventName` and `HandlerName`, the serialized `Payload`, the `EventStatus`, scheduling and retry state (`ScheduledAt`, `RetryAttemptCount`, `RetryLastDelay`, `ClaimedAt`), audit timestamps (`CreatedAt`, `LastUpdatedAt`), the timeout counter (`ProcessingTimeoutsCount`), and `LastError`. `EventStatus` has four operational values: `Scheduled`, `InProgress`, `Completed`, and `DeadLettered`. How you store them, as columns, document fields, or hash entries, is yours to choose.
 

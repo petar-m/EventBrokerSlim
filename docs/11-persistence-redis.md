@@ -1,3 +1,8 @@
+---
+title: Persistent Events: Redis
+nav_order: 11
+---
+
 # Persistent Events: Redis
 
 Redis is an in-memory data store with optional persistence. This backend stores events in Redis data structures, shared across application instances. See [Choosing a backend](05-persistent-events.md#choosing-a-backend) to compare the alternatives.
