@@ -160,12 +160,12 @@ These are the non-obvious choices and their tradeoffs.
 
 | Backend                                    | Best for                                             | Scale-out |
 | ------------------------------------------ | ---------------------------------------------------- | --------- |
-| [SQLite](06-persistence-sqlite/)         | Dev, test, single-instance embedded                  | No        |
-| [LiteDB](07-persistence-litedb/)         | Dev, test, single-instance document store            | No        |
-| [PostgreSQL](09-persistence-postgresql/) | Production, relational, strong consistency           | Yes       |
-| [SQL Server](10-persistence-sqlserver/)  | Production, already on SQL Server                    | Yes       |
-| [MongoDB](08-persistence-mongodb/)       | Already running MongoDB, document-oriented workloads | Yes       |
-| [Redis](11-persistence-redis/)           | Already running Redis, fast polling                  | Yes       |
+| [SQLite](06-persistence-sqlite.md)         | Dev, test, single-instance embedded                  | No        |
+| [LiteDB](07-persistence-litedb.md)         | Dev, test, single-instance document store            | No        |
+| [PostgreSQL](09-persistence-postgresql.md) | Production, relational, strong consistency           | Yes       |
+| [SQL Server](10-persistence-sqlserver.md)  | Production, already on SQL Server                    | Yes       |
+| [MongoDB](08-persistence-mongodb.md)       | Already running MongoDB, document-oriented workloads | Yes       |
+| [Redis](11-persistence-redis.md)           | Already running Redis, fast polling                  | Yes       |
 
 Embedded backends (SQLite, LiteDB) require no server. They are single-writer. Horizontal scale-out is not supported. Use them for development and single-instance production scenarios.
 
@@ -173,5 +173,5 @@ Server-based relational backends (PostgreSQL, SQL Server) support full horizonta
 
 MongoDB and Redis are good choices if your infrastructure already includes them and you want to avoid adding a relational database dependency. Redis is memory-first: records survive a restart only if Redis persistence is enabled.
 
-The six backends implement a common `IEventStorage` contract. If none fits your store, you can [implement it for a custom backend](12-implementing-a-backend/).
+The six backends implement a common `IEventStorage` contract. If none fits your store, you can [implement it for a custom backend](12-implementing-a-backend.md).
 

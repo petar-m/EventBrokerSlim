@@ -5,3 +5,12 @@ theme: "just-the-docs"
 permalink: pretty
 url: "https://petar-m.github.io"
 baseurl: "/EventBrokerSlim"
+
+# Links shown in the top-right of every page
+aux_links:
+  "EventBrokerSlim on GitHub":
+    - "https://github.com/petar-m/EventBrokerSlim"
+aux_links_new_tab: true
+
+plugins:
+  - jekyll-relative-links

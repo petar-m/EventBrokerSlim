@@ -8,7 +8,7 @@ nav_order: 4
 
 This page covers the in-memory event broker in depth: how it dispatches events, the handler lifecycle, and the full feature surface.
 
-Delegate pipelines, the recommended handler model, have their own page: [Pipelines](03-pipelines/). For durability across restarts and multiple instances, see [Persistent Events](05-persistent-events/).
+Delegate pipelines, the recommended handler model, have their own page: [Pipelines](03-pipelines.md). For durability across restarts and multiple instances, see [Persistent Events](05-persistent-events.md).
 
 ## How the in-memory event broker works
 
@@ -195,7 +195,7 @@ The same `IRetryPolicy` instance is shared throughout one handler's processing o
 
 That shared instance is what lets the parts coordinate. `RetryRequested` tells a later delegate, or `OnError()`, that a retry was already asked for, so it does not add a second one. `Abandoned` records that the handler gave up. `OnError()` runs only when `Handle()` throws: if `Handle()` requested a retry before the exception escaped, `OnError()` sees `RetryRequested` and leaves it; otherwise it can call `Abandon()`.
 
-`IRetryPolicy.Abandon()` marks the event as abandoned and cancels any retry, including one requested earlier in the same execution. The in-memory broker has no dead-letter store, so an abandoned event is simply dropped. That is the same outcome as not requesting a retry, so calling `Abandon()` is optional here. It is still worth using to state "give up" explicitly, and it matters once persistence is enabled: an abandoned record is moved to dead-letter instead of completed. See [Persistent Events](05-persistent-events/).
+`IRetryPolicy.Abandon()` marks the event as abandoned and cancels any retry, including one requested earlier in the same execution. The in-memory broker has no dead-letter store, so an abandoned event is simply dropped. That is the same outcome as not requesting a retry, so calling `Abandon()` is optional here. It is still worth using to state "give up" explicitly, and it matters once persistence is enabled: an abandoned record is moved to dead-letter instead of completed. See [Persistent Events](05-persistent-events.md).
 
 > Retry timing is approximate. The actual delay can be longer than requested, especially under load when no concurrency slot is free. With persistent events it also depends on the configured polling interval.
 

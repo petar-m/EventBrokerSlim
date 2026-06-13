@@ -8,7 +8,7 @@ nav_order: 12
 
 EventBrokerSlim ships six storage backends: SQLite, LiteDB, MongoDB, PostgreSQL, SQL Server, and Redis. When your store is none of these, you can add it by implementing one interface: `IEventStorage`.
 
-This page assumes you have read [Persistent Events](05-persistent-events/) and know the event record lifecycle it describes.
+This page assumes you have read [Persistent Events](05-persistent-events.md) and know the event record lifecycle it describes.
 
 `IEventStorage` is a single interface, and every backend implements all of it. There is no partial implementation. One method, `TryClaimAsync()`, carries a correctness requirement the whole design rests on: a store that cannot claim a record atomically cannot deliver events safely. That method has its own section below.
 
