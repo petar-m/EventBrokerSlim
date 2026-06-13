@@ -1,4 +1,5 @@
 ---
+layout: default
 title: Persistent Events: SQLite
 nav_order: 6
 ---

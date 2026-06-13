@@ -1,4 +1,5 @@
 ---
+layout: default
 title: Implementing a storage backend
 nav_order: 12
 ---

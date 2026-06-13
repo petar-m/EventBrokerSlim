@@ -1,4 +1,5 @@
 ---
+layout: default
 title: Pipelines
 nav_order: 3
 ---

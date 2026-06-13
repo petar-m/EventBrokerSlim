@@ -1,4 +1,5 @@
 ---
+layout: default
 title: Persistent Events: PostgreSQL
 nav_order: 9
 ---

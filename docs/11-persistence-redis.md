@@ -1,4 +1,5 @@
 ---
+layout: default
 title: Persistent Events: Redis
 nav_order: 11
 ---
