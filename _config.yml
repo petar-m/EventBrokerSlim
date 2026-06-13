@@ -2,5 +2,5 @@
 title: EventBrokerSlim Docs
 description: "EventBrokerSlim documentation site"
 theme: "just-the-docs"
-url: "https://petar-m.github.io/EventBrokerSlim"  # replace with your site URL
-
+url: "https://petar-m.github.io"
+baseurl: "/EventBrokerSlim"
