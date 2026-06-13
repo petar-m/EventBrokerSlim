@@ -1,6 +1,7 @@
 ---
 layout: default
 title: "EventBrokerSlim"
+nav_order: 1
 ---
 
 # EventBrokerSlim
@@ -95,7 +96,8 @@ Cross-service routing requires a message broker (RabbitMQ, Azure Service Bus, Ka
 
 ## Next steps
 
-- [Getting Started](02-getting-started.md). A working example in minutes.
-- [Pipelines](03-pipelines.md). The recommended handler model: compose handlers from small, testable functions.
-- [In-memory broker](04-in-memory-broker.md). Deep dive into how dispatch works, the handler lifecycle, and retry policies.
-- [Persistent Events](05-persistent-events.md). Everything you need to add durability.
+- [Getting Started](02-getting-started/). A working example in minutes.
+- [Pipelines](03-pipelines/). The recommended handler model: compose handlers from small, testable functions.
+- [In-memory broker](04-in-memory-broker/). Deep dive into how dispatch works, the handler lifecycle, and retry policies.
+- [Persistent Events](05-persistent-events/). Everything you need to add durability.
+

@@ -49,7 +49,7 @@ The business step usually sits last and simply does its work without calling `ne
 - Middleware (logging, error handling, correlation, timing) composes naturally via `INext`.
 - `IRetryPolicy`, `CancellationToken`, and any registered service are parameters each step declares only when it needs them, in any order, instead of a fixed method signature.
 
-Class-based handlers remain available when a class structure helps. See [In-memory broker](04-in-memory-broker.md). Internally they are converted to pipelines, so the two are the same mechanism.
+Class-based handlers remain available when a class structure helps. See [In-memory broker](04-in-memory-broker/). Internally they are converted to pipelines, so the two are the same mechanism.
 
 ## Building a pipeline
 
@@ -204,11 +204,12 @@ if (result.IsSuccessful && result.Context.TryGet<string>(out var slug))
 }
 ```
 
-`RunAsync` accepts an optional `PipelineRunContext` and `CancellationToken`, and never throws. It reports outcome through `PipelineRunResult`: `IsSuccessful`, the captured `Exception` if a function threw, and `Context` for reading values left behind by the run. EventBrokerSlim builds its own error handling (`OnError`, retry policies, dead-lettering) on top of this result. That behavior is covered in [In-memory broker](04-in-memory-broker.md).
+`RunAsync` accepts an optional `PipelineRunContext` and `CancellationToken`, and never throws. It reports outcome through `PipelineRunResult`: `IsSuccessful`, the captured `Exception` if a function threw, and `Context` for reading values left behind by the run. EventBrokerSlim builds its own error handling (`OnError`, retry policies, dead-lettering) on top of this result. That behavior is covered in [In-memory broker](04-in-memory-broker/).
 
 If you do not need DI, call `PipelineBuilder.Create()` with no scope factory and rely on the context for inputs.
 
 ## Next steps
 
-- [In-memory broker](04-in-memory-broker.md). Retries without blocking, dynamic handlers, and multiple broker instances.
-- [Persistent Events](05-persistent-events.md). Add durability with a single configuration change.
+- [In-memory broker](04-in-memory-broker/). Retries without blocking, dynamic handlers, and multiple broker instances.
+- [Persistent Events](05-persistent-events/). Add durability with a single configuration change.
+

@@ -1,6 +1,7 @@
 # Site settings
 title: EventBrokerSlim Docs
 description: "EventBrokerSlim documentation site"
-theme: "just-the-docs"
+
+permalink: pretty
 url: "https://petar-m.github.io"
 baseurl: "/EventBrokerSlim"

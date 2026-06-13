@@ -53,7 +53,7 @@ IPipeline pipeline = PipelineBuilder.Create()
 
 The delegate receives the published `ArticlePublished` instance directly. Any service registered in DI can be added as a parameter alongside it.
 
-Pipelines can also chain multiple delegates to layer cross-cutting concerns. See the [Pipelines guide](03-pipelines.md).
+Pipelines can also chain multiple delegates to layer cross-cutting concerns. See the [Pipelines guide](03-pipelines/).
 
 ## Step 4. Register the handler
 
@@ -125,9 +125,10 @@ Register it:
 services.AddTransientEventHandler<ArticlePublished, ArticlePublishedHandler>();
 ```
 
-Class-based and pipeline handlers can coexist. See [In-memory broker](04-in-memory-broker.md) for mixing handler styles and registering multiple handlers per event.
+Class-based and pipeline handlers can coexist. See [In-memory broker](04-in-memory-broker/) for mixing handler styles and registering multiple handlers per event.
 
 ## Next steps
 
-- [In-memory broker](04-in-memory-broker.md). Retries without blocking, dynamic handlers, and multiple broker instances.
-- [Persistent Events](05-persistent-events.md). Add durability with a single configuration change.
+- [In-memory broker](04-in-memory-broker/). Retries without blocking, dynamic handlers, and multiple broker instances.
+- [Persistent Events](05-persistent-events/). Add durability with a single configuration change.
+
