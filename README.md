@@ -1,5 +1,7 @@
 [![build](https://github.com/petar-m/EventBrokerSlim/actions/workflows/build.yml/badge.svg)](https://github.com/petar-m/EventBrokerSlim/actions)
 
+[Documentation](https://petar-m.github.io/EventBrokerSlim/)
+
 # EventBrokerSlim  
 
 [![NuGet](https://img.shields.io/nuget/v/M.EventBrokerSlim.svg)](https://www.nuget.org/packages/M.EventBrokerSlim)    
