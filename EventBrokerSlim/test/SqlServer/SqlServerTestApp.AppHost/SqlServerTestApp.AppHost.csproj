@@ -1,15 +1,16 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.2.1">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.5.3">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
     <UserSecretsId>8e2e3bb0-8740-4107-9e7c-5a3cdd03be21</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.5.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -77,6 +77,9 @@ jobs:
         echo "version: ${{ env.VERSION }}"
         echo "project: ${{ env.PROJECT }}"
 
+    - name: Install .NET Aspire CLI
+      run: curl -sSL https://aspire.dev/install.sh | bash
+
     - name: Restore dependencies
       run: dotnet restore EventBrokerSlim.slnx
 
