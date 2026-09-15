@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\src\M.EventBrokerSlim.PersistentEvents.Sqlite\M.EventBrokerSlim.PersistentEvents.Sqlite.csproj" />
   </ItemGroup>
 
