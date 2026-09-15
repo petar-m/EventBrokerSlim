@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim#eventbrokerslimpersistenteventsqlite</PackageProjectUrl>
+    <PackageProjectUrl>https://petar-m.github.io/EventBrokerSlim/06-persistence-sqlite/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
     <RespositoryType>git</RespositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
