@@ -87,53 +87,37 @@ jobs:
       name: Build
       run: dotnet build EventBrokerSlim.slnx --no-restore --configuration Release -p:Version=${{ env.VERSION }}
 
-    - name: Test M.EventBrokerSlim.Tests (net8.0)
+    - name: Test FuncPipeline.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net8.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.eventbroker.net8.cobertura.xml
+      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.funcpipeline.cobertura.xml
 
-    - name: Test M.EventBrokerSlim.Tests (net9.0)
+    - name: Test M.EventBrokerSlim.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net9.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.eventbroker.net9.cobertura.xml
-
-    - name: Test M.EventBrokerSlim.Tests (net10.0)
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj -f net10.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.eventbroker.net10.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/M.EventBrokerSlim.Tests/M.EventBrokerSlim.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.eventbroker.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.LiteDb.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/LiteDb/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.litedb.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/LiteDb/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests/M.EventBrokerSlim.PersistentEvents.LiteDb.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.litedb.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.MongoDb.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/MongoDb/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.mongodb.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/MongoDb/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests/M.EventBrokerSlim.PersistentEvents.MongoDb.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.mongodb.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.postgresql.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/PostgreSql/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests/M.EventBrokerSlim.PersistentEvents.PostgreSql.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.postgresql.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.Redis.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/Redis/M.EventBrokerSlim.PersistentEvents.Redis.Tests/M.EventBrokerSlim.PersistentEvents.Redis.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.redis.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/Redis/M.EventBrokerSlim.PersistentEvents.Redis.Tests/M.EventBrokerSlim.PersistentEvents.Redis.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.redis.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.Sqlite.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.sqlite.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/Sqlite/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests/M.EventBrokerSlim.PersistentEvents.Sqlite.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.sqlite.cobertura.xml
 
     - name: Test M.EventBrokerSlim.PersistentEvents.SqlServer.Tests
       if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test EventBrokerSlim/test/SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests.csproj --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.sqlserver.cobertura.xml
-
-    - name: Test FuncPipeline.Tests (net8.0)
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net8.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.funcpipeline.net8.cobertura.xml
-
-    - name: Test FuncPipeline.Tests (net9.0)
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net9.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.funcpipeline.net9.cobertura.xml
-
-    - name: Test FuncPipeline.Tests (net10.0)
-      if: ${{ always() && steps.build.outcome == 'success' }}
-      run: dotnet test FuncPipeline/test/FuncPipeline.Tests/FuncPipeline.Tests.csproj -f net10.0 --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.funcpipeline.net10.cobertura.xml
+      run: dotnet test EventBrokerSlim/test/SqlServer/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests/M.EventBrokerSlim.PersistentEvents.SqlServer.Tests.csproj --no-build --no-restore --verbosity normal --configuration Release --report-trx -- --coverage --coverage-output-format cobertura --coverage-output coverage.sqlserver.cobertura.xml
 
     - name: Install Markdown Test Report Tool
       if: success() || failure()
