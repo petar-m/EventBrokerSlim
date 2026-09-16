@@ -33,6 +33,7 @@ public class RetryOverrideFromOnErrorTests
         Assert.Equal(2, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
         Assert.Equal(400, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 60);
+        eventBroker.Shutdown();
     }
 
     public class TestEvent(string Info)

@@ -37,6 +37,7 @@ public class HandlerScopeAndInstanceTests
         // different scopes
         Assert.Equal(2, eventsRecorder.HandlerScopeHashCodes.Length);
         Assert.NotEqual(eventsRecorder.HandlerScopeHashCodes[0], eventsRecorder.HandlerScopeHashCodes[1]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -72,6 +73,7 @@ public class HandlerScopeAndInstanceTests
         // same scope (singletons resolve from root scope)
         Assert.Equal(2, eventsRecorder.HandlerScopeHashCodes.Length);
         Assert.Equal(eventsRecorder.HandlerScopeHashCodes[0], eventsRecorder.HandlerScopeHashCodes[1]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -107,6 +109,7 @@ public class HandlerScopeAndInstanceTests
         // different scopes
         Assert.Equal(2, eventsRecorder.HandlerScopeHashCodes.Length);
         Assert.NotEqual(eventsRecorder.HandlerScopeHashCodes[0], eventsRecorder.HandlerScopeHashCodes[1]);
+        eventBroker.Shutdown();
     }
 
     public record TestEvent(int CorrelationId) : ITraceable<int>;

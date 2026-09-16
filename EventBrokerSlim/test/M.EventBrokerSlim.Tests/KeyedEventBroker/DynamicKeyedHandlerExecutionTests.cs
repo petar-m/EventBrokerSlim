@@ -55,6 +55,7 @@ public class DynamicKeyedHandlerExecutionTests
         // No ""No event handler found for event..." logged.
         Assert.Empty(provider.Sink.LogEntries);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -91,6 +92,7 @@ public class DynamicKeyedHandlerExecutionTests
         Assert.Single(items);
         Assert.Equal(2, items[0].Number);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 }

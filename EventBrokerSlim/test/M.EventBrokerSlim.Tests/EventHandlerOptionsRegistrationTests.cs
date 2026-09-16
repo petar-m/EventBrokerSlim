@@ -77,6 +77,7 @@ public class EventHandlerOptionsRegistrationTests
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<TestEventBase>().ToArray();
         Assert.Single(items);
+        eventBroker1.Shutdown();
     }
 
     [Fact]
@@ -103,6 +104,7 @@ public class EventHandlerOptionsRegistrationTests
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<TestEventBase>().ToArray();
         Assert.Single(items);
+        eventBroker1.Shutdown();
     }
 
     [Fact]
@@ -129,6 +131,7 @@ public class EventHandlerOptionsRegistrationTests
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<TestEventBase>().ToArray();
         Assert.Single(items);
+        eventBroker1.Shutdown();
     }
 
     [Fact]
@@ -161,6 +164,7 @@ public class EventHandlerOptionsRegistrationTests
         // Assert
         var items = _tracker.Items.Select(x => x.Item).OfType<TestEventBase>().ToArray();
         Assert.Single(items);
+        eventBroker1.Shutdown();
     }
 
     [Fact]
@@ -191,6 +195,7 @@ public class EventHandlerOptionsRegistrationTests
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
         LogEntry log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal("No event handler found for event M.EventBrokerSlim.Tests.TestEventBase", log.Message);
+        defaultBroker.Shutdown();
     }
 
     [Fact]
@@ -280,6 +285,7 @@ public class EventHandlerOptionsRegistrationTests
         var pipelineRegistry = scope.ServiceProvider.GetRequiredKeyedService<PipelineRegistry>("broker1");
         var pipelines = pipelineRegistry.Get(typeof(TestEventBase));
         Assert.Contains(pipelines, p => p.HandlerName == "combined-handler");
+        eventBroker1.Shutdown();
     }
 
     public class TestHandler1 : IEventHandler<TestEventBase>

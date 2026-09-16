@@ -40,6 +40,7 @@ public class OrderOfRetriesTests
         Assert.Equal(eventsByTimeHandled[2], event2);
         Assert.Equal(eventsByTimeHandled[3], event2);
         Assert.Equal(eventsByTimeHandled[4], event1);
+        eventBroker.Shutdown();
     }
 
     public class TestEvent1(string Info)

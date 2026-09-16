@@ -33,6 +33,7 @@ public class RetryFromHandleUsingDelayDelegateTests
         Assert.Equal(2, eventsTracker.Items.Count);
         var timestamps = eventsTracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Timestamp).ToArray();
         Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 50);
+        eventBroker.Shutdown();
     }
 
     [Theory]
@@ -66,6 +67,7 @@ public class RetryFromHandleUsingDelayDelegateTests
         Assert.Equal(100, (timestamps[1] - timestamps[0]).TotalMilliseconds, tolerance: 60);
         Assert.Equal(300, (timestamps[2] - timestamps[1]).TotalMilliseconds, tolerance: 60);
         Assert.Equal(600, (timestamps[3] - timestamps[2]).TotalMilliseconds, tolerance: 60);
+        eventBroker.Shutdown();
     }
 
     [Theory]
@@ -95,6 +97,7 @@ public class RetryFromHandleUsingDelayDelegateTests
         // Assert
         Assert.Equal(4, eventsTracker.Items.Count);
         Assert.All(eventsTracker.Items.Select(x => x.Item), x => Assert.Same(event1, x));
+        eventBroker.Shutdown();
     }
 
     public class TestEvent(string Info)

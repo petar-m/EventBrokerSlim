@@ -90,6 +90,7 @@ public class LoadTests
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[0].Count);
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[1].Count);
         Assert.Equal(3 * EventsCount + EventsCount / 250 * 3 + EventsCount / 500 * 3, counters[2].Count);
+        eventBroker.Shutdown();
     }
 
     public static class DelegateEventHandlers

@@ -57,6 +57,7 @@ public class KeyedHandlerExecutionTests
         // No ""No event handler found for event..." logged.
         Assert.Empty(provider.Sink.LogEntries);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -95,6 +96,7 @@ public class KeyedHandlerExecutionTests
         LogEntry log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal("No event handler found for event M.EventBrokerSlim.Tests.TestEventBase", log.Message);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -134,6 +136,7 @@ public class KeyedHandlerExecutionTests
         Assert.Equal(2, provider.Sink.LogEntries.Count());
         Assert.All(provider.Sink.LogEntries, x => Assert.Equal("No event handler found for event M.EventBrokerSlim.Tests.TestEventBase", x.Message));
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 

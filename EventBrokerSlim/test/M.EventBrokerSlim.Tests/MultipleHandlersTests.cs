@@ -39,6 +39,7 @@ public class MultipleHandlersTests
         Assert.Contains($"1_{typeof(TestEventHandler).Name}", eventsRecorder.HandledEventIds);
         Assert.Contains($"1_{typeof(TestEventHandler1).Name}", eventsRecorder.HandledEventIds);
         Assert.Contains($"1_{typeof(TestEventHandler2).Name}", eventsRecorder.HandledEventIds);
+        eventBroker.Shutdown();
     }
 
     public record TestEvent(string CorrelationId) : ITraceable<string>;

@@ -36,6 +36,7 @@ public class ExceptionHandlingTests
         Assert.Equal(LogLevel.Error, log.LogLevel);
         Assert.Equal($"Unhandled exception executing handler for event {typeof(Event1).FullName}", log.Message);
         Assert.Equal("No service for type System.String has been registered. ResolveFromAttribute { PrimarySource = Services, Fallback = False, PrimaryNotFound = ThrowException, SecondaryNotFound = ReturnTypeDefault, Key =  }.", log.Exception?.Message);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -67,6 +68,7 @@ public class ExceptionHandlingTests
         Assert.Equal(LogLevel.Error, log.LogLevel);
         Assert.Equal($"Unhandled exception executing handler for event {typeof(Event1).FullName}", log.Message);
         Assert.Equal("The method or operation is not implemented.", log.Exception?.Message);
+        eventBroker.Shutdown();
     }
 
     [Fact]

@@ -24,6 +24,7 @@ public class EventBrokerTests
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.Publish<TestEvent>(null, CancellationToken.None));
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -42,6 +43,7 @@ public class EventBrokerTests
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         await Assert.ThrowsAsync<ArgumentNullException>("event", async () => await eventBroker.PublishDeferred<TestEvent>(null, TimeSpan.FromSeconds(1)));
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -59,6 +61,7 @@ public class EventBrokerTests
         // Act Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>("deferDuration",
             async () => await eventBroker.PublishDeferred(new TestEvent(1), TimeSpan.FromSeconds(-1)));
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -76,6 +79,7 @@ public class EventBrokerTests
         // Act Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>("deferDuration",
             async () => await eventBroker.PublishDeferred(new TestEvent(1), TimeSpan.FromSeconds(0)));
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -209,6 +213,7 @@ public class EventBrokerTests
 
         var handlerExecutedAt = scope.ServiceProvider.GetRequiredService<Timestamp>().ExecutedAt;
         Assert.True(handlerExecutedAt - calledPublishDeferredAt >= TimeSpan.FromMilliseconds(200));
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -237,6 +242,7 @@ public class EventBrokerTests
         Assert.Collection(eventsRecorder.HandledEventIds,
             x => Assert.Equal(2, x),
             x => Assert.Equal(1, x));
+        eventBroker.Shutdown();
     }
 
     [Fact]

@@ -134,6 +134,7 @@ public class HandlerRegistrationTests
 
         // Assert
         Assert.True(completed);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -166,6 +167,7 @@ public class HandlerRegistrationTests
 
         // Assert
         Assert.True(completed);
+        eventBroker.Shutdown();
     }
 
     public record TestEvent(string CorrelationId) : ITraceable<string>;

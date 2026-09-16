@@ -37,6 +37,7 @@ public class HandlerExecutionTests
         // second event completes faster, but will be executed after the first one is handled
         Assert.Equal(1, eventsRecorder.HandledEventIds[0]);
         Assert.Equal(2, eventsRecorder.HandledEventIds[1]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -69,6 +70,7 @@ public class HandlerExecutionTests
         // second event is faster and will complete first
         Assert.Equal(2, eventsRecorder.HandledEventIds[0]);
         Assert.Equal(1, eventsRecorder.HandledEventIds[1]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -94,6 +96,7 @@ public class HandlerExecutionTests
         // Assert
         Assert.Empty(eventsRecorder.HandledEventIds);
         Assert.Empty(eventsRecorder.Exceptions);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -123,6 +126,7 @@ public class HandlerExecutionTests
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Warning, log.LogLevel);
         Assert.Equal("No event handler found for event M.EventBrokerSlim.Tests.HandlerExecutionTests+TestEvent", log.Message);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -150,6 +154,7 @@ public class HandlerExecutionTests
         var provider = (TestLoggerProvider)scope.ServiceProvider.GetServices<ILoggerProvider>().Single(x => x is TestLoggerProvider);
 
         Assert.Empty(provider.Sink.LogEntries);
+        eventBroker.Shutdown();
     }
 
     public record TestEvent(int CorrelationId, TimeSpan TimeToRun = default) : ITraceable<int>;

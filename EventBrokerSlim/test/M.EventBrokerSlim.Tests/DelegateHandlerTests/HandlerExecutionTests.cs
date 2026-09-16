@@ -50,6 +50,7 @@ public class HandlerExecutionTests
         Assert.Equal(2, items.Length);
         Assert.Single(items.Distinct(), event1);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -82,6 +83,7 @@ public class HandlerExecutionTests
         Assert.Single(items.Distinct());
         Assert.NotEqual(_ct, items[0]);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -113,6 +115,7 @@ public class HandlerExecutionTests
         Assert.Equal(2, items.Length);
         Assert.Single(items.Distinct());
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -156,6 +159,7 @@ public class HandlerExecutionTests
         var items = _tracker.Items.OrderBy(x => x.Timestamp).Select(x => x.Item).OfType<string>().ToArray();
         Assert.Equal(new[] { "before wrapper1", "before wrapper2", "before wrapper3", "handler", "after wrapper3", "after wrapper2", "after wrapper1" }, items);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -224,6 +228,7 @@ public class HandlerExecutionTests
             Assert.Equal(100d, (timestamps[i] - timestamps[i - 1]).TotalMilliseconds, 50d);
         }
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -269,6 +274,7 @@ public class HandlerExecutionTests
             Assert.Equal(100d, (timestamps[i] - timestamps[i - 1]).TotalMilliseconds, 50d);
         }
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 }

@@ -50,6 +50,7 @@ public class DynamicHandlerExecutionTests
         Assert.Single(items);
         Assert.Equal(2, items[0].Number);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -87,6 +88,7 @@ public class DynamicHandlerExecutionTests
         Assert.Single(items);
         Assert.Equal(2, items[0].Number);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -124,6 +126,7 @@ public class DynamicHandlerExecutionTests
         Assert.Equal(2, items[0].Number);
         Assert.Equal(2, items[1].Number);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 
@@ -167,6 +170,7 @@ public class DynamicHandlerExecutionTests
         Assert.Equal(2, items[0].Number);
         Assert.Equal(2, items[1].Number);
 
+        eventBroker.Shutdown();
         _output.WriteLine($"Elapsed: {_tracker.Elapsed}");
     }
 }

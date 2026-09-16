@@ -32,6 +32,7 @@ public class RetryPolicyTests
         Assert.Equal(8, eventsTracker.Items.Count);
         var retryPolicy = eventsTracker.Items.First().Item;
         Assert.All(eventsTracker.Items.Select(x => x.Item), x => Assert.Same(retryPolicy, x));
+        eventBroker.Shutdown();
     }
 
     public class TestEvent(string Info)

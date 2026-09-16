@@ -30,6 +30,7 @@ public class ExceptionHandlingTests
         // Assert
         Assert.Single(eventsRecorder.Exceptions);
         Assert.IsType<NotImplementedException>(eventsRecorder.Exceptions[0]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -56,6 +57,7 @@ public class ExceptionHandlingTests
         // Assert
         Assert.Empty(eventsRecorder.HandledEventIds);
         Assert.Empty(eventsRecorder.Exceptions);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -88,6 +90,7 @@ public class ExceptionHandlingTests
         Assert.Equal("Unhandled exception executing M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEventHandler1.OnError()", log.Message);
         Assert.IsType<ArgumentException>(log.Exception);
         Assert.Matches("No service for type M\\.EventBrokerSlim\\.IEventHandler`1\\[\\[M\\.EventBrokerSlim\\.Tests\\.ExceptionHandlingTests\\+TestEvent, M\\.EventBrokerSlim\\.Tests, Version=(.*), Culture=neutral, PublicKeyToken=null]] has been registered with key", log.Exception.Message);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -114,6 +117,7 @@ public class ExceptionHandlingTests
         // Assert
         Assert.Single(eventsRecorder.Exceptions);
         Assert.IsType<NotImplementedException>(eventsRecorder.Exceptions[0]);
+        eventBroker.Shutdown();
     }
 
     [Fact]
@@ -144,6 +148,7 @@ public class ExceptionHandlingTests
         var log = Assert.Single(provider.Sink.LogEntries);
         Assert.Equal(LogLevel.Error, log.LogLevel);
         Assert.Equal("Unhandled exception executing M.EventBrokerSlim.Tests.ExceptionHandlingTests+TestEventHandler.OnError()", log.Message);
+        eventBroker.Shutdown();
     }
 
     public record TestEvent(int CorrelationId, bool ThrowFromHandle = false, bool ThrowFromOnError = false) : ITraceable<int>;
