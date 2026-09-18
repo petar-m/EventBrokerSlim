@@ -39,17 +39,13 @@ The recommended approach is a **delegate pipeline**. A pipeline is a function (o
 ```csharp
 using M.EventBrokerSlim.DependencyInjection;
 
-IPipeline pipeline = PipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (ArticlePublished e, IEmailService email, CancellationToken ct) =>
     {
         await email.NotifySubscribersAsync(e.ArticleId, ct);
     })
-    .Build()
-    .Pipelines[0];
+    .Build();
 ```
-
-`Build()` produces the pipeline; `Pipelines[0]` takes the single one defined here.
 
 The delegate receives the published `ArticlePublished` instance directly. Any service registered in DI can be added as a parameter alongside it.
 

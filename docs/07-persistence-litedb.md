@@ -80,15 +80,13 @@ public record ArticlePublished(Guid ArticleId, string Slug);
 var registry = new EventRegistry()
     .Add<ArticlePublished>("article-published");
 
-IPipeline pipeline = PipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (ArticlePublished e, CancellationToken ct) =>
     {
         Console.WriteLine($"Processing article {e.ArticleId}");
         await Task.CompletedTask;
     })
-    .Build()
-    .Pipelines[0];
+    .Build();
 
 var provider = new ServiceCollection()
     .AddSingleton(registry)

@@ -158,8 +158,7 @@ A retry does not require an exception. A handler that completes normally can sti
 The delay is either a fixed `TimeSpan` or a function of the attempt number and the previous delay:
 
 ```csharp
-var pipeline = PipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (INext next, IRetryPolicy retry) =>
     {
         try
@@ -178,8 +177,7 @@ var pipeline = PipelineBuilder.Create()
     {
         await email.NotifySubscribersAsync(e.ArticleId, ct);
     })
-    .Build()
-    .Pipelines[0];
+    .Build();
 ```
 
 ### Retry state
@@ -215,11 +213,9 @@ public class ModerationGate : IDisposable
 
     public void Enable()
     {
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(Review)
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         _ticket = _dynamicHandlers.Add<ArticlePublished>(pipeline);
     }

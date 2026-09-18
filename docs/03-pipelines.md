@@ -17,8 +17,7 @@ Pipelines come from [FuncPipeline](https://www.nuget.org/packages/FuncPipeline),
 Each function receives the parameters it asks for plus an `INext` handle. Calling `INext.RunAsync()` runs the rest of the pipeline. Code before that call runs on the way in. Code after it runs on the way out, after every later function has finished.
 
 ```csharp
-PipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (INext next) =>
     {
         Console.WriteLine("Before A");
@@ -27,6 +26,8 @@ PipelineBuilder.Create()
     })
     .Execute(async () => Console.WriteLine("A"))
     .Build();
+
+_ = await pipeline.RunAsync();
 
 // Output:
 // Before A
@@ -53,11 +54,10 @@ Class-based handlers remain available when a class structure helps. See [In-memo
 
 ## Building a pipeline
 
-Pipelines are built with the fluent `PipelineBuilder` API. `NewPipeline()` starts one, each `Execute()` adds a function, and `Build()` finalizes it.
+Pipelines are built with the fluent `PipelineBuilder` API. `PipelineBuilder` starts one, each `Execute()` adds a function, and `Build()` finalizes it.
 
 ```csharp
-PipelineBuilder builder = PipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (ILogger<Program> logger, INext next) =>
     {
         try
@@ -74,12 +74,7 @@ PipelineBuilder builder = PipelineBuilder.Create()
         await index.UpdateAsync(e.ArticleId, ct);
     })
     .Build();
-
-IPipeline pipeline = builder.Pipelines[0];
 ```
-
-`Build()` returns the builder, not the pipeline. The finished pipelines are exposed on `PipelineBuilder.Pipelines`, in definition order, so a single-pipeline build ends in `.Pipelines[0]`. To build several from one builder, call `NewPipeline()` again after `Build()`; each adds another entry to `Pipelines`. `Build(Action<IPipeline>? onBuild)` takes an optional callback invoked with the pipeline just built, useful for registering it as you go.
-
 `Execute()` has overloads for zero through sixteen typed parameters. Parameters can appear in any order, and only the ones a function declares are resolved for it.
 
 ## Delegate parameters
@@ -149,11 +144,10 @@ Setting `PrimaryNotFound = ThrowException` turns a missing dependency into a har
 
 ## Service scopes per function
 
-By default each function in a run gets its own DI scope, created just before it executes and disposed just after. Scoped and transient services are therefore fresh per function, not shared down the chain. Pass `PipelineRunOptions` to `NewPipeline` to share one scope across the whole run instead:
+By default each function in a run gets its own DI scope, created just before it executes and disposed just after. Scoped and transient services are therefore fresh per function, not shared down the chain. Pass `PipelineRunOptions` to `PipelineBuilder` to share one scope across the whole run instead:
 
 ```csharp
-PipelineBuilder.Create()
-    .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = false })
+IPipeline pipeline = new PipelineBuilder(new PipelineRunOptions{ ServiceScopePerFunction = false })
     .Execute(/* ... */)
     .Build();
 ```
@@ -185,14 +179,12 @@ Outside the broker you run the pipeline yourself and supply the inputs the event
 // A scope factory, from your application's IServiceProvider, if functions resolve services from DI.
 IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
 
-IPipeline pipeline = PipelineBuilder.Create(scopeFactory)
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder(scopeFactory)
     .Execute(async (Article article, ISlugGenerator slugs, PipelineRunContext context) =>
     {
         context.Set<string>(await slugs.CreateAsync(article.Title));
     })
-    .Build()
-    .Pipelines[0];
+    .Build();
 
 // Seed the inputs the function needs, run, then read the output back.
 var context = new PipelineRunContext().Set<Article>(article);
@@ -206,7 +198,7 @@ if (result.IsSuccessful && result.Context.TryGet<string>(out var slug))
 
 `RunAsync` accepts an optional `PipelineRunContext` and `CancellationToken`, and never throws. It reports outcome through `PipelineRunResult`: `IsSuccessful`, the captured `Exception` if a function threw, and `Context` for reading values left behind by the run. EventBrokerSlim builds its own error handling (`OnError`, retry policies, dead-lettering) on top of this result. That behavior is covered in [In-memory broker](04-in-memory-broker.md).
 
-If you do not need DI, call `PipelineBuilder.Create()` with no scope factory and rely on the context for inputs.
+If you do not need DI, call `PipelineBuilder` constructor with no scope factory and rely on the context for inputs.
 
 ## Next steps
 

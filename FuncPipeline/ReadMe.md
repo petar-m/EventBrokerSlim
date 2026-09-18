@@ -13,8 +13,7 @@ Functions will be executed in the order of definition. `INext.RunAsync()` define
 
 *Example:*
 ```csharp
-var pipelineBuilder = pipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     .Execute(async (INext next) =>
     {
         Console.WriteLine("Before A");
@@ -29,10 +28,6 @@ var pipelineBuilder = pipelineBuilder.Create()
 // A
 // After A
 ```
-
-`PipelineBuilder` can create multiple pipelines by using `NewPipeline()` after `Build()`.   
-`PipelineBuilder.Pipelines` exposes created pipelines in the order of their definition.  
-`PipelineBuilder.Build(Action<IPipeline>? onBuild = null)` accepts an optional callback invoked with the currently built pipeline.
 
 ## Executing Pipelines  
 
@@ -51,8 +46,8 @@ PipelineRunResult result = await pipeline.RunAsync();
 ## Parameter Resolution  
 
 FuncPipeline supports function parameter resolution from:  
-- **IServiceProvider**: Using the service provider either passed in `PipelineBuilder.Create(IServiceScopeFactory? serviceScopeFactory = null)` or set to the `IPipeline.ServiceScopeFactory` property.  
-Function dependencies are always resolved from a new `IServiceScope`, disposed of after each run. Functions can share a scope, or alternatively, each function uses a separate scope. This is controlled on a pipeline level by passing `PipelineRunOptions` to `PipelineBuilder.NewPipeline(PipelineRunOptions? options = null)`.  
+- **IServiceProvider**: Using the service provider either passed in `PipelineBuilder` constructor or set to the `IPipeline.ServiceScopeFactory` property.  
+Function dependencies are always resolved from a new `IServiceScope`, disposed of after each run. Functions can share a scope, or alternatively, each function uses a separate scope. This is controlled on a pipeline level by passing `PipelineRunOptions` to `PipelineBuilder` constructor.  
 The default is `PipelineRunOptions.ServiceScopePerFunction = true`.
 - **PipelineRunContext**: Using the `PipelineRunContext` instance passed to `IPipeline.RunAsync()`.
 
@@ -63,8 +58,7 @@ Parameters always available:
 
 *Example:*
 ```csharp
-var pipelineBuilder = pipelineBuilder.Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     // Parameters always available without any setup
     .Execute(async (INext next, PipelineRunContext context, CancellationToken ct) =>
     {
@@ -100,8 +94,7 @@ Values are stored in the context based on their type. This allows them to be inj
 ```csharp
 serviceCollection.Add<IService, Service>();
 ...
-var pipelineBuilder = pipelineBuilder.Create(serviceScopeFactory)
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder(serviceScopeFactory)
     .Execute(async (
         INext next /* always available */, 
         PipelineRunContext context /* always available */,
@@ -141,8 +134,7 @@ The `ResolveFromAttribute` allows control over how parameters are resolved.
 
 *Example:*
 ```csharp
-pipelineBuilder
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
     // Change parameter resolution behavior
     .Execute(static async (
         [ResolveFrom(PrimarySource = Source.Services, Fallback = true, SecondaryNotFound = NotFoundBehavior.ThrowException, Key = "service key")] 
