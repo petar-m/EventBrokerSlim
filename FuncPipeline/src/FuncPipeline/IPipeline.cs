@@ -19,4 +19,9 @@ public interface IPipeline
     /// Gets or sets the service scope factory used to creates scopes for resolving dependencies during pipeline execution.
     /// </summary>
     IServiceScopeFactory? ServiceScopeFactory { get; set; }
+
+    /// <summary>
+    /// Gets an optional name of the pipeline.
+    /// </summary>
+    string? Name { get; }
 }

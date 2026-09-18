@@ -16,6 +16,8 @@ internal class Pipeline : IPipeline
 
     public PipelineRunOptions Options { get; }
 
+    public string? Name { get; internal set; }
+
     internal ImmutableArray<FunctionObject> Functions { get; }
 
     public async Task<PipelineRunResult> RunAsync(PipelineRunContext? pipelineRunContext = null, CancellationToken cancellationToken = default)

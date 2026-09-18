@@ -11,6 +11,7 @@ public class PipelineBuilder
     private readonly PipelineRunOptions _pipelineRunOptions = PipelineRunOptions.Default;
     private readonly IServiceScopeFactory? _serviceScopeFactory;
     private readonly List<FunctionObject> _functions = new();
+    private string? _pilelineName;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PipelineBuilder"/> class.
@@ -49,13 +50,26 @@ public class PipelineBuilder
     }
 
     /// <summary>
+    /// Sets the name of the pipeline.
+    /// </summary>
+    /// <param name="name">The name of the pipeline.</param>
+    /// <returns>The <see cref="PipelineBuilder"/> instance.</returns>
+    public PipelineBuilder WithName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+        _pilelineName = name;
+        return this;
+    }
+
+    /// <summary>
     /// Builds the pipeline and optionally invokes a callback.
     /// </summary>
     /// <returns>The built <see cref="IPipeline"/> instance.</returns>
     public IPipeline Build()
         => new Pipeline(_functions, _pipelineRunOptions)
         {
-            ServiceScopeFactory = _serviceScopeFactory
+            ServiceScopeFactory = _serviceScopeFactory,
+            Name = _pilelineName
         };
 
     /// <summary>
