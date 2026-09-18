@@ -24,14 +24,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var context = new PipelineRunContext();
 
@@ -61,8 +59,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async (ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
@@ -79,8 +76,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                     }
                 }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var context = new PipelineRunContext();
 
@@ -102,15 +98,13 @@ public class ArgumentsResolutionPrimarySourceContextTests
     public async Task NoFallback_ReturnTypeDefault_Attribute()
     {
         // Arrange
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ReturnTypeDefault)] ITestStub x) =>
             {
                 Assert.Null(x);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -123,8 +117,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
     public async Task NoFallback_ReturnTypeDefault_AttributeAsParameter()
     {
         // Arrange
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static (ITestStub x) =>
             {
                 Assert.Null(x);
@@ -142,8 +135,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                     }
                 }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -164,14 +156,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var context = new PipelineRunContext().Set<ITestStub>(contextFunc);
 
@@ -197,14 +187,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .AddSingleton<ITestStub>(contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -227,15 +215,13 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ReturnTypeDefault)] ITestStub x) =>
             {
                 Assert.Null(x);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -255,8 +241,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static (ITestStub x) =>
             {
                 Assert.Null(x);
@@ -275,8 +260,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                     }
                 }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -296,14 +280,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(async static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -328,8 +310,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(async static (ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
@@ -347,8 +328,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                     }
                 }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -370,14 +350,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
         A.CallTo(() => contextFunc.ExecuteAsync(default))
             .Returns(Task.CompletedTask);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException)] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -399,15 +377,13 @@ public class ArgumentsResolutionPrimarySourceContextTests
         A.CallTo(() => contextFunc.ExecuteAsync(default))
             .Returns(Task.CompletedTask);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ReturnTypeDefault)] ITestStub x) =>
             {
                 Assert.Null(x);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -427,15 +403,13 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ReturnTypeDefault, Key = "service_key")] ITestStub x) =>
             {
                 Assert.Null(x);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -455,8 +429,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static (ITestStub x) =>
             {
                 Assert.Null(x);
@@ -476,8 +449,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                     }
                 }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -498,14 +470,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
             .AddKeyedSingleton<ITestStub>("service_key", contextFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException, Key = "service_key")] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -528,14 +498,12 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(async static ([ResolveFrom(PrimarySource = Source.Context, Fallback = true, PrimaryNotFound = NotFoundBehavior.ThrowException, SecondaryNotFound = NotFoundBehavior.ThrowException, Key = "service_key")] ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
@@ -560,8 +528,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(async static (ITestStub x) =>
             {
                 await x.ExecuteAsync(default);
@@ -580,8 +547,7 @@ public class ArgumentsResolutionPrimarySourceContextTests
                    }
                }
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);

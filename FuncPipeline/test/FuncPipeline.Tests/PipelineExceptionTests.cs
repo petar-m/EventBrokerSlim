@@ -19,14 +19,12 @@ public class PipelineExceptionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   await x.ExecuteAsync(ct);
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -48,8 +46,7 @@ public class PipelineExceptionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await x.ExecuteAsync("before next", ct);
@@ -62,8 +59,7 @@ public class PipelineExceptionTests
                   throw new Exception("Test");
               })
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 

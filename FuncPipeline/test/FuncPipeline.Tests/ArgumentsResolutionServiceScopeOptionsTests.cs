@@ -17,8 +17,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = true })
+        IPipeline pipeline = new PipelineBuilder(new PipelineRunOptions { ServiceScopePerFunction = true }, serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {
                 context.Set<(int Dependency1, int Dependency2)>((x.GetHashCode(), 0));
@@ -30,8 +29,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
                 context.Set<(int Dependency1, int Dependency2)>((dependencies.Dependency1, x.GetHashCode()));
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
@@ -47,8 +45,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = true })
+        IPipeline pipeline = new PipelineBuilder(new PipelineRunOptions { ServiceScopePerFunction = true }, serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {
                 context.Set<(int Dependency1, int Dependency2)>((x.GetHashCode(), 0));
@@ -60,8 +57,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
                 context.Set<(int Dependency1, int Dependency2)>((dependencies.Dependency1, x.GetHashCode()));
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
@@ -77,8 +73,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
             .AddScoped<ITestStub>(x => A.Fake<ITestStub>())
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = false })
+        IPipeline pipeline = new PipelineBuilder(new PipelineRunOptions { ServiceScopePerFunction = false }, serviceProvider.GetRequiredService<IServiceScopeFactory>())
             .Execute(static async (ITestStub x, PipelineRunContext context, INext next) =>
             {
                 context.Set<(int Dependency1, int Dependency2)>((x.GetHashCode(), 0));
@@ -90,8 +85,7 @@ public class ArgumentsResolutionServiceScopeOptionsTests
                 context.Set<(int Dependency1, int Dependency2)>((dependencies.Dependency1, x.GetHashCode()));
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
@@ -103,15 +97,13 @@ public class ArgumentsResolutionServiceScopeOptionsTests
     [Fact]
     public async Task ServiceScopePerFunction_False_DoesNotThrow()
     {
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline(new PipelineRunOptions { ServiceScopePerFunction = false })
+        IPipeline pipeline = new PipelineBuilder(new PipelineRunOptions { ServiceScopePerFunction = false })
             .Execute(static (ITestStub x) =>
             {
                 Assert.Null(x);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 

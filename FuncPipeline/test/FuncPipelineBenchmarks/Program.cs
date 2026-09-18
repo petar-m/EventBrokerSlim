@@ -26,16 +26,14 @@ public class Benchmarks
             .AddScoped<TestService>()
             .BuildServiceProvider(true);
 
-        _pipeline = PipelineBuilder.Create(_services.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        _pipeline = new PipelineBuilder(_services.GetRequiredService<IServiceScopeFactory>())
             .Execute<TestService, PipelineRunContext>((service, context) =>
             {
                 var value = service.GetValue();
                 context.Set<int>(value);
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
     }
 
     [Benchmark]

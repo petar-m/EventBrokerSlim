@@ -15,15 +15,13 @@ public class ArgumentsResolutionDefaultBehaviorTests
         CancellationToken cancellationToken = default;
         ITestStub referenceType = A.Fake<ITestStub>(x => x.Strict());
 
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute((ITestStub x, CancellationToken ct) =>
               {
                   referenceType = x;
                   return Task.CompletedTask;
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: cancellationToken);
 
@@ -37,15 +35,13 @@ public class ArgumentsResolutionDefaultBehaviorTests
         CancellationToken cancellationToken = default;
         (string, int) valueType = ("abc", 123);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(((string, int) x, CancellationToken ct) =>
               {
                   valueType = x;
                   return Task.CompletedTask;
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: cancellationToken);
 
@@ -68,15 +64,13 @@ public class ArgumentsResolutionDefaultBehaviorTests
             .AddSingleton<ITestStub>(serviceProviderFunc)
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
               .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
                   await x.ExecuteAsync(message, ct);
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: cancellationToken);
 
@@ -103,15 +97,13 @@ public class ArgumentsResolutionDefaultBehaviorTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
               .Execute(static async (ITestStub x, CancellationToken ct) =>
               {
                   var message = x.Execute<string>();
                   await x.ExecuteAsync(message, ct);
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -138,8 +130,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
         var serviceProvider = new ServiceCollection()
             .BuildServiceProvider();
 
-        IPipeline pipeline = PipelineBuilder.Create(serviceProvider.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder(serviceProvider.GetRequiredService<IServiceScopeFactory>())
               .Execute(static async (PipelineRunContext c, CancellationToken ct) =>
               {
                   if(!c.TryGet<ITestStub>(out var x))
@@ -150,8 +141,7 @@ public class ArgumentsResolutionDefaultBehaviorTests
                   var message = x!.Execute<string>();
                   await x.ExecuteAsync(message, ct);
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 

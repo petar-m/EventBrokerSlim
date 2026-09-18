@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AotTestApp;
 
-internal class Program
+internal static class Program
 {
     static async Task Main(string[] args)
     {
@@ -11,9 +11,8 @@ internal class Program
             .AddSingleton<DateService>()
             .BuildServiceProvider(true);
 
-        var pipeline = PipelineBuilder.Create(services.GetRequiredService<IServiceScopeFactory>())
-            .NewPipeline()
-            .Execute<string, INext>(async ([ResolveFrom(PrimarySource = Source.Context, Fallback =false, PrimaryNotFound = NotFoundBehavior.ThrowException)]message, next) =>
+        var pipeline = new PipelineBuilder(services.GetRequiredService<IServiceScopeFactory>())
+            .Execute<string, INext>(async ([ResolveFrom(PrimarySource = Source.Context, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)] message, next) =>
             {
                 Console.WriteLine($"Message: {message}");
                 await next.RunAsync();
@@ -24,8 +23,7 @@ internal class Program
                 Console.WriteLine($"Date: {date.GetTime().Result}");
                 return Task.CompletedTask;
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var context = new PipelineRunContext().Set<string>("resolved from context");
         var result = await pipeline.RunAsync(context);
@@ -38,5 +36,5 @@ internal class Program
 
 public class DateService
 {
-     public Task<string> GetTime() => Task.FromResult(DateTime.Now.ToLongDateString());
+    public Task<string> GetTime() => Task.FromResult(DateTime.Now.ToLongDateString());
 }

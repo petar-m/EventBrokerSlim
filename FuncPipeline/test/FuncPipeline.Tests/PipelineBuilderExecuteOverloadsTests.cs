@@ -20,11 +20,9 @@ public class PipelineBuilderExecuteOverloadsTests
         var context = new PipelineRunContext()
             .Set<IMock>(mock);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(mock.Do)
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -47,11 +45,9 @@ public class PipelineBuilderExecuteOverloadsTests
         var context = new PipelineRunContext()
             .Set<IMock>(mock);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x) => await x.Do())
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -77,11 +73,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IMock>(mock)
             .Set<IArg1>(arg1);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1) => await x.Do(arg1))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -109,11 +103,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg1>(arg1)
             .Set<IArg2>(arg2);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2) => await x.Do(arg1, arg2))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -143,11 +135,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg2>(arg2)
             .Set<IArg3>(arg3);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3) => await x.Do(arg1, arg2, arg3))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -179,11 +169,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg3>(arg3)
             .Set<IArg4>(arg4);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4) => await x.Do(arg1, arg2, arg3, arg4))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -217,11 +205,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg4>(arg4)
             .Set<IArg5>(arg5);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5) => await x.Do(arg1, arg2, arg3, arg4, arg5))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -257,11 +243,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg5>(arg5)
             .Set<IArg6>(arg6);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -299,11 +283,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg6>(arg6)
             .Set<IArg7>(arg7);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -343,11 +325,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg7>(arg7)
             .Set<IArg8>(arg8);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -389,11 +369,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg8>(arg8)
             .Set<IArg9>(arg9);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -437,11 +415,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg9>(arg9)
             .Set<IArg10>(arg10);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -487,11 +463,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg10>(arg10)
             .Set<IArg11>(arg11);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10, IArg11 arg11) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -539,11 +513,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg11>(arg11)
             .Set<IArg12>(arg12);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10, IArg11 arg11, IArg12 arg12) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -593,11 +565,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg12>(arg12)
             .Set<IArg13>(arg13);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10, IArg11 arg11, IArg12 arg12, IArg13 arg13) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -649,11 +619,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg13>(arg13)
             .Set<IArg14>(arg14);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10, IArg11 arg11, IArg12 arg12, IArg13 arg13, IArg14 arg14) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
@@ -707,11 +675,9 @@ public class PipelineBuilderExecuteOverloadsTests
             .Set<IArg14>(arg14)
             .Set<IArg15>(arg15);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (IMock x, IArg1 arg1, IArg2 arg2, IArg3 arg3, IArg4 arg4, IArg5 arg5, IArg6 arg6, IArg7 arg7, IArg8 arg8, IArg9 arg9, IArg10 arg10, IArg11 arg11, IArg12 arg12, IArg13 arg13, IArg14 arg14, IArg15 arg15) => await x.Do(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         // Act
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);

@@ -20,11 +20,9 @@ public class PipelineExecutionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -44,15 +42,13 @@ public class PipelineExecutionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await next.RunAsync();
                   await x.ExecuteAsync(ct);
               })
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -72,8 +68,7 @@ public class PipelineExecutionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await x.ExecuteAsync("before wrapper 1", ct);
@@ -87,8 +82,7 @@ public class PipelineExecutionTests
                   await x.ExecuteAsync("after wrapper 2", ct);
               })
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -113,8 +107,7 @@ public class PipelineExecutionTests
 
         var context = new PipelineRunContext().Set(typeof(ITestStub), func);
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, INext next, CancellationToken ct) =>
               {
                   await x.ExecuteAsync("before wrapper 1", ct);
@@ -126,8 +119,7 @@ public class PipelineExecutionTests
                   await x.ExecuteAsync("wrapper 2", ct);
               })
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync("func", ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, cancellationToken);
 
@@ -148,11 +140,9 @@ public class PipelineExecutionTests
     {
         var context = new PipelineRunContext();
 
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(context, _ct);
 
@@ -162,11 +152,9 @@ public class PipelineExecutionTests
     [Fact]
     public async Task Context_InternallyCreated_Available_In_Result()
     {
-        IPipeline pipeline = PipelineBuilder.Create()
-              .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
               .Execute(static async (ITestStub x, CancellationToken ct) => await x.ExecuteAsync(ct))
-              .Build()
-              .Pipelines[0];
+              .Build();
 
         PipelineRunResult result = await pipeline.RunAsync(cancellationToken: _ct);
 
