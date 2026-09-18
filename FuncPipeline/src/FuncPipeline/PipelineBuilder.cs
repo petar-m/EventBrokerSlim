@@ -51,9 +51,8 @@ public class PipelineBuilder
     /// <summary>
     /// Builds the pipeline and optionally invokes a callback.
     /// </summary>
-    /// <param name="onBuild">An optional callback to invoke when the pipeline is built.</param>
     /// <returns>The built <see cref="IPipeline"/> instance.</returns>
-    public IPipeline Build(Action<IPipeline>? onBuild = null)
+    public IPipeline Build()
         => new Pipeline(_functions, _pipelineRunOptions)
         {
             ServiceScopeFactory = _serviceScopeFactory
