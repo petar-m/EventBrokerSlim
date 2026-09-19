@@ -9,14 +9,12 @@ internal static class Program
 {
     static async Task Main(string[] args)
     {
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async (DateService dateService, string message) =>
             {
                 Console.WriteLine($"Pipeline: {message} {await dateService.GetTime()}");
             })
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = new ServiceCollection()
             .AddEventBroker()

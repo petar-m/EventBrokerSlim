@@ -34,4 +34,9 @@ public class NullPipeline : IPipeline
     /// <param name="cancellationToken">No-op parameter, not used in this implementation.</param>
     /// <returns>A task that represents the asynchronous operation, containing a successful <see cref="PipelineRunResult"/>.</returns>
     public Task<PipelineRunResult> RunAsync(PipelineRunContext? pipelineRunContext = null, CancellationToken cancellationToken = default) => Task.FromResult(_successResult);
+
+    /// <summary>
+    /// Gets the name of the pipeline, which is always null for the <see cref="NullPipeline"/> implementation. This property is implemented to satisfy the <see cref="IPipeline"/> interface but does not provide any meaningful information in this context, as the pipeline does not have a specific name or identifier associated with it.
+    /// </summary>
+    public string? Name => null;
 }

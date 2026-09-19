@@ -138,11 +138,9 @@ public class EventHandlerOptionsRegistrationTests
     public async Task AddEventHandlerPipeline_WithForBroker_RegistersWithKeyedBroker()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var serviceCollection = new ServiceCollection();
         serviceCollection
@@ -220,11 +218,9 @@ public class EventHandlerOptionsRegistrationTests
     public void AddEventHandlerPipeline_WithHandlerName_SetsHandlerName()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var serviceCollection = new ServiceCollection()
             .AddEventBroker()
@@ -245,11 +241,9 @@ public class EventHandlerOptionsRegistrationTests
     public async Task AllOptions_Combined_WorkTogether()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         var serviceCollection = new ServiceCollection();
         serviceCollection

@@ -26,11 +26,9 @@ public class KeyedHandlerExecutionTests
     public async Task Keyed_Handler_Registrations_Used_By_Keyed_EventBroker()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection
             .AddEventHandlerPipeline<TestEventBase>(pipeline, "broker1")
@@ -65,11 +63,9 @@ public class KeyedHandlerExecutionTests
     public async Task Keyed_Handler_Registrations_Not_Used_By_Default_EventBroker()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection
             .AddEventHandlerPipeline<TestEventBase>(pipeline, "broker1")
@@ -104,11 +100,9 @@ public class KeyedHandlerExecutionTests
     public async Task Keyed_Handler_Registrations_Not_Used_By_Another_Keyed_EventBroker()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection
             .AddEventHandlerPipeline<TestEventBase>(pipeline, "broker2")

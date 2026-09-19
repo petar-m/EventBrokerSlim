@@ -27,11 +27,9 @@ public class DynamicKeyedHandlerExecutionTests
     public async Task Handler_Dynamically_Added()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -63,11 +61,9 @@ public class DynamicKeyedHandlerExecutionTests
     public async Task Handler_Dynamically_Removed()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using IServiceScope scope = services.CreateScope();

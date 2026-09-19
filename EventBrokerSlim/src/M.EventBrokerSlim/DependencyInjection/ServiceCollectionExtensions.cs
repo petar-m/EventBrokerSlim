@@ -373,8 +373,7 @@ public static partial class ServiceCollectionExtensions
 
     private static EventPipeline CreateEventPipeline<TEvent, THandler>(string key, string? handlerName = null) where THandler : class, IEventHandler<TEvent>
     {
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(static async (ILogger<THandler> logger, INext next) =>
             {
                 try
@@ -427,6 +426,6 @@ public static partial class ServiceCollectionExtensions
             })
             .Build();
 
-        return new EventPipeline(typeof(TEvent), pipeline.Pipelines[0], handlerName);
+        return new EventPipeline(typeof(TEvent), pipeline, handlerName);
     }
 }

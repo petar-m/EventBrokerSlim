@@ -25,11 +25,9 @@ public class DynamicHandlerExecutionTests
     public async Task Handler_Dynamically_Added()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -58,11 +56,9 @@ public class DynamicHandlerExecutionTests
     public async Task Handler_Dynamically_Removed()
     {
         // Arrange
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .Pipelines[0];
+            .Build();
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using IServiceScope scope = services.CreateScope();
@@ -96,11 +92,11 @@ public class DynamicHandlerExecutionTests
     public async Task Multiple_Dynamic_Handlers_Added()
     {
         // Arrange
-        var builder = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline1 = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .NewPipeline()
+            .Build();
+
+        var pipeline2 = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
             .Build();
 
@@ -114,8 +110,8 @@ public class DynamicHandlerExecutionTests
         await eventBroker.Publish(new TestEventBase(1), _ct);
         await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
-        _ = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[0]);
-        _ = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[1]);
+        _ = dynamicEventHandlers.Add<TestEventBase>(pipeline1);
+        _ = dynamicEventHandlers.Add<TestEventBase>(pipeline2);
         await eventBroker.Publish(new TestEventBase(2), _ct);
 
         await _tracker.Wait(TimeSpan.FromMilliseconds(300));
@@ -134,11 +130,11 @@ public class DynamicHandlerExecutionTests
     public async Task Multiple_Dynamic_Handlers_Removed()
     {
         // Arrange
-        var builder = PipelineBuilder.Create()
-            .NewPipeline()
+        var pipeline1 = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
-            .Build()
-            .NewPipeline()
+            .Build();
+
+        var pipeline2 = new PipelineBuilder()
             .Execute(async static (TestEventBase testEvent, EventsTracker tracker) => await tracker.TrackAsync(testEvent))
             .Build();
 
@@ -152,8 +148,8 @@ public class DynamicHandlerExecutionTests
         await eventBroker.Publish(new TestEventBase(1), _ct);
         await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);
 
-        IDynamicHandlerClaimTicket claimTicket1 = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[0]);
-        IDynamicHandlerClaimTicket claimTicket2 = dynamicEventHandlers.Add<TestEventBase>(builder.Pipelines[1]);
+        IDynamicHandlerClaimTicket claimTicket1 = dynamicEventHandlers.Add<TestEventBase>(pipeline1);
+        IDynamicHandlerClaimTicket claimTicket2 = dynamicEventHandlers.Add<TestEventBase>(pipeline2);
 
         await eventBroker.Publish(new TestEventBase(2), _ct);
         await Task.Delay(TimeSpan.FromMilliseconds(50), _ct);

@@ -16,21 +16,21 @@ public  class HandlerRegistrationTests
     public void PipelineRegistry_is_registered_in_service_provider()
     {
         _serviceCollection.AddEventBroker();
-        var pipelineBuilder = PipelineBuilder.Create();
-        pipelineBuilder.NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(event1);
                 await next.RunAsync();
             })
             .Execute(static async (Event1 event1, EventsTracker tracker) => await tracker.TrackAsync(event1))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var pipelineRegistry = scope.ServiceProvider.GetRequiredService<PipelineRegistry>();
 
-        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
+        Assert.Equal(pipeline, pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
     }
 
     [Fact]
@@ -38,20 +38,20 @@ public  class HandlerRegistrationTests
     {
         var key = "key";
         _serviceCollection.AddKeyedEventBroker("key");
-        var pipelineBuilder = PipelineBuilder.Create();
-        pipelineBuilder.NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(event1);
                 await next.RunAsync();
             })
             .Execute(static async (Event1 event1, EventsTracker tracker) => await tracker.TrackAsync(event1))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x, key));
+            .Build();
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline, key);
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
         var pipelineRegistry = scope.ServiceProvider.GetRequiredKeyedService<PipelineRegistry>(key);
-        Assert.Equal(pipelineBuilder.Pipelines[0], pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
+        Assert.Equal(pipeline, pipelineRegistry.Get(typeof(Event1))[0].Pipeline);
         Assert.Null(scope.ServiceProvider.GetService<PipelineRegistry>());
     }
 

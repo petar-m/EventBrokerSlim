@@ -15,10 +15,11 @@ public class ExceptionHandlingTests
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(([ResolveFrom(PrimarySource = Source.Services, Fallback = false, PrimaryNotFound = NotFoundBehavior.ThrowException)] string notRegistered) => Task.CompletedTask)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using ServiceProvider services = serviceCollection.BuildServiceProvider(true);
         using IServiceScope scope = services.CreateScope();
@@ -46,10 +47,11 @@ public class ExceptionHandlingTests
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static (Event1 @event) => throw new NotImplementedException())
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -78,10 +80,11 @@ public class ExceptionHandlingTests
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddEventBroker().AddLogging(x => x.AddTest());
 
-        var pipeline = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async (CancellationToken cancellationToken) => await Task.Delay(200, cancellationToken))
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();

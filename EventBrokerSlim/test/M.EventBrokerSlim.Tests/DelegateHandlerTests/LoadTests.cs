@@ -24,37 +24,45 @@ public class LoadTests
             .AddLogging(x => x.AddTest())
             .AddSingleton<EventsTracker>();
 
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline1 = new PipelineBuilder()
             .Execute<Event1, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event1>)
             .Execute<Event1, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event1>)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline1);
+        IPipeline pipeline2 = new PipelineBuilder()
             .Execute<Event2, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event2>)
             .Execute<Event2, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event2>)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event2>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event2>(pipeline2);
+        IPipeline pipeline3 = new PipelineBuilder()
             .Execute<Event3, INext, HandlerSettings, IRetryPolicy, EventsTracker>(DelegateEventHandlers.TestEventHandler1ErrorHandler<Event3>)
             .Execute<Event3, EventsTracker>(DelegateEventHandlers.TestEventHandler1<Event3>)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event3>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event3>(pipeline3);
+        IPipeline pipeline4 = new PipelineBuilder()
             .Execute<Event1, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline4);
+        IPipeline pipeline5 = new PipelineBuilder()
             .Execute<Event2, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event2>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event2>(pipeline5);
+        IPipeline pipeline6 = new PipelineBuilder()
             .Execute<Event3, IRetryPolicy, EventsTracker, HandlerSettings>(DelegateEventHandlers.TestEventHandler2)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event3>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event3>(pipeline6);
+        IPipeline pipeline7 = new PipelineBuilder()
             .Execute<Event1, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event1>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event1>(pipeline7);
+        IPipeline pipeline8 = new PipelineBuilder()
             .Execute<Event2, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event2>(x))
-            .NewPipeline()
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event2>(pipeline8);
+        IPipeline pipeline9 = new PipelineBuilder()
             .Execute<Event3, EventsTracker>(DelegateEventHandlers.TestEventHandler3)
-            .Build(x => serviceCollection.AddEventHandlerPipeline<Event3>(x)); ;
+            .Build();
+        serviceCollection.AddEventHandlerPipeline<Event3>(pipeline9);
 
         using var services = serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();

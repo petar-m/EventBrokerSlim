@@ -25,15 +25,16 @@ public class HandlerExecutionTests
     public async Task Event_Injected_In_Handler()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(event1);
                 await next.RunAsync();
             })
             .Execute(static async (Event1 event1, EventsTracker tracker) => await tracker.TrackAsync(event1))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -58,15 +59,16 @@ public class HandlerExecutionTests
     public async Task CancellationToken_Injected_In_Handler()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (CancellationToken cancellationToken, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(cancellationToken);
                 await next.RunAsync();
             })
             .Execute(static async (CancellationToken cancellationToken, EventsTracker tracker) => await tracker.TrackAsync(cancellationToken))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -91,15 +93,16 @@ public class HandlerExecutionTests
     public async Task RetryPolicy_Injected_In_Handler()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (IRetryPolicy retryPolicy, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(retryPolicy.GetHashCode());
                 await next.RunAsync();
             })
             .Execute(static async (IRetryPolicy retryPolicy, EventsTracker tracker) => await tracker.TrackAsync(retryPolicy.GetHashCode()))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -123,8 +126,7 @@ public class HandlerExecutionTests
     public async Task Wrappers_Executed_In_Order()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, EventsTracker tracker, INext next) =>
             {
                 tracker.Track("before wrapper1");
@@ -144,7 +146,9 @@ public class HandlerExecutionTests
                 tracker.Track("after wrapper3");
             })
             .Execute(static async (Event1 event1, EventsTracker tracker) => await tracker.TrackAsync("handler"))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -167,15 +171,16 @@ public class HandlerExecutionTests
     public async Task Deferred_Publish_Is_Handled()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, EventsTracker tracker, INext next) =>
             {
                 tracker.Track(event1);
                 await next.RunAsync();
             })
             .Execute(static async (Event1 event1, EventsTracker tracker) => await tracker.TrackAsync(event1))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -197,8 +202,7 @@ public class HandlerExecutionTests
     public async Task Retry_From_Handler()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, IRetryPolicy retryPolicy, EventsTracker tracker) =>
             {
                 await tracker.TrackAsync(event1);
@@ -207,7 +211,9 @@ public class HandlerExecutionTests
                     retryPolicy.RetryAfter(TimeSpan.FromMilliseconds(100));
                 }
             })
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -236,8 +242,7 @@ public class HandlerExecutionTests
     public async Task Retry_From_Wrapper()
     {
         // Arrange
-        PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(static async (Event1 event1, IRetryPolicy retryPolicy, EventsTracker tracker, INext next) =>
             {
                 await next.RunAsync();
@@ -248,7 +253,9 @@ public class HandlerExecutionTests
                 }
             })
             .Execute(static async (Event1 event1, IRetryPolicy retryPolicy, EventsTracker tracker) => await tracker.TrackAsync("handler"))
-            .Build(x => _serviceCollection.AddEventHandlerPipeline<Event1>(x));
+            .Build();
+
+        _serviceCollection.AddEventHandlerPipeline<Event1>(pipeline);
 
         using var services = _serviceCollection.BuildServiceProvider(true);
         using var scope = services.CreateScope();
