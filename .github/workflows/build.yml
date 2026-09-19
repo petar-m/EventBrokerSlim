@@ -137,7 +137,7 @@ jobs:
       if: success() || failure()  
       uses: danielpalme/ReportGenerator-GitHub-Action@v5
       with:
-        reports: "**/*.coverage.cobertura.xml"
+        reports: "**/*.cobertura.xml"
         targetdir: "coveragereport"
         reporttypes: "MarkdownSummaryGithub"
         verbosity: "Info"
