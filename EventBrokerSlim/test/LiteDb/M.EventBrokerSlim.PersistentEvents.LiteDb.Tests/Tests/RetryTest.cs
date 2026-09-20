@@ -1,5 +1,4 @@
 using FuncPipeline;
-using LiteDB;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;

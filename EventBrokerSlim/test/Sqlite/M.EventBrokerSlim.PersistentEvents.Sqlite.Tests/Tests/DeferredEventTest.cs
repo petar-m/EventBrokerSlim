@@ -1,5 +1,4 @@
-﻿using System;
-using FuncPipeline;
+﻿using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Extensions.DependencyInjection;

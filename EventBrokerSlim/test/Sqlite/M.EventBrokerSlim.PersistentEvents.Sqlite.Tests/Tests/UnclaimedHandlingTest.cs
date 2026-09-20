@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using M.EventBrokerSlim.DependencyInjection;
+﻿using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
