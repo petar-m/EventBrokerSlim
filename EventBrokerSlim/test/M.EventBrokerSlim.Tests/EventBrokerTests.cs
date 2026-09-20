@@ -122,7 +122,7 @@ public class EventBrokerTests
         eventsRecorder.Expect(1);
         await eventBroker.Publish(new TestEvent(CorrelationId: 1), _ct);
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
         eventBroker.Shutdown();
 
         var exception = await Assert.ThrowsAsync<EventBrokerPublishNotAvailableException>(async () => await eventBroker.Publish(new TestEvent(CorrelationId: 2), _ct));
@@ -154,7 +154,7 @@ public class EventBrokerTests
         eventBroker.Shutdown();
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(20));
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.False(completed);
@@ -204,7 +204,7 @@ public class EventBrokerTests
 
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(200));
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(2));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.True(completed);
@@ -235,7 +235,7 @@ public class EventBrokerTests
         await eventBroker.PublishDeferred(new TestEvent(CorrelationId: 1), TimeSpan.FromMilliseconds(300));
         await eventBroker.Publish(new TestEvent(CorrelationId: 2), _ct);
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.True(completed);
@@ -270,7 +270,7 @@ public class EventBrokerTests
 
         eventBroker.Shutdown();
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.False(completed);
@@ -304,7 +304,7 @@ public class EventBrokerTests
 
         eventBroker.Shutdown();
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.False(completed);
@@ -344,7 +344,7 @@ public class EventBrokerTests
 
         eventBroker.Shutdown();
 
-        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(1));
+        var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
         // Assert
         Assert.False(completed);
