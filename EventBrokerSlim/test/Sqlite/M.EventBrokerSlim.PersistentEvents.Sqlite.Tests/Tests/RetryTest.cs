@@ -16,9 +16,7 @@ public class RetryTest : IDisposable
     public RetryTest(Setup setup)
     {
         _connectionString = setup.GetConnectionString();
-        var builder = PipelineBuilder
-            .Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async (SampleEvent e, IRetryPolicy retryPolicy, EventReceiver r, EventRecord record) =>
             {
                 r.Add(record);
@@ -37,7 +35,7 @@ public class RetryTest : IDisposable
                 db.Table = nameof(RetryTest);
                 db.CreateEventsTable();
             }))
-            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
+            .AddEventHandlerPipeline<SampleEvent>(pipeline, o => o.WithHandlerName("sample-event-handler"))
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 
