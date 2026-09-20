@@ -54,7 +54,7 @@ public class EventsRecorder<T> where T : notnull
             await Task.Delay(_waitForItemsTimeout);
         }
 
-        return false;
+        return _expected.IsEmpty;
     }
 
     public async Task Wait(TimeSpan timeout) => await Task.Delay(timeout);
