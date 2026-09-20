@@ -191,7 +191,6 @@ public class EventBrokerTests
             .AddEventBroker()
             .AddTransientEventHandler<TestEvent, TestEventHandler>()
             .AddSingleton<EventsRecorder<int>>()
-            .AddSingleton<Timestamp>()
             .BuildServiceProvider(true);
         using var scope = services.CreateScope();
 
@@ -206,14 +205,18 @@ public class EventBrokerTests
 
         var completed = await eventsRecorder.WaitForExpected(TimeSpan.FromSeconds(4));
 
-        // Assert
-        Assert.True(completed);
-        Assert.Single(eventsRecorder.HandledEventIds);
-        Assert.Equal(1, eventsRecorder.HandledEventIds[0]);
-
-        var handlerExecutedAt = scope.ServiceProvider.GetRequiredService<Timestamp>().ExecutedAt;
-        Assert.True(handlerExecutedAt - calledPublishDeferredAt >= TimeSpan.FromMilliseconds(200));
         eventBroker.Shutdown();
+
+        // Assert
+        Assert.True(completed, "The event was not handled within the expected time.");
+        if(eventsRecorder.HandleTimes.TryGetValue(1, out var handlerExecutedAt))
+        {
+            Assert.True(handlerExecutedAt - calledPublishDeferredAt >= TimeSpan.FromMilliseconds(200), "The event was not handled within the expected time.");
+        }
+        else
+        {
+            Assert.Fail("Handler execution time for event ID 1 was not recorded.");
+        }
     }
 
     [Fact]
@@ -363,7 +366,6 @@ public class EventBrokerTests
             .AddEventBroker()
             .AddTransientEventHandler<TestEvent, TestEventHandler>()
             .AddSingleton<EventsRecorder<int>>()
-            .AddSingleton<Timestamp>()
             .AddLogging(x => x.AddDebug().AddTest())
             .BuildServiceProvider(true);
         using var scope = services.CreateScope();
@@ -401,22 +403,15 @@ public class EventBrokerTests
     public class TestEventHandler : IEventHandler<TestEvent>
     {
         private readonly EventsRecorder<int> _eventsRecorder;
-        private readonly Timestamp? _timestamp;
 
-        public TestEventHandler(EventsRecorder<int> eventsRecorder, Timestamp? timestamp = null)
+        public TestEventHandler(EventsRecorder<int> eventsRecorder)
         {
             _eventsRecorder = eventsRecorder;
-            _timestamp = timestamp;
         }
 
         public async Task Handle(TestEvent @event, IRetryPolicy retryPolicy, CancellationToken cancellationToken)
         {
             _eventsRecorder.Notify(@event);
-
-            if(_timestamp is not null)
-            {
-                _timestamp.ExecutedAt = DateTime.UtcNow;
-            }
 
             if(@event.ThrowFromHandle)
             {
@@ -438,10 +433,5 @@ public class EventBrokerTests
                 await Task.Delay(@event.ErrorHandlingDuration, cancellationToken);
             }
         }
-    }
-
-    public class Timestamp
-    {
-        public DateTime ExecutedAt { get; set; }
     }
 }

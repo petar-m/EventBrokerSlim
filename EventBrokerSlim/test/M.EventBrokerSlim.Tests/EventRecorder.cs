@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace M.EventBrokerSlim.Tests;
 
@@ -14,6 +15,8 @@ public class EventsRecorder<T> where T : notnull
     public Exception[] Exceptions => _exceptions.ToArray();
 
     public T[] HandledEventIds => _events.OrderBy(x => x.tick).Select(x => x.id).ToArray();
+
+    public Dictionary<T, DateTime> HandleTimes => _events.ToDictionary(x => x.id, x => new DateTime(x.tick, DateTimeKind.Utc));
 
     public T[] Expected => _expected.Keys.ToArray();
 
