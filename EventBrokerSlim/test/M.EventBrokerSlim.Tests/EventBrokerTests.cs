@@ -211,7 +211,8 @@ public class EventBrokerTests
         Assert.True(completed, "The event was not handled within the expected time.");
         if(eventsRecorder.HandleTimes.TryGetValue(1, out var handlerExecutedAt))
         {
-            Assert.True(handlerExecutedAt - calledPublishDeferredAt >= TimeSpan.FromMilliseconds(200), "The event was not handled within the expected time.");
+            TimeSpan delay = handlerExecutedAt - calledPublishDeferredAt;
+            Assert.True(delay >= TimeSpan.FromMilliseconds(200), $"The event was not handled with the expected minimum delay of 200ms, was {delay.TotalMilliseconds}ms.");
         }
         else
         {
