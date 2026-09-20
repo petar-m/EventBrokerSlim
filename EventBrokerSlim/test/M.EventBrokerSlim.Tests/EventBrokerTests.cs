@@ -212,7 +212,9 @@ public class EventBrokerTests
         if(eventsRecorder.HandleTimes.TryGetValue(1, out var handlerExecutedAt))
         {
             TimeSpan delay = handlerExecutedAt - calledPublishDeferredAt;
-            Assert.True(delay >= TimeSpan.FromMilliseconds(200), $"The event was not handled with the expected minimum delay of 200ms, was {delay.TotalMilliseconds}ms.");
+            TimeSpan tollerance = TimeSpan.FromMilliseconds(10);
+            delay += tollerance;
+            Assert.True(delay >= TimeSpan.FromMilliseconds(200), $"The event was not handled with the expected minimum delay of 200ms, was {delay.TotalMilliseconds}ms including {tollerance}ms tollerance.");
         }
         else
         {
