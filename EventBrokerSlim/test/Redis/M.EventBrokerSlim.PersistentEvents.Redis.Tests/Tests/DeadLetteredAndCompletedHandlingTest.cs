@@ -31,16 +31,15 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 
-        var builder = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline1 = new PipelineBuilder()
             .Execute((EventRecord eventRecord, EventReceiver receiver) =>
             {
                 receiver.Add(eventRecord);
                 // produces status completed
                 return Task.CompletedTask;
-            }) 
-            .Build()
-            .NewPipeline()
+            })
+            .Build();
+        IPipeline pipeline2 = new PipelineBuilder()
             .Execute((EventRecord eventRecord, EventReceiver receiver, IRetryPolicy retryPolicy) =>
             {
                 receiver.Add(eventRecord);
@@ -50,8 +49,8 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
             })
             .Build();
 
-        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], handlerName: "handler-1");
-        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[1], handlerName: "handler-2");
+        services.AddEventHandlerPipeline<SampleEvent>(pipeline1, handlerName: "handler-1");
+        services.AddEventHandlerPipeline<SampleEvent>(pipeline2, handlerName: "handler-2");
 
         _serviceProvider = services.BuildServiceProvider();
         _scope = _serviceProvider.CreateScope();
