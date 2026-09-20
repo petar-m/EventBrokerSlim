@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageProjectUrl>https://github.com/petar-m/EventBrokerSlim#eventbrokerslimpersistenteventssqlserver</PackageProjectUrl>
+    <PackageProjectUrl>https://petar-m.github.io/EventBrokerSlim/10-persistence-sqlserver/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/petar-m/EventBrokerSlim</RepositoryUrl>
     <RespositoryType>git</RespositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="M.EventBrokerSlim" Version="5.0.0" />
+    <PackageReference Include="M.EventBrokerSlim" Version="5.1.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
   </ItemGroup>
 

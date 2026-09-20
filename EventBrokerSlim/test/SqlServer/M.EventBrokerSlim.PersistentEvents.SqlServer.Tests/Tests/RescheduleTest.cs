@@ -16,9 +16,7 @@ public class RescheduleTest : IDisposable
     public RescheduleTest(Setup setup)
     {
         _setup = setup;
-        var builder = PipelineBuilder
-            .Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async (EventRecord er, EventReceiver receiver, CancellationToken cancellationToken) =>
             {
                 receiver.Add(er);
@@ -40,7 +38,7 @@ public class RescheduleTest : IDisposable
                 db.Table = nameof(RescheduleTest);
                 db.CreateEventsTable();
             }))
-            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
+            .AddEventHandlerPipeline<SampleEvent>(pipeline, o => o.WithHandlerName("sample-event-handler"))
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 
