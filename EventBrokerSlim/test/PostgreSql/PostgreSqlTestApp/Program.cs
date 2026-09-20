@@ -30,9 +30,8 @@ var eventRegistry = new EventRegistry()
 
 builder.Services.AddSingleton(eventRegistry);
 
-var pipelineBuilder = PipelineBuilder
-    .Create()
-    .NewPipeline()
+IPipeline pipeline = new PipelineBuilder()
+    .WithName("sample-event-handler")
     .Execute(async (SampleEvent @event, ILogger<Program> logger, INext next, IRetryPolicy retryPolicy, CancellationToken cancellationToken) =>
     {
         try
@@ -53,7 +52,7 @@ var pipelineBuilder = PipelineBuilder
     .Build();
 
 // Register the event handler pipeline for SampleEvent with a handler name to enable persistence
-builder.Services.AddEventHandlerPipeline<SampleEvent>(pipelineBuilder.Pipelines[0], opt => opt.WithHandlerName("sample-event-handler"));
+builder.Services.AddEventHandlerPipeline<SampleEvent>(pipeline, opt => opt.WithHandlerName(pipeline.Name));
 
 var app = builder.Build();
 
