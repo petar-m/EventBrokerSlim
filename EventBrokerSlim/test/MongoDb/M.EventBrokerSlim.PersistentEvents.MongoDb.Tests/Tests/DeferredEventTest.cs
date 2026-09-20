@@ -1,8 +1,6 @@
 ﻿using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
-using M.EventBrokerSlim.PersistentEvents.MongoDb;
-using M.EventBrokerSlim.PersistentEvents.MongoDb.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDbIntegrationTests;
 
@@ -15,9 +13,7 @@ public class DeferredEventTest : IDisposable
 
     public DeferredEventTest(Setup setup)
     {
-        var builder = PipelineBuilder
-            .Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async (SampleEvent e, EventReceiver r, EventRecord record) => r.Add(record))
             .Build();
         var services = new ServiceCollection()
@@ -28,7 +24,7 @@ public class DeferredEventTest : IDisposable
                 db.ConnectionString = setup.ConnectionString;
                 db.CollectionName = nameof(DeferredEventTest);
             }))
-            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
+            .AddEventHandlerPipeline<SampleEvent>(pipeline, o => o.WithHandlerName("sample-event-handler"))
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 

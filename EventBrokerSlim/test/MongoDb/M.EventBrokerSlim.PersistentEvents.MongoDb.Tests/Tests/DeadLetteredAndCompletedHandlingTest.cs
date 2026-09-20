@@ -1,8 +1,6 @@
 ﻿using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
-using M.EventBrokerSlim.PersistentEvents.MongoDb;
-using M.EventBrokerSlim.PersistentEvents.MongoDb.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -34,11 +32,11 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
             }))
             .AddSingleton(EventRegistryHelper.Registry);
 
-        var builder = PipelineBuilder.Create()
-            .NewPipeline()
+        IPipeline pipeline1 = new PipelineBuilder()
             .Execute(() => Task.CompletedTask) // produces status completed
-            .Build()
-            .NewPipeline()
+            .Build();
+
+        IPipeline pipeline2 = new PipelineBuilder()
             .Execute((IRetryPolicy retryPolicy) => // produces status dead lettered
             {
                 retryPolicy.Abandon();
@@ -46,8 +44,8 @@ public class DeadLetteredAndCompletedHandlingTest : IDisposable
             })
             .Build();
 
-        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], handlerName: "handler-1");
-        services.AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[1], handlerName: "handler-2");
+        services.AddEventHandlerPipeline<SampleEvent>(pipeline1, handlerName: "handler-1");
+        services.AddEventHandlerPipeline<SampleEvent>(pipeline2, handlerName: "handler-2");
 
         _serviceProvider = services.BuildServiceProvider();
         _scope = _serviceProvider.CreateScope();

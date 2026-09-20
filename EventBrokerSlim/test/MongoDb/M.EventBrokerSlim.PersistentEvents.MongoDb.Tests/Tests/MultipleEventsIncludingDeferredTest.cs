@@ -1,8 +1,6 @@
 ﻿using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
-using M.EventBrokerSlim.PersistentEvents.MongoDb;
-using M.EventBrokerSlim.PersistentEvents.MongoDb.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDbIntegrationTests;
 
@@ -15,12 +13,11 @@ public class MultipleEventsIncludingDeferredTest : IDisposable
 
     public MultipleEventsIncludingDeferredTest(Setup setup)
     {
-        var builder = PipelineBuilder
-            .Create()
-            .NewPipeline()
+        IPipeline pipeline1 = new PipelineBuilder()
             .Execute(async (SampleEvent e, EventReceiver r, EventRecord record) => r.Add(record))
-            .Build()
-            .NewPipeline()
+            .Build();
+
+        IPipeline pipeline2 = new PipelineBuilder()
             .Execute(async (SampleEvent2 e, EventReceiver r, EventRecord record) => r.Add(record))
             .Build();
         var services = new ServiceCollection()
@@ -32,8 +29,8 @@ public class MultipleEventsIncludingDeferredTest : IDisposable
                 db.ConnectionString = setup.ConnectionString;
                 db.CollectionName = nameof(MultipleEventsIncludingDeferredTest);
             }))
-            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
-            .AddEventHandlerPipeline<SampleEvent2>(builder.Pipelines[1], o => o.WithHandlerName("sample-event-handler-2"))
+            .AddEventHandlerPipeline<SampleEvent>(pipeline1, o => o.WithHandlerName("sample-event-handler"))
+            .AddEventHandlerPipeline<SampleEvent2>(pipeline2, o => o.WithHandlerName("sample-event-handler-2"))
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 

@@ -1,8 +1,6 @@
 ﻿using FuncPipeline;
 using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
-using M.EventBrokerSlim.PersistentEvents.MongoDb;
-using M.EventBrokerSlim.PersistentEvents.MongoDb.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -19,9 +17,7 @@ public class AbandonTest : IDisposable
     public AbandonTest(Setup setup)
     {
         _setup = setup;
-        var builder = PipelineBuilder
-            .Create()
-            .NewPipeline()
+        IPipeline pipeline = new PipelineBuilder()
             .Execute(async (SampleEvent e, IRetryPolicy retryPolicy, EventReceiver r, EventRecord record) =>
             {
                 r.Add(record);
@@ -43,7 +39,7 @@ public class AbandonTest : IDisposable
                 db.ConnectionString = setup.ConnectionString;
                 db.CollectionName = nameof(AbandonTest);
             }))
-            .AddEventHandlerPipeline<SampleEvent>(builder.Pipelines[0], o => o.WithHandlerName("sample-event-handler"))
+            .AddEventHandlerPipeline<SampleEvent>(pipeline, o => o.WithHandlerName("sample-event-handler"))
             .AddSingleton(EventRegistryHelper.Registry)
             .AddSingleton<EventReceiver>();
 

@@ -1,7 +1,5 @@
 ﻿using M.EventBrokerSlim.DependencyInjection;
 using M.EventBrokerSlim.Persistent;
-using M.EventBrokerSlim.PersistentEvents.MongoDb;
-using M.EventBrokerSlim.PersistentEvents.MongoDb.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
