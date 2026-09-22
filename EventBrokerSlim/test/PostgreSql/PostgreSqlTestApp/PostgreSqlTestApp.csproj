@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="M.EventBrokerSlim" Version="5.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Tests.ServiceDefaults\Tests.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\src\M.EventBrokerSlim.PersistentEvents.PostgreSql\M.EventBrokerSlim.PersistentEvents.PostgreSql.csproj" />
   </ItemGroup>
