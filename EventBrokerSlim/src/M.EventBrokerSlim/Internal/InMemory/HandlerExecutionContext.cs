@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using FuncPipeline;
-using M.EventBrokerSlim.Internal.ObjectPools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 
@@ -9,13 +8,28 @@ namespace M.EventBrokerSlim.Internal.InMemory;
 
 internal sealed class HandlerExecutionContext : IResettable
 {
-    public HandlerExecutionContext Initialize(object @event, IPipeline pipeline, RetryDescriptor? retryDescriptor, CancellationToken cancellationToken)
+    public HandlerExecutionContext Initialize(
+        object @event,
+        IPipeline pipeline,
+        RetryDescriptor? retryDescriptor,
+        CancellationToken cancellationToken,
+        SemaphoreSlim semaphore,
+        ILogger logger,
+        RetryQueue retryQueue,
+        DefaultObjectPool<PipelineRunContext> pipelineRunContextObjectPool,
+        DefaultObjectPool<RetryPolicy> retryPolicyObjectPool,
+        DefaultObjectPool<HandlerExecutionContext> objectPool)
     {
         Event = @event;
         Pipeline = pipeline;
         RetryDescriptor = retryDescriptor;
         CancellationToken = cancellationToken;
-        RetryPolicy = RetryDescriptor?.RetryPolicy;
+        Semaphore = semaphore;
+        Logger = logger;
+        RetryQueue = retryQueue;
+        PipelineRunContextObjectPool = pipelineRunContextObjectPool;
+        RetryPolicyObjectPool = retryPolicyObjectPool;
+        ObjectPool = objectPool;
         return this;
     }
 
@@ -25,40 +39,27 @@ internal sealed class HandlerExecutionContext : IResettable
         Pipeline = null;
         RetryDescriptor = null;
         CancellationToken = default;
-        RetryPolicy = null;
+        Semaphore = null;
+        Logger = null;
+        RetryQueue = null;
+        PipelineRunContextObjectPool = null;
+        RetryPolicyObjectPool = null;
+        ObjectPool = null;
         return true;
     }
 
-    public object? Event { get; private set; }
-
-    public IPipeline? Pipeline { get; private set; }
-
+    [NotNull] public object? Event { get; private set; }
+    [NotNull] public IPipeline? Pipeline { get; private set; }
     public RetryDescriptor? RetryDescriptor { get; private set; }
+    [NotNull] public CancellationToken CancellationToken { get; private set; }
+    [NotNull] public SemaphoreSlim? Semaphore { get; private set; }
+    [NotNull] public ILogger? Logger { get; private set; }
+    [NotNull] public RetryQueue? RetryQueue { get; private set; }
+    [NotNull] public DefaultObjectPool<PipelineRunContext>? PipelineRunContextObjectPool { get; private set; }
+    [NotNull] public DefaultObjectPool<RetryPolicy>? RetryPolicyObjectPool { get; private set; }
+    [NotNull] public DefaultObjectPool<HandlerExecutionContext>? ObjectPool { get; private set; }
 
-    public CancellationToken CancellationToken { get; private set; }
-
-    public RetryPolicy? RetryPolicy { get; private set; }
-
-    public static SemaphoreSlim? Semaphore;
-    public static ILogger? Logger;
-    public static RetryQueue? RetryQueue;
-    
-    public static DefaultObjectPool<PipelineRunContext> PipelineRunContextObjectPool => _lazyPipelineRunContextObjectPool!.Value;
-    public static DefaultObjectPool<RetryPolicy> RetryPolicyObjectPool => _lazyRetryPolicyObjectPool!.Value;
-    public static DefaultObjectPool<HandlerExecutionContext> ObjectPool => _lazyObjectPool!.Value;
-
-    public static void ConfigureObjectPools(int maxRetained)
-    {
-        _lazyObjectPool = new Lazy<DefaultObjectPool<HandlerExecutionContext>>(() => new DefaultObjectPool<HandlerExecutionContext>(new ObjectPoolPolicy(), maxRetained));
-        _lazyPipelineRunContextObjectPool = new Lazy<DefaultObjectPool<PipelineRunContext>>(() => new DefaultObjectPool<PipelineRunContext>(new PipelineRunContextPooledObjectPolicy(), maxRetained));
-        _lazyRetryPolicyObjectPool = new Lazy<DefaultObjectPool<RetryPolicy>>(() => new DefaultObjectPool<RetryPolicy>(new RetryPolicyPooledObjectPolicy(), maxRetained));
-    }
-
-    private static Lazy<DefaultObjectPool<HandlerExecutionContext>>? _lazyObjectPool;
-    private static Lazy<DefaultObjectPool<PipelineRunContext>>? _lazyPipelineRunContextObjectPool;
-    private static Lazy<DefaultObjectPool<RetryPolicy>>? _lazyRetryPolicyObjectPool;
-
-    private class ObjectPoolPolicy : IPooledObjectPolicy<HandlerExecutionContext>
+    internal class ObjectPoolPolicy : IPooledObjectPolicy<HandlerExecutionContext>
     {
         public HandlerExecutionContext Create()
         {
