@@ -21,9 +21,9 @@ internal sealed class EventHandlerRunner
     private readonly EventBrokerSettings _settings;
     private readonly IEventStorage _eventStorage;
     private readonly SemaphoreSlim _semaphore;
-    private DefaultObjectPool<HandlerExecutionContext> _executionContextObjectPool;
-    private DefaultObjectPool<PipelineRunContext> _pipelineRunContextObjectPool;
-    private DefaultObjectPool<RetryPolicy> _retryPolicyObjectPool;
+    private readonly DefaultObjectPool<HandlerExecutionContext> _executionContextObjectPool;
+    private readonly DefaultObjectPool<PipelineRunContext> _pipelineRunContextObjectPool;
+    private readonly DefaultObjectPool<RetryPolicy> _retryPolicyObjectPool;
 
     internal EventHandlerRunner(
         ChannelReader<ScheduledEventRecord> channelReader,
